@@ -72,6 +72,12 @@ class DataBuffer:
         self.data.clear()
 
 
+def safe_speed_to_float(v):
+    try:
+        return float(v)
+    except ValueError:
+        return 0.0
+
 class LoggerState(Enum):
     initialized = 1
     ready = 2
@@ -160,7 +166,7 @@ class SensorLogger:
                 # motion is only detected via GPS speed
                 if new_data['gps'] and self.db_handler:
                     is_moving = True in \
-                                [s[1].get('speed') > ACTIVATE_RECORDING_M_PER_S for s in new_data['gps']]
+                                [safe_speed_to_float(s[1].get('speed')) > ACTIVATE_RECORDING_M_PER_S for s in new_data['gps']]
 
                     if is_moving:
                         if not recording_active:  # activate recording
