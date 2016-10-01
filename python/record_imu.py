@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 
 import sqlite3
-import sys, os, time
+import sys, os, time, uuid
 import RTIMU
 
 DB_LOCATION="/external/racepi_data/test.db"
@@ -15,7 +15,7 @@ else:
 
 def db_insert(c, r, p , y, x_accel, y_accel, z_accel):
     t = time.time()
-    id = 1
+    id = uuid.uuid1()
     c.execute (
         """
         insert into imu_data
@@ -23,19 +23,18 @@ def db_insert(c, r, p , y, x_accel, y_accel, z_accel):
          r, p, y,
          x_accel, y_accel, z_accel)
         values
-        (%s, %s,
+        ('%s', %s,
         %f, %f, %f,
         %f, %f, %f)        
         """ %
-        (id, t, r, p, y, x_accel, y_accel, z_accel)
+        (id.hex, t, r, p, y, x_accel, y_accel, z_accel)
         )
-    #c.commit()
 
 
-SETTINGS_FILE = "RTIMULib"
+SETTINGS_FILE = "/etc/RTIMULib.ini"
 
-print("Using settings file " + SETTINGS_FILE + ".ini")
-if not os.path.exists(SETTINGS_FILE + ".ini"):
+print("Using settings file " + SETTINGS_FILE)
+if not os.path.exists(SETTINGS_FILE):
   print("Settings file does not exist, will be created")
 
 s = RTIMU.Settings(SETTINGS_FILE)
@@ -48,6 +47,7 @@ if (not imu.IMUInit()):
     sys.exit(1)
 else:
     print("IMU Init Succeeded")
+
 # this is a good time to set any fusion parameters
 imu.setSlerpPower(0.02)
 imu.setGyroEnable(True)
@@ -59,7 +59,6 @@ print("Poll Interval: %d (ms)\n" % poll_interval)
 last_time = time.time()
 
 count = 0;
-
 
 while True:
     try:
@@ -82,7 +81,7 @@ while True:
             count += 1
             refresh_rate = 1.0/ (time.time() - last_time)
             last_time = time.time()
-            os.write(0, "\r(%2f. hz) %d" % (refresh_rate,count));
+            #os.write(0, "\r(%2f. hz) %d" % (refresh_rate,count));
             time.sleep(poll_interval*0.5/1000.0)
     except:
         conn.commit();
