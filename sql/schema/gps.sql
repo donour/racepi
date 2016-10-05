@@ -3,18 +3,18 @@
 BEGIN;
 CREATE TABLE gps_data
 (
-	session_id BLOB,
+	session_id BLOB NOT NULL,
 	timestamp DATETIME NOT NULL,
-	gps_time VARCHAR,
+	time VARCHAR,
 	lat DOUBLE,
 	lon DOUBLE,
 	speed DOUBLE,	
-	track_deg DOUBLE,
+	track DOUBLE,
 	epx DOUBLE,
 	epy DOUBLE,
 	epv DOUBLE,
 
-	FOREIGN KEY(session_id) REFERENCES session(id)
+	FOREIGN KEY(session_id) REFERENCES sessions(id)
 );
 
 COMMIT;

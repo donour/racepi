@@ -7,7 +7,7 @@ CREATE TABLE sessions (
 COMMIT;
 
 -- needed for good realtime write performance
-PRAGMA journal_mode=WAL;
+-- PRAGMA journal_mode=WAL;
 
 
       

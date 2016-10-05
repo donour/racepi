@@ -1,7 +1,7 @@
 BEGIN;
 CREATE TABLE imu_data
 (
-	session_id BLOB,
+	session_id BLOB NOT NULL,
 	timestamp DATETIME NOT NULL,
 	r DOUBLE,
 	p DOUBLE,
@@ -10,7 +10,7 @@ CREATE TABLE imu_data
 	y_accel DOUBLE,	
 	z_accel DOUBLE,
 
-	FOREIGN KEY(session_id) REFERENCES session(id)
+	FOREIGN KEY(session_id) REFERENCES sessions(id)
 );
 
 COMMIT;
