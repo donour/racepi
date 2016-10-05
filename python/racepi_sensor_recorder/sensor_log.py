@@ -16,7 +16,8 @@ class sensorHandler:
     def start(self):
         self.process.start()
 
-    def join(self):
+    def stop(self):
+        self.doneEvent.set()
         self.process.join()
 
     def get_all_data(self):
@@ -58,8 +59,6 @@ if __name__ == "__main__":
                     
                     
     except KeyboardInterrupt:
-        imu_done.set()
-        gps_done.set()
-        imu_proc.join()
-        gps_proc.join()
+        imu_handler.stop()
+        gps_handler.stop()
         print "done"
