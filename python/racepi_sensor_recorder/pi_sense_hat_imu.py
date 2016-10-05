@@ -2,7 +2,6 @@
 import os, time
 import RTIMU
 
-
 SETTINGS_FILE = "/etc/RTIMULib.ini"
 if not os.path.exists(SETTINGS_FILE):
     print("Settings file not found, creating file: " + SETTINGS_FILE)
@@ -22,7 +21,7 @@ _IMU.setGyroEnable(True)
 _IMU.setAccelEnable(True)
 _IMU.setCompassEnable(True)
 _poll_interval = _IMU.IMUGetPollInterval()
-print("Poll Interval: %d (ms)\n" % _poll_interval)
+print("Poll Interval: %d (ms)" % _poll_interval)
 print("IMU Init Succeeded")
 
 def record_from_imu(q, done):
@@ -41,8 +40,7 @@ def record_from_imu(q, done):
         if _IMU.IMURead():
             data = _IMU.getIMUData()
             q.put((time.time(), data))
-        else:
-            raise IOError("Failed to read from imu")
-        time.sleep(_poll_interval * 0.5 / 1000.0)
+            time.sleep(_poll_interval * 0.5 / 1000.0)
+        
 
 

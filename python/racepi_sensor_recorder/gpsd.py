@@ -17,7 +17,7 @@ def record_from_gps(q, done):
         lat = data.get('lat')
         lon = data.get('lon')
         if t is not None:
-            q.put( (time.time(), t, lat, lon, s, track))
+            q.put( (time.time(), data))
 
 if __name__ == "__main__":
     from multiprocessing import Queue, Event, Process
