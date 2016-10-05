@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# Create empty db file with propery schema
+
+# Schema for the database. The order is important because
+# tables use foreign keys.
+SCHEMA_FILES=(           \
+    "schema/session.sql" \
+    "schema/gps.sql"     \
+    "schema/imu.sql"     \
+)
+
+if [ -z $1 ]; then
+    echo "Usage: $0 <filename>" >&2
+    exit 1
+fi
+OUTPUT_FILE=$1
+
+echo "Looking up sqlite3"
+SQLITE=$(which sqlite3)
+if [ -z ${SQLITE} ]; then
+    echo "Failed to find SQLITE"
+    exit 1
+fi
+echo "[SQLITE3]: using $SQLITE" 
+
+TMPFILE=$(mktemp)
+
+# setup automatic cleanup of tmpfile
+function cleanup {
+    rm "${TMPFILE}"
+}
+trap cleanup EXIT
+
+echo "[Created tmpfile]: ${TMPFILE}" 
+
+set -eu -o pipefail
+
+${SQLITE} ${TMPFILE} ".databases"
+for f in "${SCHEMA_FILES[@]}"
+do
+    echo "Importing ${f}"
+    cat "${f}" | ${SQLITE} ${TMPFILE}
+done
+
+cp -i $TMPFILE ${OUTPUT_FILE}
+
+echo "[Success] ${OUTPUT_FILE}"
