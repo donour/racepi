@@ -2,24 +2,42 @@
 <html lang="en-US">
 <script src="static/angular/angular.min.js"></script>
 <body>
+<title>RacePI</title>
 
-<div ng-app="racePiApp" ng-controller="appCtrl">
-    <table>
+<div ng-app="racePiApp" >
+    <table ng-controller="sessionCtrl">
         <tr ng-repeat="x in sessions">
             <td>{{ x[0] }}</td>
             <td>{{ x[1] }}</td>
         </tr>
     </table>
+    <table ng-controller="gpsCtrl">
+        <tr ng-repeat="x in samples">
+            <td>{{ x[2] }}</td>
+            <td>{{ x[3] }}</td>
+            <td>{{ x[4] }}</td>
+            <td>{{ x[5] }}</td>
+            <td>{{ x[6] }}</td>
+        </tr>
+    </table>
+    <table ng-controller="imuCtrl">
+        <tr ng-repeat="x in samples">
+            <td>{{ x[1] }}</td>
+            <td>{{ x[2] }}</td>
+            <td>{{ x[3] }}</td>
+            <td>{{ x[4] }}</td>
+        </tr>
+    </table>
 </div>
+
 
 <script>
 var app = angular.module('racePiApp', []);
-app.controller('appCtrl', function($scope, $http) {
-    $http.get("/sessions")
-    .then(function (response) {$scope.sessions = response.data.result;});
-});
-
 </script>
+
+<script src="static/controllers/Session/SessionController.js"></script>
+<script src="static/controllers/GPS/GpsController.js"></script>
+<script src="static/controllers/IMU/ImuController.js"></script>
 
 </body>
 </html>
