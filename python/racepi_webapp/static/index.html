@@ -1,7 +1,25 @@
 <!DOCTYPE html>
-
+<html lang="en-US">
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
 <body>
-  The stuff!
-</body>
 
+<div ng-app="racePiApp" ng-controller="appCtrl">
+    <table>
+        <tr ng-repeat="x in sessions">
+            <td>{{ x[0] }}</td>
+            <td>{{ x[1] }}</td>
+        </tr>
+    </table>
+</div>
+
+<script>
+var app = angular.module('racePiApp', []);
+app.controller('appCtrl', function($scope, $http) {
+    $http.get("/sessions")
+    .then(function (response) {$scope.sessions = response.data.result;});
+});
+
+</script>
+
+</body>
 </html>

@@ -2,14 +2,13 @@ from flask import Flask, jsonify
 from sqlalchemy import create_engine
 
 app = Flask(__name__)
-
 db = create_engine('sqlite:////home/donour/test.db')
-c = db.connect()
 
 
 def get_data(table):
+    c = db.connect()
     q = c.execute("select * FROM %s" % table);
-    return jsonify(q.cursor.fetchall())
+    return jsonify(result=q.cursor.fetchall())
 
 
 @app.route('/')
