@@ -3,6 +3,10 @@ import os
 import gps
 import time
 
+BAUD_RATE="38400"
+# set baudrate for serial gps receiver
+os.system("stty -F /dev/gpsm8n ispeed " + BAUD_RATE)
+
 def record_from_gps(q, done):
 
     if not q:
