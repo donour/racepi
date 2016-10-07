@@ -1,19 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-<table ng-controller="gpsCtrl">
-    <tr ng-repeat="x in samples">
-        <td>{{ x[2] }}</td>
+
+<table ng-controller="imuDataController">
+    <tr ng-repeat="x in imuSamples">
+        <td>{{ x[0] }}</td>
         <td>{{ x[3] }}</td>
         <td>{{ x[4] }}</td>
         <td>{{ x[5] }}</td>
-        <td>{{ x[6] }}</td>
     </tr>
 </table>
-
-</body>
-</html>

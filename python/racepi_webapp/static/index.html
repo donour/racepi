@@ -1,43 +1,39 @@
 <!DOCTYPE html>
 <html lang="en-US">
-<script src="static/angular/angular.min.js"></script>
-<body>
-<title>RacePI</title>
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="http://www.w3schools.com/lib/w3.css">
+    <link rel="stylesheet" href="static/styles/main.css">
+    <link rel="stylesheet"
+          href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet"/>
 
-<div ng-app="racePiApp" >
-    <table ng-controller="sessionCtrl">
-        <tr ng-repeat="x in sessions">
-            <td>{{ x[0] }}</td>
-            <td>{{ x[1] }}</td>
-        </tr>
-    </table>
-    <table ng-controller="gpsCtrl">
-        <tr ng-repeat="x in samples">
-            <td>{{ x[2] }}</td>
-            <td>{{ x[3] }}</td>
-            <td>{{ x[4] }}</td>
-            <td>{{ x[5] }}</td>
-            <td>{{ x[6] }}</td>
-        </tr>
-    </table>
-    <table ng-controller="imuCtrl">
-        <tr ng-repeat="x in samples">
-            <td>{{ x[1] }}</td>
-            <td>{{ x[2] }}</td>
-            <td>{{ x[3] }}</td>
-            <td>{{ x[4] }}</td>
-        </tr>
-    </table>
+    <title>RacePI</title>
+    <script src="static/angular/angular.min.js"></script>
+    <script src="static/angular/angular-resource.min.js"></script>
+    <script src="http://angular-ui.github.io/ui-router/release/angular-ui-router.js"></script>
+    <script src="static/app.js"></script>
+ </head>
+
+
+<body ng-app='routingDemoApp' class="container">
+<h2>RacePI</h2>
+
+<nav class="navbar navbar-default row">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <ul class="nav navbar-nav">
+                <li><a ui-sref="business">Business</a></li>
+                <li><a ui-sref="sessions">Sessions</a></li>
+                <li><a ui-sref="gps">GPS</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="row">
+    <div class="well" ui-view></div><!--Content of the above defined business & portfolio states will be injected here -->
 </div>
 
-
-<script>
-var app = angular.module('racePiApp', []);
-</script>
-
-<script src="static/controllers/Session/SessionController.js"></script>
-<script src="static/controllers/GPS/GpsController.js"></script>
-<script src="static/controllers/IMU/ImuController.js"></script>
 
 </body>
 </html>
