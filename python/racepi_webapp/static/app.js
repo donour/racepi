@@ -1,16 +1,9 @@
 "use strict";
 var App = angular.module('routingDemoApp',['ui.router', 'ngResource']);
-/*
-                app.controller('sessionDataController', function($scope, $http) {
-                    $http.get("/sessions")
-                    .then(function (response) {$scope.sessions = response.data.result;});
-                });
-*/
 
 App.config(['$stateProvider', '$urlRouterProvider', function($stateProvider, $urlRouterProvider){
                 // For any unmatched url, send to /business
                 $urlRouterProvider.otherwise("/business")
-
 
                 $stateProvider
                         .state('business', {//State demonstrating Nested views

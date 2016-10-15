@@ -37,20 +37,32 @@ def get_imu_data():
     return get_data("imu_data")
 
 
-@app.route('/plot/timeseries')
+@app.route('/plot/accel')
 def get_plot_timeseries():
     session_id = request.args.get("session_id")
     # TODO fail on bad session_id
     with db.connect() as c:
-        q = c.execute("select time,speed FROM %s where %s " % ("gps_data", "session_id='%s'" % session_id))
+        q = c.execute("select timestamp,x_accel,y_accel,z_accel FROM %s where %s " % ("imu_data", "session_id='%s'" % session_id))
+        t = []
         x = []
         y = []
+        z = []
         data = q.cursor.fetchall()
-        map(lambda p: x.append(p[0]), data)
-        map(lambda p: y.append(p[1]), data)
+        t0 = data[0][0]
+        map(lambda p: t.append(p[0]-t0), data)
+        map(lambda p: x.append(p[1]), data)
+        map(lambda p: y.append(p[2]), data)
+        map(lambda p: z.append(p[3]), data)
         data = [
-            pgo.Scatter(x=x, y=y)
+            pgo.Scatter(x=t, y=x, name="x"),
+            pgo.Scatter(x=t, y=y, name="y"),
+            pgo.Scatter(x=t, y=z, name="z")
+
         ]
-        layout = pgo.Layout(title="Timeseries")
+        layout = pgo.Layout(
+            title="Accel",
+            xaxis=dict(title="time"),
+            yaxis=dict(title="val"),
+        )
         fig = pgo.Figure(data=data, layout=layout)
-        return jsonify(result=fig)
+        return jsonify(data=fig.get('data'), layout=fig.get('layout'))

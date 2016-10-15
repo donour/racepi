@@ -2,22 +2,33 @@
 <html lang="en-US">
 <head>
     <meta charset="UTF-8">
+    <title>RacePI</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet"/>
     <link rel="stylesheet" href="http://www.w3schools.com/lib/w3.css">
     <link rel="stylesheet" href="static/styles/main.css">
-    <link rel="stylesheet"
-          href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet"/>
 
-    <title>RacePI</title>
     <script src="static/angular/angular.min.js"></script>
     <script src="static/angular/angular-resource.min.js"></script>
+    <script src="static/angular/angular-ui-router.js"></script>
+    <script src="static/plotly/plotly-latest.min.js"></script>
 
-    <script src="http://angular-ui.github.io/ui-router/release/angular-ui-router.js"></script>
     <script src="static/app.js"></script>
- </head>
+
+</head>
 
 
 <body ng-app='routingDemoApp' class="container">
 <h2>RacePI</h2>
+
+
+<div id="graph" style="width:600px;height:400px;"></div>
+<script type="text/javascript">
+Plotly.d3.json('http://0.0.0.0:5000/plot/accel?session_id=7182b9888abb11e6bfd6b827eb8021e9',
+    function(figure) {
+        Plotly.plot('graph', figure.data, figure.layout);
+    }
+);
+</script>
 
 <nav class="navbar navbar-default row">
     <div class="container-fluid">
@@ -32,9 +43,9 @@
 </nav>
 
 <div class="row">
-    <div class="well" ui-view></div><!--Content of the above defined business & portfolio states will be injected here -->
+    <div class="well" ui-view></div>
+    <!--Content of the above defined business & portfolio states will be injected here -->
 </div>
-
 
 </body>
 </html>
