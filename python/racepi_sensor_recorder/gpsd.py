@@ -4,8 +4,6 @@ import gps
 import time
 
 BAUD_RATE="38400"
-# set baudrate for serial gps receiver
-os.system("stty -F /dev/gpsm8n ispeed " + BAUD_RATE)
 
 def record_from_gps(q, done):
 
@@ -14,6 +12,12 @@ def record_from_gps(q, done):
 
     session = gps.gps(mode = gps.WATCH_ENABLE)
     while not done.is_set():
+        while not session:
+            # set baudrate for serial gps receiver
+            if os.path.isfile('/dev/gpsm8n'):
+                os.system("stty -F /dev/gpsm8n ispeed " + BAUD_RATE)
+                session = gps.gps(mode = gps.WATCH_ENABLE)
+            
         data = session.next()
         t = data.get('time')
         s = data.get('speed')
@@ -21,6 +25,7 @@ def record_from_gps(q, done):
         lat = data.get('lat')
         lon = data.get('lon')
         if t is not None:
+            print data
             q.put( (time.time(), data))
 
 if __name__ == "__main__":
