@@ -39,6 +39,7 @@ class dbHandler:
         self.conn.execute("PRAGMA foreign_keys = ON;");
         self.conn.execute("PRAGMA journal_mode=WAL;")
         
+        
     def get_new_session(self):
         """
         Create new session entry in DB and return the 
@@ -119,7 +120,6 @@ if __name__ == "__main__":
 
     from sense_hat import SenseHat
     display = pi_sense_hat_display.RacePiStatusDisplay(SenseHat())
-
     
     print "Opening sensor handlers"
     display.set_col_init(pi_sense_hat_display.IMU_COL)
@@ -127,7 +127,6 @@ if __name__ == "__main__":
 
     display.set_col_init(pi_sense_hat_display.GPS_COL)
     gps_handler = sensorHandler(record_from_gps)
-
     
     try:
         imu_handler.start()
@@ -148,8 +147,7 @@ if __name__ == "__main__":
             
             if not imu_data and not gps_data:
                 # empty queues, relieve the CPU a little
-                time.sleep(0.01) # 
-                    
+                time.sleep(0.01) #                     
                     
     except KeyboardInterrupt:
         imu_handler.stop()
