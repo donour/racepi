@@ -3,7 +3,7 @@ from sqlalchemy import create_engine
 from plotly import graph_objs as pgo
 
 app = Flask(__name__)
-db = create_engine('sqlite:////home/donour/test.db')
+db = create_engine('sqlite:////external/racepi_data/test.db')
 
 
 def get_sql_data(table, filter):

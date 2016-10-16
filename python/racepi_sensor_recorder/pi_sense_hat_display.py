@@ -1,9 +1,5 @@
 #!/usr/bin/env python2
-from sense_hat import SenseHat
 import atexit
-
-#red = (255, 0, 0)
-#sense.show_message("One small step for Pi!", text_colour=red)
 
 IMU_COL=0
 GPS_COL=1
@@ -25,11 +21,14 @@ class RacePiStatusDisplay:
         self.sense = senseHat
         self.__clear()
         self.sense.set_rotation(90)
-        atexit.register(self.__clear)
+        atexit.register(self.__shutdown_mesg)
 
         self.set_col_lost(IMU_COL)
         self.set_col_lost(GPS_COL)
         self.set_col_lost(OBD_COL)
+
+    def __shutdown_mesg(self):
+        self.sense.show_message(".");
         
     def __clear(self):
         self.sense.clear()
@@ -75,6 +74,7 @@ class RacePiStatusDisplay:
 
 if __name__ == "__main__":
 
+    from sense_hat import SenseHat
     s = RacePiStatusDisplay(SenseHat())
     s.set_col_lost(IMU_COL)
     s.set_col_init(GPS_COL)
@@ -82,4 +82,4 @@ if __name__ == "__main__":
     
     import time
     while True:
-            time.sleep(1)    
+            time.sleep(10)    
