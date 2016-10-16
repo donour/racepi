@@ -1,0 +1,49 @@
+Latest Update 20/6/14:
+Learned Relative Octane Adjust "OCTANE ADJ" "2203E8" "((256*A)+B)*(-0.0000610124)+3.998717499" "%"
+Equation for Learned Octane Adjust confirmed.
+
+Equation for Clutch Slip Corrected:
+Clutch A Slip "CLUTCH A SLIP" "221ebb" "((Signed(A)*256)+B)/4" "RPM"
+Clutch B Slip "CLUTCH B SLIP" "221ebc" "((Signed(A)*256)+B)/4" "RPM"
+
+Update 19/6/14:
+Battery Current Equation found, added to confirm working and correct equation section
+
+
+CONFIRM WORKING AND CORRECT EQUATION:
+
+Name "ShortName" "ModeAndPID" "Equation" "Min Value" "Max Value" "Units" "Header"
+Accelerator Pedal Position    "ACC PEDAL POS" "22032b" "A/2" "%"
+Air Cond Compressor State "AIR COND" "22099b" "A"
+Battery Age "BATT AGE" "224027" "((A*256)+B)" "Days" "726"
+Battery Charge "BATT%" "224028" "A" "%" "726"
+Battery Current BATT CUR 224090 (((A*256)+B)/16)-511.7 -600 600 Amp 726
+Battery Temperature "BATT Temp" "224029" "A-40" "°C" "726"
+Fuel Level "FUEL LEVEL" "22f42f" "A/256*100" "%"
+Fuel Pump Pressure Desired "FUEL PSI DESIRED" "2203dc" "((256*A)+b)*10*.145" "PSI"
+Gear Commanded by Output State "GEAR" "221e12" "A" "Gear"
+In Car Temperature "INCARTEMP" "22dd04" "A/8" "°C" "726"
+Lateral G "LAT G" "222b11" "((signed(A)*256)+B)*0.02" "g" "ABS"
+Longitude G "LONG G" "222b0c" "((signed(A)*256)+B)*0.02" "g" "ABS"
+Steering Wheel Angle "STWHEEL" "223302" "((signed(A)*256+b))/10-780" "°" "ABS"
+Throttle Position (Desired) "TP D" "22091a" "((A*256)+B)*(100/8192)" "°"
+Trans Axle Gear Ratio Measured "GEAR RATIO" "221e16" "((A*256)+B)/4096" ":1"
+Transmission Gear Engaged "GEAR ENGAGED" "221e1f" "A" "Gear"
+Transmission Gear Mode "GEAR MODE" "221e23" "A" "Mode"
+ABS Wheel Speed 1 "ABS RFW" "222b06" "A" "KM/H" "ABS"
+ABS Wheel Speed 2 "ABS LFW" "222b07" "A" "KM/H" "ABS"
+ABS Wheel Speed 3 "ABS RRW" "222b08" "A" "KM/H" "ABS"
+ABS Wheel Speed 4 "ABS LRW" "222b09" "A" "KM/H" "ABS"
+Engine Knock	"Knock" "2203ec" "signed(A)/2" "°"
+
+EQUATION not solved but PID working:
+Brake Fluid line Hydraulic Pressure "BFLHP" "222b0d" "A" "kpa"
+Catalyst Temperature "CAT TEMP" "22f43c" "((A*256)+B)-40" "°C"
+Clutch Open "CLUTCH STATE" "221eA0" "A&256"
+Engine Total Distance "ENG DIST" "22dd01" "((A*256)+B)" "KM"
+In Gear "IN GEAR" "221e04" "A"
+Inlet Air Temperature Fault "INLET TEMP" "220700" "A"
+Max Diff between TP1 and TP2 "DIFF TP1 TP2" "2203A7" "A" "°"
+Torque Control Request "TORQ CON" "2203AF" "A"
+Transmission Temperature "Trans" "221E1C" "(((SIGNED(A)*256)+B)*(9/8)+320)/10" "-40" "260" "°C" "TCM"
+
