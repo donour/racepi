@@ -2,7 +2,7 @@
 import serial
 import time
 
-BAUD_RATE="115200"
+BAUD_RATE="576000"
 DEV_NAME="/dev/obdlink"
 
 class ElmHandler:
