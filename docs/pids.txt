@@ -47,3 +47,38 @@ Max Diff between TP1 and TP2 "DIFF TP1 TP2" "2203A7" "A" "°"
 Torque Control Request "TORQ CON" "2203AF" "A"
 Transmission Temperature "Trans" "221E1C" "(((SIGNED(A)*256)+B)*(9/8)+320)/10" "-40" "260" "°C" "TCM"
 
+eft Front Tire Pressure (Driver Front) - Uses the vehicle's TPMS to read your tire pressure. GREAT for constant readings and to see how much PSI increase (or possibly decrease if tires get damaged) when driving! Each tire will get its own menu. All four listed below.
+PID: 222813
+Long Name: Left Front Tire Pressure
+Short Name: Tire PSI (LF)
+Maximum Value: 70
+Unit type: PSI
+Equation: (((256*A)+B)/3+22/3)*0.145
+OBD Header to use: 726
+
+Right Front Tire Pressure (Passenger Front)
+PID: 222814
+Long Name: Right Front Tire Pressure
+Short Name: Tire PSI (RF)
+Maximum Value: 70
+Unit type: PSI
+Equation: (((256*A)+B)/3+22/3)*0.145
+OBD Header to use: 726
+
+Right Rear Tire Pressure (Passenger Rear)
+PID: 222815
+Long Name: Right Rear Tire Pressure
+Short Name: Tire PSI (RR)
+Maximum Value: 70
+Unit type: PSI
+Equation: (((256*A)+B)/3+22/3)*0.145
+OBD Header to use: 726
+
+Left Rear Tire Pressure (Driver Rear)
+PID: 222816
+Long Name: Left Rear Tire Pressure
+Short Name: Tire PSI (LR)
+Maximum Value: 70
+Unit type: PSI
+Equation: (((256*A)+B)/3+22/3)*0.145
+OBD Header to use: 726
