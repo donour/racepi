@@ -1,6 +1,5 @@
 #!/usr/bin/env python2
 import serial
-import os
 import time
 
 BAUD_RATE="115200"
@@ -15,22 +14,53 @@ class ElmHandler:
             # port open failed
             raise IOError("Could not open" + dev)
 
-        # TODO : ensure that the device is an elm327 compatible        
-        self.send_command('atz'); time.sleep(6) # with for device result
+        # reset device and wait for startup
+        self.__send_command('atz'); time.sleep(6) # with for device result
         self.port.read() # empty buffer
-                
+
+        # disable command echo and line feed
         self.get_sample('atE0')
+        self.get_sample('atL0')
+
         self.elm_version = self.get_sample('ati')
         self.dev_description = self.get_sample('at@1')
-        if not 'ELM' in self.elm_version:
+
+        # ensure device is ELM compatible
+        if not 'ELM327' in self.elm_version:
             raise IOError("Failed to find ELM device")
-        print self.elm_version, self.dev_description
+
+        # set automatic protocol selection
+        response = self.get_sample('atsp0')
+        if 'OK' not in response:
+            raise IOError("Failed to set automatic protocol selection")
+
+        # TODO: ensure that al the PIDs requested are available
+
+    def get_is_connected(self):
+        """
+        Determine if the device is still connected by checking if the ID string
+        is the same as during init
+        """
+        return self.elm_version in self.get_sample('ati')
+    
+    def get_is_plugged_in(self):
+        """
+        Determine if the device is plugged into a vehicle by checking the 
+        voltage pin reading
+        """
+        response = self.get_sample('atrv')
+        if '0.0V' == response:
+            return False
+        return True
 
     def get_sample(self, cmd):
-        self.send_command(cmd)
-        return self.get_result()
+        """
+        Send a single ELM AT command and return the one line result
+        """
+        self.__send_command(cmd)
+        return self.__get_result()
         
-    def send_command(self, cmd):
+    def __send_command(self, cmd):
         if self.port:
             self.port.flushOutput()
             self.port.flushInput()
@@ -38,7 +68,7 @@ class ElmHandler:
                 self.port.write(c)
             self.port.write("\r\n")
 
-    def get_result(self):         
+    def __get_result(self):         
         if self.port:
             buffer = ""
             while True:
@@ -49,6 +79,8 @@ class ElmHandler:
                     if buffer != "" or c != ">": #if something is in buffer, add everything
                         buffer = buffer + c
 
+            if "no data" in buffer.lower():
+                return None                            
             return buffer
         else:
             return None
@@ -59,14 +91,15 @@ def record_from_elm327(q, done):
     if not q:
         raise ValueError("Illegal argument, no queue specified")
 
-    elm = ElmHandler(DEV_NAME, BAUD_RATE)
-
-    # TODO : ensure that the device is an elm327 compatible
-    # TODO: ensure that al the PIDs requested are available
-
+    elm = None
     while not done.is_set():
-        pass
+        if not elm:
+            elm = ElmHandler(DEV_NAME, BAUD_RATE)
+            print "ELM device detected: %s (%s)" % (elm.elm_version, elm.dev_description)
+            print "ELM connected to vehicle:", str(elm.get_is_plugged_in())
 
+        # TODO : read data from device and publish to queue 
+            
 if __name__ == "__main__":
     from multiprocessing import Queue, Event, Process
 
