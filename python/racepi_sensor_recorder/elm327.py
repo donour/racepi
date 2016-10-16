@@ -93,11 +93,13 @@ def record_from_elm327(q, done):
 
     elm = None
     while not done.is_set():
-        if not elm:
-            elm = ElmHandler(DEV_NAME, BAUD_RATE)
-            print "ELM device detected: %s (%s)" % (elm.elm_version, elm.dev_description)
-            print "ELM connected to vehicle:", str(elm.get_is_plugged_in())
-
+        while not elm:
+            try:
+                elm = ElmHandler(DEV_NAME, BAUD_RATE)
+                print "ELM device detected: %s (%s)" % (elm.elm_version, elm.dev_description)
+                print "ELM connected to vehicle:", str(elm.get_is_plugged_in())
+            except serial.SerialException:
+                time.sleep(10)
         # TODO : read data from device and publish to queue 
             
 if __name__ == "__main__":

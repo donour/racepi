@@ -5,8 +5,10 @@ import os, uuid, time
 from multiprocessing import Queue, Event, Process
 
 from pi_sense_hat_imu import record_from_imu
-import pi_sense_hat_display
 from gpsd import record_from_gps
+from elm327 import record_from_elm327
+import pi_sense_hat_display
+
 
 DB_LOCATION="/external/racepi_data/test.db"
 
@@ -127,12 +129,17 @@ if __name__ == "__main__":
 
     display.set_col_init(pi_sense_hat_display.GPS_COL)
     gps_handler = sensorHandler(record_from_gps)
+
+    display.set_col_init(pi_sense_hat_display.OBD_COL)
+    obd_handler = sensorHandler(record_from_elm327)
     
     try:
         imu_handler.start()
         display.set_col_ready(pi_sense_hat_display.IMU_COL)
         gps_handler.start()
         display.set_col_ready(pi_sense_hat_display.GPS_COL)
+        obd_handler.start()
+        display.set_col_ready(pi_sense_hat_display.OBD_COL)
     
         session_id = db_handler.get_new_session()
         print "New session: " + str(session_id)
