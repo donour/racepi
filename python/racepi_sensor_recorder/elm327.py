@@ -21,6 +21,8 @@ class ElmHandler:
         # disable command echo and line feed
         self.get_sample('atE0')
         self.get_sample('atL0')
+        self.get_sample('atS0')
+        self.get_sample('atal')
 
         self.elm_version = self.get_sample('ati')
         self.dev_description = self.get_sample('at@1')
@@ -33,6 +35,12 @@ class ElmHandler:
         response = self.get_sample('atsp0')
         if 'OK' not in response:
             raise IOError("Failed to set automatic protocol selection")
+
+	self.__send_command('0100')
+	time.sleep(8)
+	self.port.read()
+	self.port.read()
+	self.port.read()
 
         # TODO: ensure that al the PIDs requested are available
 
@@ -66,7 +74,7 @@ class ElmHandler:
             self.port.flushInput()
             for c in cmd:
                 self.port.write(c)
-            self.port.write("\r\n")
+            self.port.write("\r")
 
     def __get_result(self):         
         if self.port:
@@ -98,10 +106,15 @@ def record_from_elm327(q, done):
                 elm = ElmHandler(DEV_NAME, BAUD_RATE)
                 print "ELM device detected: %s (%s)" % (elm.elm_version, elm.dev_description)
                 print "ELM connected to vehicle:", str(elm.get_is_plugged_in())
+
             except serial.SerialException:
                 time.sleep(10)
         # TODO : read data from device and publish to queue 
-            
+	elm.port.read()
+		
+	q.put(elm.get_sample("22091a"))
+	time.sleep(0.025)
+
 if __name__ == "__main__":
     from multiprocessing import Queue, Event, Process
 
@@ -111,7 +124,7 @@ if __name__ == "__main__":
     p = Process(target=record_from_elm327, args=(q,done))
     p.start()
     while True:
-        print q.get()
+        print time.time(), q.get()
 
 
     
