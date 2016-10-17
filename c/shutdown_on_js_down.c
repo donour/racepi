@@ -72,10 +72,8 @@ void handle_events(int evfd)
       continue;
     switch (ev->code) {
     case KEY_ENTER:
-      
-      running = 0;
-      break;
     case KEY_DOWN:
+    case KEY_UP:      
       printf("Key pressed\n");
       system("/sbin/poweroff");
       break;
