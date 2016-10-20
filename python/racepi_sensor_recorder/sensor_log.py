@@ -1,18 +1,24 @@
 #!/usr/bin/env python2
+"""
+This is a tool for autocross performance data from multiple
+sensor sources. Each sensor source implements a get_data() 
+api runs in its own system process to allow for pre-emptive
+scheduling and to limit contention for system resources.
+"""
 
 import sqlite3
 import os, uuid, time
 from multiprocessing import Queue, Event, Process
 
-from pi_sense_hat_imu import record_from_imu
-from gpsd import record_from_gps
-from elm327 import record_from_elm327
-import pi_sense_hat_display
-
 
 DB_LOCATION="/external/racepi_data/test.db"
 
-class sensorHandler:
+class SensorHandler:    
+    """
+    Base handler class for using producer-consumer sensor reading, using
+    multiproccess
+    
+    """
     def __init__(self, read_func):
         self.doneEvent = Event()
         self.data_q = Queue()
@@ -32,7 +38,10 @@ class sensorHandler:
         return data
 
     
-class dbHandler:
+class DbHandler:
+    """
+    Helper class for write to sqlite DB using RacePi schema
+    """
     def __init__(self, db_location):
         
         self.conn = sqlite3.connect(db_location)
@@ -57,7 +66,6 @@ class dbHandler:
 
     
     def insert_imu_updates(self, imu_data, session_id):
-
         for sample in imu_data:
             if sample:
                 t = sample[0]
@@ -84,7 +92,6 @@ class dbHandler:
             self.conn.commit()
                 
 
-    
     def insert_gps_updates(self, gps_data, session_id):
         field_names = ['time','lat','lon','speed','track','epx','epy','epv']
 
@@ -111,27 +118,32 @@ class dbHandler:
 
         if gps_data:
             self.conn.commit()  
-            
-            
 
-    
+
 if __name__ == "__main__":
 
+    # initialize sensor modules    
+    from pi_sense_hat_imu import record_from_imu
+    from gpsd import record_from_gps
+    from elm327 import record_from_elm327
+    import pi_sense_hat_display
+
+    
     print "Opening Database"
-    db_handler = dbHandler(DB_LOCATION)
+    db_handler = DbHandler(DB_LOCATION)
 
     from sense_hat import SenseHat
     display = pi_sense_hat_display.RacePiStatusDisplay(SenseHat())
     
     print "Opening sensor handlers"
     display.set_col_init(pi_sense_hat_display.IMU_COL)
-    imu_handler = sensorHandler(record_from_imu)
+    imu_handler = SensorHandler(record_from_imu)
 
     display.set_col_init(pi_sense_hat_display.GPS_COL)
-    gps_handler = sensorHandler(record_from_gps)
+    gps_handler = SensorHandler(record_from_gps)
 
     display.set_col_init(pi_sense_hat_display.OBD_COL)
-    obd_handler = sensorHandler(record_from_elm327)
+    obd_handler = SensorHandler(record_from_elm327)
     
     try:
         imu_handler.start()
