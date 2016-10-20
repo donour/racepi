@@ -1,0 +1,38 @@
+<div ng-if="vm.sessionId">
+    <div class="row" ng-if="vm.accelPlotConfig">
+        <div class="col-sm-12">
+            <h4>IMU</h4>
+            <rp-plotly config="vm.accelPlotConfig"></rp-plotly>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-12">
+            <h4>GPS</h4>
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th>time</th>
+                    <th>lat</th>
+                    <th>lon</th>
+                    <th>speed</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr ng-repeat="row in vm.gps | limitTo:50">
+                    <td>{{row[2]}}</td>
+                    <td>{{row[3]}}</td>
+                    <td>{{row[4]}}</td>
+                    <td>{{row[5]}}</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<div ng-if="!vm.sessionId">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="text-center lead"><em>No Session ID Selected</em></div>
+        </div>
+    </div>
+</div>

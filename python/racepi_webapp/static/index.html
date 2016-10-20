@@ -13,39 +13,23 @@
     <script src="static/plotly/plotly-latest.min.js"></script>
 
     <script src="static/app.js"></script>
+    <script src="static/views/sessions/sessions.controller.js"></script>
+    <script src="static/views/details/details.controller.js"></script>
+    <script src="static/directives/rpNavBar/rpNavBar.directive.js"></script>
+    <script src="static/directives/rpPlotly/rpPlotly.directive.js"></script>
 
 </head>
 
 
-<body ng-app='routingDemoApp' class="container">
-<h2>RacePI</h2>
-
-
-<div id="graph" style="width:600px;height:400px;"></div>
-<script type="text/javascript">
-Plotly.d3.json('http://0.0.0.0:5000/plot/accel?session_id=7182b9888abb11e6bfd6b827eb8021e9',
-    function(figure) {
-        Plotly.plot('graph', figure.data, figure.layout);
-    }
-);
-</script>
-
-<nav class="navbar navbar-default row">
-    <div class="container-fluid">
-        <div class="navbar-header">
-            <ul class="nav navbar-nav">
-                <li><a ui-sref="business">Business</a></li>
-                <li><a ui-sref="sessions">Sessions</a></li>
-                <li><a ui-sref="gps">GPS</a></li>
-            </ul>
+<body ng-app='racepi'>
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12">
+            <h2>RacePI</h2>
         </div>
     </div>
-</nav>
-
-<div class="row">
-    <div class="well" ui-view></div>
-    <!--Content of the above defined business & portfolio states will be injected here -->
+    <rp-nav-bar></rp-nav-bar>
+    <div ui-view></div>
 </div>
-
 </body>
 </html>
