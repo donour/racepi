@@ -7,11 +7,12 @@ scheduling and to limit contention for system resources.
 """
 
 import sqlite3
-import os, uuid, time
+import os, uuid, time, operator
 from multiprocessing import Queue, Event, Process
 
-
 DB_LOCATION="/external/racepi_data/test.db"
+MOVE_SPEED_THRESHOLD=0.0
+
 
 class SensorHandler:    
     """
@@ -153,21 +154,33 @@ if __name__ == "__main__":
         obd_handler.start()
         display.set_col_ready(pi_sense_hat_display.OBD_COL)
     
-        session_id = db_handler.get_new_session()
-        print "New session: " + str(session_id)
-
-        gps_sample = None
+        recording_active = False        
         while True:
             imu_data = imu_handler.get_all_data()
             gps_data = gps_handler.get_all_data()
 
-            db_handler.insert_gps_updates(gps_data, session_id)
-            db_handler.insert_imu_updates(imu_data, session_id)
-            
             if not imu_data and not gps_data:
                 # empty queues, relieve the CPU a little
                 time.sleep(0.01) #                     
                     
+            else:
+                is_moving = reduce(operator.or_ ,
+                              map(lambda s: s[1].get('speed') > MOVE_SPEED_THRESHOLD, gps_data), False)
+
+                # record whenever velocity != 0, otherwise stop
+                if is_moving and not recording_active:
+                    session_id = db_handler.get_new_session()
+                    print "New session: " + str(session_id)
+                    recording_active = True
+
+                if not is_moving and gps_data:
+                    recording_active = False;                    
+
+                if recording_active:                     
+                    db_handler.insert_gps_updates(gps_data, session_id)
+                    db_handler.insert_imu_updates(imu_data, session_id)
+
+            
     except KeyboardInterrupt:
         imu_handler.stop()
         gps_handler.stop()
