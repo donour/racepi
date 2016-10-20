@@ -172,9 +172,11 @@ if __name__ == "__main__":
                     session_id = db_handler.get_new_session()
                     print "New session: " + str(session_id)
                     recording_active = True
+                    display.set_recording_state(recording_active)
 
                 if not is_moving and gps_data:
                     recording_active = False;                    
+                    display.set_recording_state(recording_active)
 
                 if recording_active:                     
                     db_handler.insert_gps_updates(gps_data, session_id)

@@ -70,6 +70,12 @@ class RacePiStatusDisplay:
         self.sense.set_pixel(1, colNumber, 0, 255, 0)
         self.sense.set_pixel(2, colNumber, 0, 255, 0)
 
+    def set_recording_state(self, state):
+        """
+        Set recording state, True/False
+        """
+        for i in range(8):
+            self.sense.set_pixel(7, i, 0 if state else 255, 255 if state else 0, 0)
     
 
 if __name__ == "__main__":
@@ -82,4 +88,5 @@ if __name__ == "__main__":
     
     import time
     while True:
-            time.sleep(10)    
+            time.sleep(1)
+            s.set_recording_state(int(time.time()) % 2  == 0)
