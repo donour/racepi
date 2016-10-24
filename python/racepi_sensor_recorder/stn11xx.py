@@ -10,6 +10,7 @@ class STNHandler:
 
     def __init__(self, dev, baud):
 
+        # TODO autoset baudrate
         self.port = serial.Serial(dev, baud)
         if dev != self.port.getPort():
             # port open failed

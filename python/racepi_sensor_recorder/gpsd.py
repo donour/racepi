@@ -4,7 +4,8 @@ import gps
 import time
 
 BAUD_RATE="38400"
-
+GPS_REQUIRED_FIELDS = ['time','lat','lon','speed','track','epx','epy','epv']
+ 
 def record_from_gps(q, done):
 
     if not q:
@@ -20,12 +21,8 @@ def record_from_gps(q, done):
             
         data = session.next()
         t = data.get('time')
-        s = data.get('speed')
-        track = data.get('track')
-        lat = data.get('lat')
-        lon = data.get('lon')
-        if t is not None:
-             q.put( (time.time(), data))
+        if t is not None and set(GPS_REQUIRED_FIELDS).issubset(set(data.keys())):
+            q.put( (time.time(), data))
 
 if __name__ == "__main__":
     from multiprocessing import Queue, Event, Process

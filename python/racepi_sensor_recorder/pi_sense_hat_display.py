@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 import atexit
+import time
 
 IMU_COL=0
 GPS_COL=1
@@ -26,6 +27,8 @@ class RacePiStatusDisplay:
         self.set_col_lost(IMU_COL)
         self.set_col_lost(GPS_COL)
         self.set_col_lost(OBD_COL)
+        self.last_heartbeat = time.time()
+        self.heartbeat_active = False
 
     def __shutdown_mesg(self):
         self.sense.show_message(".");
@@ -76,6 +79,16 @@ class RacePiStatusDisplay:
         """
         for i in range(8):
             self.sense.set_pixel(7, i, 0 if state else 255, 255 if state else 0, 0)
+
+    def heartbeat(self, frequency = 1):
+        now = time.time()
+        if now - self.last_heartbeat > frequency:
+            self.sense.set_pixel(0, 7,
+                                 255 if not self.heartbeat_active else 0,
+                                 255 if self.heartbeat_active else 0,
+                                 0)
+            self.last_heartbeat = now
+            self.heartbeat_active = not self.heartbeat_active
     
 
 if __name__ == "__main__":
@@ -90,3 +103,4 @@ if __name__ == "__main__":
     while True:
             time.sleep(1)
             s.set_recording_state(int(time.time()) % 2  == 0)
+            s.heartbeat(3)

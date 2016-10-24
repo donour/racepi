@@ -9,9 +9,10 @@ scheduling and to limit contention for system resources.
 import sqlite3
 import os, uuid, time, operator
 from multiprocessing import Queue, Event, Process
+from gpsd import GPS_REQUIRED_FIELDS
 
 DB_LOCATION="/external/racepi_data/test.db"
-MOVE_SPEED_THRESHOLD=0.0
+MOVE_SPEED_THRESHOLD=3.5
 
 
 class SensorHandler:    
@@ -73,8 +74,8 @@ class DbHandler:
                 pose = sample[1]['fusionPose']
                 accel= sample[1]['accel']
 
-                os.write(1, "\r[%.3f] %2.4f %2.4f %2.4f" % (
-                    t,pose[0], pose[1], pose[2]))
+                #os.write(1, "\r[%.3f] %2.4f %2.4f %2.4f" % (
+                #    t,pose[0], pose[1], pose[2]))
 
                 insert_cmd = """
                   insert into imu_data
@@ -94,7 +95,7 @@ class DbHandler:
                 
 
     def insert_gps_updates(self, gps_data, session_id):
-        field_names = ['time','lat','lon','speed','track','epx','epy','epv']
+        field_names = GPS_REQUIRED_FIELDS
 
         for sample in gps_data:
             # system time of sample
@@ -178,11 +179,14 @@ if __name__ == "__main__":
                     recording_active = False;                    
                     display.set_recording_state(recording_active)
 
-                if recording_active:                     
-                    db_handler.insert_gps_updates(gps_data, session_id)
-                    db_handler.insert_imu_updates(imu_data, session_id)
-
-            
+                if recording_active:
+                    try:
+                        db_handler.insert_gps_updates(gps_data, session_id)
+                        db_handler.insert_imu_updates(imu_data, session_id)
+                    except TypeError as te:
+                        print "Failed to insert data: ", te
+                display.heartbeat()
+                
     except KeyboardInterrupt:
         imu_handler.stop()
         gps_handler.stop()
