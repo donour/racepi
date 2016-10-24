@@ -43,4 +43,16 @@ def record_from_imu(q, done):
             time.sleep(_poll_interval * 0.5 / 1000.0)
         
 
-
+if __name__ == "__main__":
+    from multiprocessing import Queue, Event, Process
+    done = Event()
+    q = Queue()
+    p = Process(target=record_from_imu, args=(q,done))
+    p.start()
+    while True:
+        s = q.get()[1]
+        os.write(1, "\r" +
+                 "[% 1.2f,% 1.2f,% 1.2f % 1.2f] : " % s.get('fusionQPose') +
+                 "[% 1.2f,% 1.2f,% 1.2f] : " % s.get('fusionPose') +
+                 "[% 1.2f,% 1.2f,% 1.2f] : " % s.get('accel') +
+                 "[% 1.2f,% 1.2f,% 1.2f]" % s.get('gyro'))
