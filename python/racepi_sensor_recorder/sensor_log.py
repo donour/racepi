@@ -13,7 +13,7 @@ from gpsd import GPS_REQUIRED_FIELDS
 
 DB_LOCATION="/external/racepi_data/test.db"
 MOVE_SPEED_THRESHOLD=3.5
-
+DISPLAY_UPDATE_TIME=1.0
 
 class SensorHandler:    
     """
@@ -155,15 +155,18 @@ if __name__ == "__main__":
         obd_handler.start()
         display.set_col_ready(pi_sense_hat_display.OBD_COL)
     
-        recording_active = False        
+        recording_active = False
+        last_display_update_time = 0;
+        last_gps_update_time = 0        
+
         while True:
             imu_data = imu_handler.get_all_data()
             gps_data = gps_handler.get_all_data()
 
             if not imu_data and not gps_data:
                 # empty queues, relieve the CPU a little
-                time.sleep(0.01) #                     
-                    
+                time.sleep(0.01)
+
             else:
                 is_moving = reduce(operator.or_ ,
                               map(lambda s: s[1].get('speed') > MOVE_SPEED_THRESHOLD, gps_data), False)
@@ -173,11 +176,9 @@ if __name__ == "__main__":
                     session_id = db_handler.get_new_session()
                     print "New session: " + str(session_id)
                     recording_active = True
-                    display.set_recording_state(recording_active)
 
                 if not is_moving and gps_data:
                     recording_active = False;                    
-                    display.set_recording_state(recording_active)
 
                 if recording_active:
                     try:
@@ -185,8 +186,20 @@ if __name__ == "__main__":
                         db_handler.insert_imu_updates(imu_data, session_id)
                     except TypeError as te:
                         print "Failed to insert data: ", te
+
+            # display update logic
+            now = time.time()
+            if gps_data:
+                last_gps_update_time = now
+
+            if now - last_display_update_time >  DISPLAY_UPDATE_TIME :
+                if now - last_gps_update_time > 1:
+                    display.set_col_init(pi_sense_hat_display.OBD_COL)
+                last_display_update_time = now
                 display.heartbeat()
-                
+                display.set_recording_state(recording_active)
+
+
     except KeyboardInterrupt:
         print "Keyboard exit"
     finally:
