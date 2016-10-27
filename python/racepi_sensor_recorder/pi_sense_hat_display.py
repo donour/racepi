@@ -36,10 +36,6 @@ class RacePiStatusDisplay:
     def __clear(self):
         self.sense.clear()
 
-    def __clear_column(self, colNumber):
-        for i in range(8):
-            self.sense.set_pixel(i,colNumber, 0, 0, 0)
-
     def set_col_lost(self, colNumber):
         """
         Set specified column to lost/disconnected
@@ -47,8 +43,9 @@ class RacePiStatusDisplay:
         colNumber should be one of the globally specified 
         column numbers.
         """
-        self.__clear_column(colNumber)
         self.sense.set_pixel(0, colNumber, 255, 0, 0)
+        self.sense.set_pixel(1, colNumber, 0, 0, 0)
+        self.sense.set_pixel(2, colNumber, 0, 0, 0)
 
     def set_col_init(self, colNumber):
         """
@@ -57,9 +54,9 @@ class RacePiStatusDisplay:
         colNumber should be one of the globally specified 
         column numbers.
         """
-        self.__clear_column(colNumber)
         self.sense.set_pixel(0, colNumber, 208, 210, 0)
         self.sense.set_pixel(1, colNumber, 208, 210, 0)
+        self.sense.set_pixel(3, colNumber, 0, 0, 0)
 
     def set_col_ready(self, colNumber):
         """
@@ -68,7 +65,6 @@ class RacePiStatusDisplay:
         colNumber should be one of the globally specified 
         column numbers.
         """
-        self.__clear_column(colNumber)
         self.sense.set_pixel(0, colNumber, 0, 255, 0)
         self.sense.set_pixel(1, colNumber, 0, 255, 0)
         self.sense.set_pixel(2, colNumber, 0, 255, 0)
