@@ -19,7 +19,6 @@ class SensorHandler:
     """
     Base handler class for using producer-consumer sensor reading, using
     multiproccess
-    
     """
     def __init__(self, read_func):
         self.doneEvent = Event()
@@ -73,6 +72,7 @@ class DbHandler:
                 t = sample[0]
                 pose = sample[1]['fusionPose']
                 accel= sample[1]['accel']
+                gyro = sample[1]['gyro']
 
                 #os.write(1, "\r[%.3f] %2.4f %2.4f %2.4f" % (
                 #    t,pose[0], pose[1], pose[2]))
@@ -80,14 +80,14 @@ class DbHandler:
                 insert_cmd = """
                   insert into imu_data
                   (session_id, timestamp,
-                   r, p, y, x_accel, y_accel, z_accel)
+                   r, p, y, x_accel, y_accel, z_accel, x_gyro, y_gyro, z_gyro)
                   values
                   ('%s', %s,
-                   %f, %f, %f, %f, %f, %f)
+                   %f, %f, %f, %f, %f, %f, %f, %f, %f)
                 """ % (
                     (session_id.hex, t) +
-                     tuple(pose) + tuple(accel))
-
+                     tuple(pose) + tuple(accel) + tuple(gyro))
+                print insert_cmd
                 self.conn.execute(insert_cmd)
 
         if imu_data:
@@ -188,6 +188,7 @@ if __name__ == "__main__":
                 display.heartbeat()
                 
     except KeyboardInterrupt:
+        print "Keyboard exit"
+    finally:
         imu_handler.stop()
         gps_handler.stop()
-        print "done"
