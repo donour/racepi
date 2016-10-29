@@ -4,6 +4,8 @@
             <thead>
             <tr>
                 <th>Session ID</th>
+                <th>GPS Samples</th>
+                <th>IMU Samples</th>
                 <th></th>
             </tr>
             </thead>
@@ -12,6 +14,12 @@
                 <td>
                     <div>{{session[0]}}</div>
                     <div style="font-size: 0.7em; color: #ddd;">{{session[1]}}</div>
+                </td>
+                <td>
+                    <div>{{session[2]}}</div>
+                </td>
+                <td>
+                    <div>{{session[3]}}</div>
                 </td>
                 <td width="125px">
                     <a ui-sref="details({sessionId: session[0]})">
