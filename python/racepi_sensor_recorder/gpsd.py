@@ -24,6 +24,7 @@ def record_from_gps(q, done):
         if t is not None and set(GPS_REQUIRED_FIELDS).issubset(set(data.keys())):
             q.put( (time.time(), data))
 
+
 if __name__ == "__main__":
     from multiprocessing import Queue, Event, Process
 

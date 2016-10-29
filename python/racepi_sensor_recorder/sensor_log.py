@@ -13,7 +13,7 @@ from gpsd import GPS_REQUIRED_FIELDS
 
 DB_LOCATION="/external/racepi_data/test.db"
 MOVE_SPEED_THRESHOLD=3.5
-DISPLAY_UPDATE_TIME=1.0
+DISPLAY_UPDATE_TIME=0.05
 
 class SensorHandler:    
     """
@@ -87,7 +87,6 @@ class DbHandler:
                 """ % (
                     (session_id.hex, t) +
                      tuple(pose) + tuple(accel) + tuple(gyro))
-                print insert_cmd
                 self.conn.execute(insert_cmd)
 
         if imu_data:
@@ -138,26 +137,19 @@ if __name__ == "__main__":
     display = pi_sense_hat_display.RacePiStatusDisplay(SenseHat())
     
     print "Opening sensor handlers"
-    display.set_col_init(pi_sense_hat_display.IMU_COL)
     imu_handler = SensorHandler(record_from_imu)
-
-    display.set_col_init(pi_sense_hat_display.GPS_COL)
     gps_handler = SensorHandler(record_from_gps)
-
-    display.set_col_init(pi_sense_hat_display.OBD_COL)
     obd_handler = SensorHandler(record_from_elm327)
     
     try:
         imu_handler.start()
-        display.set_col_ready(pi_sense_hat_display.IMU_COL)
         gps_handler.start()
-        display.set_col_ready(pi_sense_hat_display.GPS_COL)
         obd_handler.start()
-        display.set_col_ready(pi_sense_hat_display.OBD_COL)
     
         recording_active = False
         last_display_update_time = 0;
-        last_gps_update_time = 0        
+        last_gps_update_time = 0
+        last_imu_update_time = 0        
 
         while True:
             imu_data = imu_handler.get_all_data()
@@ -191,10 +183,18 @@ if __name__ == "__main__":
             now = time.time()
             if gps_data:
                 last_gps_update_time = now
+            if imu_data:
+                last_imu_update_time = now
 
             if now - last_display_update_time >  DISPLAY_UPDATE_TIME :
                 if now - last_gps_update_time > 1:
-                    display.set_col_init(pi_sense_hat_display.OBD_COL)
+                    display.set_col_init(pi_sense_hat_display.GPS_COL)
+                else:
+                    display.set_col_ready(pi_sense_hat_display.GPS_COL)
+                if now - last_imu_update_time > 1:
+                    display.set_col_init(pi_sense_hat_display.IMU_COL)
+                else:
+                    display.set_col_ready(pi_sense_hat_display.IMU_COL)
                 last_display_update_time = now
                 display.heartbeat()
                 display.set_recording_state(recording_active)
