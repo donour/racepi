@@ -9,35 +9,12 @@ scheduling and to limit contention for system resources.
 import sqlite3
 import os, uuid, time, operator
 from multiprocessing import Queue, Event, Process
-from gpsd import GPS_REQUIRED_FIELDS
+from gpsd import GPS_REQUIRED_FIELDS, GpsSensorHandler
+from pi_sense_hat_imu import RpiImuSensorHandler
 
 DB_LOCATION="/external/racepi_data/test.db"
 MOVE_SPEED_THRESHOLD=3.5
 DISPLAY_UPDATE_TIME=0.05
-
-class SensorHandler:    
-    """
-    Base handler class for using producer-consumer sensor reading, using
-    multiproccess
-    """
-    def __init__(self, read_func):
-        self.doneEvent = Event()
-        self.data_q = Queue()
-        self.process = Process(target=read_func, args=(self.data_q, self.doneEvent))
-
-    def start(self):
-        self.process.start()
-
-    def stop(self):
-        self.doneEvent.set()
-        self.process.join()
-
-    def get_all_data(self):
-        data = []
-        while not self.data_q.empty():
-            data.append(self.data_q.get())
-        return data
-
     
 class DbHandler:
     """
@@ -124,11 +101,8 @@ class DbHandler:
 if __name__ == "__main__":
 
     # initialize sensor modules    
-    from pi_sense_hat_imu import record_from_imu
-    from gpsd import record_from_gps
     from elm327 import record_from_elm327
     import pi_sense_hat_display
-
     
     print "Opening Database"
     db_handler = DbHandler(DB_LOCATION)
@@ -137,15 +111,13 @@ if __name__ == "__main__":
     display = pi_sense_hat_display.RacePiStatusDisplay(SenseHat())
     
     print "Opening sensor handlers"
-    imu_handler = SensorHandler(record_from_imu)
-    gps_handler = SensorHandler(record_from_gps)
-    obd_handler = SensorHandler(record_from_elm327)
-    
+    imu_handler = RpiImuSensorHandler()
+    gps_handler = GpsSensorHandler()
+
     try:
         imu_handler.start()
         gps_handler.start()
-        obd_handler.start()
-    
+           
         recording_active = False
         last_display_update_time = 0;
         last_gps_update_time = 0

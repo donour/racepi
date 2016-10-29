@@ -1,57 +1,60 @@
 #!/usr/bin/env python2
 import os, time
 import RTIMU
+from sensor_handler import SensorHandler
 
-SETTINGS_FILE = "/etc/RTIMULib.ini"
-if not os.path.exists(SETTINGS_FILE):
-    print("Settings file not found, creating file: " + SETTINGS_FILE)
-else:
-    print("Loading settings: " + SETTINGS_FILE)
-_settings = RTIMU.Settings(SETTINGS_FILE)
+class RpiImuSensorHandler(SensorHandler):
 
-_IMU = RTIMU.RTIMU(_settings)
+    def __init__(self):
+        SensorHandler.__init__(self, self.__record_from_imu)
 
-print("IMU Name: " + _IMU.IMUName())
+    def __record_from_imu(self):
+        """
+        Record data entries from RaspberryPi SensorHat IMU to
+        specified Queue
+        """
 
-if not _IMU.IMUInit():
-    raise IOError("IMU init failed")
+        if not self.data_q:
+            raise ValueError("Illegal argument, no queue specified")
 
-_IMU.setSlerpPower(0.02)
-_IMU.setGyroEnable(True)
-_IMU.setAccelEnable(True)
-_IMU.setCompassEnable(True)
-_poll_interval = _IMU.IMUGetPollInterval()
-print("Poll Interval: %d (ms)" % _poll_interval)
-print("IMU Init Succeeded")
+        SETTINGS_FILE = "/etc/RTIMULib.ini"
+        if not os.path.exists(SETTINGS_FILE):
+            print("Settings file not found, creating file: " + SETTINGS_FILE)
+        else:
+            print("Loading settings: " + SETTINGS_FILE)
+        _settings = RTIMU.Settings(SETTINGS_FILE)
 
-def record_from_imu(q, done):
-    """
-    Record data entries from RaspberryPi SensorHat IMU to
-    specified Queue
-    :param q: multiprocessor or thread Queue
-    :param done: multiprocessor or thread Event, specifying recording complete
-    :return: (time, IMU data sample) tuple
-    """
+        _IMU = RTIMU.RTIMU(_settings)
 
-    if not q:
-        raise ValueError("Illegal argument, no queue specified")
+        print("IMU Name: " + _IMU.IMUName())
 
-    while not done.is_set():
-        if _IMU.IMURead():
-            data = _IMU.getIMUData()
-            q.put((time.time(), data))
-            time.sleep(_poll_interval * 0.5 / 1000.0)
-        
+        if not _IMU.IMUInit():
+            raise IOError("IMU init failed")
+
+        _IMU.setSlerpPower(0.02)
+        _IMU.setGyroEnable(True)
+        _IMU.setAccelEnable(True)
+        _IMU.setCompassEnable(True)
+        _poll_interval = _IMU.IMUGetPollInterval()
+        print("Poll Interval: %d (ms)" % _poll_interval)
+        print("IMU Init Succeeded")
+
+        while not self.doneEvent.is_set():
+            if _IMU.IMURead():
+                data = _IMU.getIMUData()
+                self.data_q.put((time.time(), data))
+                time.sleep(_poll_interval * 0.5 / 1000.0)
+
 
 if __name__ == "__main__":
-    from multiprocessing import Queue, Event, Process
-    done = Event()
-    q = Queue()
-    p = Process(target=record_from_imu, args=(q,done))
-    p.start()
+
+    sh = RpiImuSensorHandler()
+    sh.start()
     while True:
-        s = q.get()[1]
-        os.write(1, "\r" +
+        data = sh.get_all_data()
+        if data:
+            s = data[0][1]
+            os.write(1, "\r" +
                  "[% 1.2f,% 1.2f,% 1.2f % 1.2f] : " % s.get('fusionQPose') +
                  "[% 1.2f,% 1.2f,% 1.2f] : " % s.get('fusionPose') +
                  "[% 1.2f,% 1.2f,% 1.2f] : " % s.get('accel') +
