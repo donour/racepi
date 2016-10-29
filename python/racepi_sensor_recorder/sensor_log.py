@@ -157,7 +157,7 @@ if __name__ == "__main__":
 
             if not imu_data and not gps_data:
                 # empty queues, relieve the CPU a little
-                time.sleep(0.01)
+                time.sleep(0.02)
 
             else:
                 is_moving = reduce(operator.or_ ,

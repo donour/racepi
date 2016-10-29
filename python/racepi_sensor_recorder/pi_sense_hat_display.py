@@ -6,6 +6,9 @@ IMU_COL=0
 GPS_COL=1
 OBD_COL=2
 
+BRIGHTNESS=80
+
+
 class RacePiStatusDisplay:
     """
     Helper class for displaying status information on the PiSenseHat LED matrix
@@ -43,7 +46,7 @@ class RacePiStatusDisplay:
         colNumber should be one of the globally specified 
         column numbers.
         """
-        self.sense.set_pixel(0, colNumber, 255, 0, 0)
+        self.sense.set_pixel(0, colNumber, BRIGHTNESS, 0, 0)
         self.sense.set_pixel(1, colNumber, 0, 0, 0)
         self.sense.set_pixel(2, colNumber, 0, 0, 0)
 
@@ -54,9 +57,10 @@ class RacePiStatusDisplay:
         colNumber should be one of the globally specified 
         column numbers.
         """
-        self.sense.set_pixel(0, colNumber, 208, 210, 0)
-        self.sense.set_pixel(1, colNumber, 208, 210, 0)
-        self.sense.set_pixel(3, colNumber, 0, 0, 0)
+        self.sense.set_pixel(0, colNumber, int(BRIGHTNESS*0.8), int(BRIGHTNESS*0.85), 0)
+        self.sense.set_pixel(1, colNumber, int(BRIGHTNESS*0.8), int(BRIGHTNESS*0.85), 0)
+        self.sense.set_pixel(2, colNumber, 0, 0, 0)
+
 
     def set_col_ready(self, colNumber):
         """
@@ -65,23 +69,24 @@ class RacePiStatusDisplay:
         colNumber should be one of the globally specified 
         column numbers.
         """
-        self.sense.set_pixel(0, colNumber, 0, 255, 0)
-        self.sense.set_pixel(1, colNumber, 0, 255, 0)
-        self.sense.set_pixel(2, colNumber, 0, 255, 0)
+        self.sense.set_pixel(0, colNumber, 0, BRIGHTNESS, 0)
+        self.sense.set_pixel(1, colNumber, 0, BRIGHTNESS, 0)
+        self.sense.set_pixel(2, colNumber, 0, BRIGHTNESS, 0)
+
 
     def set_recording_state(self, state):
         """
         Set recording state, True/False
         """
         for i in range(8):
-            self.sense.set_pixel(7, i, 0 if state else 255, 255 if state else 0, 0)
+            self.sense.set_pixel(7, i, 0 if state else BRIGHTNESS, BRIGHTNESS if state else 0, 0)
 
     def heartbeat(self, frequency = 1):
         now = time.time()
         if now - self.last_heartbeat > frequency:
             self.sense.set_pixel(0, 7,
-                                 255 if not self.heartbeat_active else 0,
-                                 255 if self.heartbeat_active else 0,
+                                 BRIGHTNESS if not self.heartbeat_active else 0,
+                                 BRIGHTNESS if self.heartbeat_active else 0,
                                  0)
             self.last_heartbeat = now
             self.heartbeat_active = not self.heartbeat_active

@@ -23,7 +23,10 @@ def record_from_gps(q, done):
         t = data.get('time')
         if t is not None and set(GPS_REQUIRED_FIELDS).issubset(set(data.keys())):
             q.put( (time.time(), data))
-
+        else:
+            # relieve the CPU when getting unusable data
+            # 20hz is above the expected GPS sample rate
+            time.sleep(0.05)
 
 if __name__ == "__main__":
     from multiprocessing import Queue, Event, Process
