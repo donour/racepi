@@ -69,9 +69,7 @@ def get_plot_timeseries():
     session_id = request.args.get("session_id")
     # TODO fail on bad session_id
     with db.connect() as c:
-        #q = c.execute("select timestamp,r,p,y FROM %s where %s " % ("imu_data", "session_id='%s'" % session_id))
         q = c.execute("select timestamp,x_accel,y_accel,z_accel FROM %s where %s " % ("imu_data", "session_id='%s'" % session_id))
-        #q = c.execute("select timestamp,x_gyro,y_gyro,z_gyro FROM %s where %s " % ("imu_data", "session_id='%s'" % session_id))
         t = []
         x = []
         y = []
@@ -136,29 +134,30 @@ def get_gpsplot_timeseries():
         return jsonify(data=fig.get('data'), layout=fig.get('layout'))
 
 
+def get_scatterplot(series, w, title):
+    data = pd.Series(series).rolling(window=w, center=True).mean()
+    t0 = data.index.values.tolist()[0]
+    data.offset_time = [x-t0 for x in data.index.values.tolist()]
+    return pgo.Scatter(x=data.offset_time[w:-w], y=sfl(data.values.tolist()[w:-w]), name=title)
+
 @app.route('/plot/run')
 def get_singlerun_timeseries():
     session_id = request.args.get("session_id")
     if 'smooth' in request.args:
         smoothing_window = int(request.args.get("smooth"))
     else:
-        smoothing_window = 1
+        smoothing_window = 2
 
-    gps_data = pd.read_sql_query("select timestamp, speed, track FROM %s where session_id='%s'" % ("gps_data", session_id), db, index_col='timestamp')
+    gps_data = pd.read_sql_query("select timestamp, speed, track, lat, lon FROM %s where session_id='%s'" % ("gps_data", session_id), db, index_col='timestamp')
     imu_data = pd.read_sql_query("select timestamp, x_accel, y_accel, z_accel FROM %s where session_id='%s'" % ("imu_data", session_id), db, index_col='timestamp')
 
-    zaccel = pd.Series(imu_data.z_accel).rolling(window=smoothing_window*2, center=True).mean()
-    speed = pd.Series(gps_data.speed).rolling(window=smoothing_window*2, center=True).mean()
-
     data = [
-        pgo.Scatter(x=sfl(gps_data.index.tolist()), y=sfl(gps_data.speed.tolist()), name="speed"),
-        pgo.Scatter(x=speed.index.tolist()[smoothing_window:-smoothing_window], y=sfl(speed.values.tolist()[smoothing_window:-smoothing_window]), name="Speed (AVG)"),
-        pgo.Scatter(x=sfl(imu_data.index.tolist()), y=sfl(imu_data.z_accel.tolist()), name="Z Accel"),
-        pgo.Scatter(x=zaccel.index.tolist()[smoothing_window:-smoothing_window], y=sfl(zaccel.values.tolist()[smoothing_window:-smoothing_window]), name="Z Accel (AVG)")
+        get_scatterplot(gps_data.speed, smoothing_window, "Speed (avg)"),
+        get_scatterplot(imu_data.z_accel, smoothing_window, "ZAccel (avg)")
     ]
 
     layout = pgo.Layout(
-        title="GPS",
+        title="Run",
         xaxis=dict(title="time"),
         yaxis=dict(title="value")
     )
