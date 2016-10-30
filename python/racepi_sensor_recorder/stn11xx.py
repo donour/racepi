@@ -6,9 +6,10 @@ BAUD_RATE="576000"
 DEV_NAME="/dev/obdlink"
 FORCE_PROTOCOL=6
 
+
 class STNHandler:
 
-    def __init__(self, dev, baud):
+    def __init__(self, dev = DEV_NAME, baud = BAUD_RATE):
 
         # TODO autoset baudrate
         self.port = serial.Serial(dev, baud)
@@ -119,28 +120,7 @@ class STNHandler:
             return buffer
         else:
             return None
-                                                                                          
                                                                                      
-def record_from_stn11xx(q, done):
-
-    if not q:
-        raise ValueError("Illegal argument, no queue specified")
-
-    elm = None
-    while not done.is_set():
-        while not elm:
-            try:
-                elm = ElmHandler(DEV_NAME, BAUD_RATE)
-                print "ELM device detected: %s (%s)" % (elm.elm_version, elm.dev_description)
-                print "ELM connected to vehicle:", str(elm.get_is_plugged_in())
-
-            except serial.SerialException:
-                time.sleep(10)
-        # TODO : read data from device and publish to queue 
-	elm.port.read()
-		
-	q.put(elm.get_sample("22091a"))
-	time.sleep(0.025)
 
 if __name__ == "__main__":
     import time, sys, os
@@ -169,21 +149,6 @@ if __name__ == "__main__":
         now = time.time()
         if now - last_update > 0.2:
             last_update = now
-            #print "-=================-"       
             os.write(1,"\r")
             for k in last_mesg.keys():
                 os.write(1, "[%s] " % last_mesg[k])
-                #print k, last_mesg[k]
-            #print now
-            
-    
-    #send_command("stfap " + sys.argv[1]+",fff")
-    #time.sleep(.3)
-    #send_command("stm")
-    #import os
-    #while True:
-    #    c= port.read()
-	#os.write(1,c)
-
-    
-

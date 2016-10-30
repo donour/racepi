@@ -30,6 +30,9 @@ class SensorLogger:
         self.gps_handler = GpsSensorHandler()
 
     def start(self):
+
+        # TODO, add CAN logger
+        
         self.imu_handler.start()
         self.gps_handler.start()
            
