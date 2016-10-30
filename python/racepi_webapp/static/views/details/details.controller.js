@@ -20,7 +20,7 @@
             $http.get('/plot/accel?session_id=' + sessionId)
                 .then(setAccelPlot);
 
-            $http.get('/plot/gps?session_id=' + sessionId)
+            $http.get('/plot/run?session_id=' + sessionId)
                 .then(setGpsPlot);
 
         }
