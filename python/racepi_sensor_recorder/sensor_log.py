@@ -17,7 +17,7 @@ from pi_sense_hat_display import RacePiStatusDisplay, GPS_COL, IMU_COL
 DEFAULT_DB_LOCATION="/external/racepi_data/test.db"
 MOVE_SPEED_THRESHOLD=3.5
 DISPLAY_UPDATE_TIME=0.05   
-
+SENSOR_DISPLAY_TIMEOUT=1.0
 
 class SensorLogger:
 
@@ -46,7 +46,7 @@ class SensorLogger:
                 # empty queues, relieve the CPU a little
                 time.sleep(0.02)
 
-            else:
+            else:                
                 is_moving = reduce(operator.or_ ,
                     map(lambda s: s[1].get('speed') > MOVE_SPEED_THRESHOLD, gps_data), False)
 
@@ -64,7 +64,7 @@ class SensorLogger:
                         self.db_handler.insert_gps_updates(gps_data, session_id)
                         self.db_handler.insert_imu_updates(imu_data, session_id)
                     except TypeError as te:
-                        print "Failed to insert data: ", te
+                        print "Failed to insert data:", te
 
             # display update logic
             now = time.time()
@@ -74,21 +74,20 @@ class SensorLogger:
                 last_imu_update_time = now
 
             if now - last_display_update_time >  DISPLAY_UPDATE_TIME :
-                if now - last_gps_update_time > 1:
+                if now - last_gps_update_time > SENSOR_DISPLAY_TIMEOUT:
                     self.display.set_col_init(GPS_COL)
                 else:
                     self.display.set_col_ready(GPS_COL)
-                if now - last_imu_update_time > 1:
+                if now - last_imu_update_time > SENSOR_DISPLAY_TIMEOUT:
                     self.display.set_col_init(IMU_COL)
                 else:
                     self.display.set_col_ready(IMU_COL)
                 last_display_update_time = now
                 self.display.heartbeat()
                 self.display.set_recording_state(recording_active)
-        
+
 
 
 if __name__ == "__main__":
     sl = SensorLogger()
     sl.start()
-        

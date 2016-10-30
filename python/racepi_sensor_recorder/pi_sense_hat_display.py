@@ -1,6 +1,5 @@
 #!/usr/bin/env python2
-import atexit
-import time
+import atexit, time
 
 IMU_COL=0
 GPS_COL=1
