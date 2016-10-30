@@ -98,6 +98,7 @@ class DbHandler:
             self.conn.commit()  
 
 
+
 if __name__ == "__main__":
 
     # initialize sensor modules    

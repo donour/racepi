@@ -3,7 +3,7 @@ from sqlalchemy import create_engine
 from plotly import graph_objs as pgo
 
 app = Flask(__name__)
-db = create_engine('sqlite:////home/donour/test.db')
+db = create_engine('sqlite:////external/racepi_data/test.db')
 
 
 def get_sql_data(table, filter):
@@ -58,8 +58,9 @@ def get_plot_timeseries():
     session_id = request.args.get("session_id")
     # TODO fail on bad session_id
     with db.connect() as c:
-        #q = c.execute("select timestamp,r,p,y FROM %s where %s " % ("imu_data", "session_id='%s'" % session_id))
-        q = c.execute("select timestamp,x_accel,y_accel,z_accel FROM %s where %s " % ("imu_data", "session_id='%s'" % session_id))
+        q = c.execute("select timestamp,r,p,y FROM %s where %s " % ("imu_data", "session_id='%s'" % session_id))
+        #q = c.execute("select timestamp,x_accel,y_accel,z_accel FROM %s where %s " % ("imu_data", "session_id='%s'" % session_id))
+        #q = c.execute("select timestamp,x_gyro,y_gyro,z_gyro FROM %s where %s " % ("imu_data", "session_id='%s'" % session_id))
         t = []
         x = []
         y = []
