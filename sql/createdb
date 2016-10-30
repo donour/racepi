@@ -8,6 +8,7 @@ SCHEMA_FILES=(           \
     "schema/session.sql" \
     "schema/gps.sql"     \
     "schema/imu.sql"     \
+    "schema/can.sql"     \
 )
 
 if [ -z $1 ]; then
