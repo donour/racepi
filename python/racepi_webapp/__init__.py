@@ -15,7 +15,22 @@ def sfl(float_list, ndigits = 3):
     :param ndigits: number of rounding digits
     :return: list of values round to small number of digits
     """
-    return [round(x, 3) for x in float_list]
+    return [round(x, ndigits) for x in float_list]
+
+def get_scatterplot(series, w, title):
+    """
+    Generate plotly scatter plot from pandas timeseries data
+
+    :param series: plot dataframe series
+    :param w: rolling averge window radius
+    :param title: title for plot
+    :return: scatterplot graph object
+    """
+    data = pd.Series(series).rolling(window=w, center=True).mean()
+    t0 = data.index.values.tolist()[0]
+    data.offset_time = [x-t0 for x in data.index.values.tolist()]
+    return pgo.Scatter(x=sfl(data.offset_time[w:-w]), y=sfl(data.values.tolist()[w:-w]), name=title)
+
 
 def get_sql_data(table, filter):
     with db.connect() as c:
@@ -134,11 +149,6 @@ def get_gpsplot_timeseries():
         return jsonify(data=fig.get('data'), layout=fig.get('layout'))
 
 
-def get_scatterplot(series, w, title):
-    data = pd.Series(series).rolling(window=w, center=True).mean()
-    t0 = data.index.values.tolist()[0]
-    data.offset_time = [x-t0 for x in data.index.values.tolist()]
-    return pgo.Scatter(x=data.offset_time[w:-w], y=sfl(data.values.tolist()[w:-w]), name=title)
 
 @app.route('/plot/run')
 def get_singlerun_timeseries():

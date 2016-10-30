@@ -1,14 +1,7 @@
 <div ng-if="vm.sessionId">
-    <div class="row" ng-if="vm.accelPlotConfig">
+    <div class="row" ng-if="vm.runPlotConfig">
         <div class="col-sm-12">
-            <h4>IMU</h4>
-            <rp-plotly config="vm.accelPlotConfig"></rp-plotly>
-        </div>
-    </div>
-    <div class="row" ng-if="vm.gpsPlotConfig">
-        <div class="col-sm-12">
-            <h4>GPS</h4>
-            <rp-plotly config="vm.gpsPlotConfig"></rp-plotly>
+            <rp-plotly config="vm.runPlotConfig"></rp-plotly>
         </div>
     </div>
     <div class="row">

@@ -17,11 +17,8 @@
             $http.get('/data/gps?session_id=' + sessionId)
                 .then(setGpsData);
 
-            $http.get('/plot/accel?session_id=' + sessionId)
-                .then(setAccelPlot);
-
             $http.get('/plot/run?session_id=' + sessionId)
-                .then(setGpsPlot);
+                .then(setRunPlot);
 
         }
 
@@ -29,12 +26,8 @@
             vm.gps = response.data.result;
         }
 
-        function setAccelPlot(response) {
-            vm.accelPlotConfig = response.data;
-        }
-
-        function setGpsPlot(response) {
-            vm.gpsPlotConfig = response.data;
+        function setRunPlot(response) {
+            vm.runPlotConfig = response.data;
         }
 
     }
