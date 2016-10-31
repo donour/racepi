@@ -30,7 +30,7 @@ BAUD_RATE = "576000"
 DEV_NAME = "/dev/obdlink"
 FORCE_PROTOCOL = 6
 ST_PROTOCOL = 33
-
+RESET_WAIT_TIME_SECONDS = 6.0
 
 class STNHandler:
 
@@ -39,20 +39,18 @@ class STNHandler:
         # TODO autoset baudrate
         self.port = serial.Serial(dev, baud)
         if dev != self.port.getPort():
-            # port open failed
             raise IOError("Could not open" + dev)
 
         # reset device and wait for startup
         self.__send_command('atz')
-        time.sleep(6)  # with for device result
+        time.sleep(RESET_WAIT_TIME_SECONDS)
         self.port.read()  # empty buffer
 
-        # disable command echo and line feed
-        self.get_sample("ATE0")
-        self.__run_config_cmd("ATL0")
-        self.__run_config_cmd("ATS0")
-        self.__run_config_cmd("ATAL")
-        self.__run_config_cmd("ATH1")
+        self.get_sample("ATE0")        # command echo
+        self.__run_config_cmd("ATL0")  # line breaks
+        self.__run_config_cmd("ATS0")  # whitespace
+        self.__run_config_cmd("ATAL")  # long messages
+        self.__run_config_cmd("ATH1")  # headers
 
         self.elm_version = self.get_sample('ati')
         self.stn_version = self.get_sample('sti')
@@ -87,7 +85,7 @@ class STNHandler:
     def __run_config_cmd(self, cmd):
         r = self.get_sample(cmd)
         print cmd, r
-        if not 'ok' in r.lower():
+        if 'ok' not in r.lower():
             raise IOError("Failed to run cmd: "+cmd)
     
     def get_is_connected(self):
