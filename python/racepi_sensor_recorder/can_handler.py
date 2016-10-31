@@ -43,7 +43,7 @@ class CanSensorHandler(SensorHandler):
             self.data_q.put((now, data))
 
         # stop monitors
-        self.stn.get_sample('ati')
+        self.stn.stop_monitor()
 
 
 if __name__ == "__main__":

@@ -15,6 +15,13 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
+"""
+Library for communicating with STN11xx device via a serial
+port. This includes the STN1130 and STN1170 inside OBDLink
+devices such as the OBDLink SX. It does not currently
+support network connections, so it cannot communication
+with WiFi bridged devices such as the OBDLink MX.
+"""
 
 import serial
 import time
@@ -22,6 +29,7 @@ import time
 BAUD_RATE="576000"
 DEV_NAME="/dev/obdlink"
 FORCE_PROTOCOL=6
+ST_PROTOCOL=33
 
 
 class STNHandler:
@@ -36,15 +44,15 @@ class STNHandler:
 
         # reset device and wait for startup
         self.__send_command('atz')
-        time.sleep(6) # with for device result
-        self.port.read() # empty buffer
+        time.sleep(6)  # with for device result
+        self.port.read()  # empty buffer
 
         # disable command echo and line feed
         self.get_sample("ATE0")
-        self.run_config_cmd("ATL0")
-        self.run_config_cmd("ATS0")
-        self.run_config_cmd("ATAL")
-        self.run_config_cmd("ATH1")
+        self.__run_config_cmd("ATL0")
+        self.__run_config_cmd("ATS0")
+        self.__run_config_cmd("ATAL")
+        self.__run_config_cmd("ATH1")
 
         self.elm_version = self.get_sample('ati')
         self.stn_version = self.get_sample('sti')
@@ -57,9 +65,9 @@ class STNHandler:
         if not 'stn11' in self.stn_version.lower():
             raise IOError("Failed to find STN11xx device: " + self.stn_version )
 
-        # set automatic protocol selection
-        self.run_config_cmd("stp 33")
-        self.run_config_cmd("atsp " + str(FORCE_PROTOCOL))
+        # set manual protocol selection
+        self.__run_config_cmd("stp " + str(ST_PROTOCOL))
+        self.__run_config_cmd("atsp " + str(FORCE_PROTOCOL))
 
         # clear CAN filters and block all messages
         self.set_monitor_ids(None)
@@ -69,14 +77,14 @@ class STNHandler:
         Reset CAN monitors to only allow data from the list
         of CAN IDs specified in ids
         """
-        self.run_config_cmd("stfcp")
-        self.run_config_cmd("stfcb")
-        self.run_config_cmd("stfab FFF,FFF")
+        self.__run_config_cmd("stfcp")
+        self.__run_config_cmd("stfcb")
+        self.__run_config_cmd("stfab FFF,FFF")
         if ids:
             for can_id in ids:
-                self.run_config_cmd("stfap %s,FFF" % can_id)
-        
-    def run_config_cmd(self, cmd):
+                self.__run_config_cmd("stfap %s,FFF" % can_id)
+
+    def __run_config_cmd(self, cmd):
         r = self.get_sample(cmd)
         print cmd, r
         if not 'ok' in r.lower():
@@ -116,9 +124,23 @@ class STNHandler:
             self.port.write("\r")
 
     def start_monitor(self):
+        """
+        Set the device to monitor mode
+        """
         self.__send_command("stm")
-        
+
+    def stop_monitor(self):
+        """
+        Disable device monitor mode
+        """
+        self.get_sample('ati')
+
     def readline(self):
+        """
+        Read a line of output from device. This is useful when
+        monitoring the CAN bus.
+        :return: single line of output, such as a CAN message
+        """
         return self.__get_result()
 
     def __get_result(self):         
