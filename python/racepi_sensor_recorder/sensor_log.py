@@ -15,24 +15,25 @@
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 """
-This is a tool for autocross performance data from multiple
-sensor sources. Each sensor source implements a get_data() 
-api runs in its own system process to allow for pre-emptive
-scheduling and to limit contention for system resources.
+This is a tool for recording autocross performance data
+from multiple sensor sources. Each sensor source implements
+a get_data() api runs in its own system process to allow
+for pre-emptive scheduling and to limit contention for
+system resources.
 """
 
-import os, time, operator
-from multiprocessing import Queue, Event, Process
-from gpsd import GPS_REQUIRED_FIELDS, GpsSensorHandler
+import time, operator
+from gpsd import GpsSensorHandler
 from pi_sense_hat_imu import RpiImuSensorHandler
 from sqlite_handler import DbHandler
 from sense_hat import SenseHat
+from can_handler import CanSensorHandler
 from pi_sense_hat_display import RacePiStatusDisplay, GPS_COL, IMU_COL
 
-DEFAULT_DB_LOCATION="/external/racepi_data/test.db"
-MOVE_SPEED_THRESHOLD=3.5
-DISPLAY_UPDATE_TIME=0.05   
-SENSOR_DISPLAY_TIMEOUT=1.0
+DEFAULT_DB_LOCATION = "/external/racepi_data/test.db"
+MOVE_SPEED_THRESHOLD = 3.5
+DISPLAY_UPDATE_TIME = 0.05
+SENSOR_DISPLAY_TIMEOUT = 1.0
 
 class SensorLogger:
 
@@ -43,6 +44,7 @@ class SensorLogger:
         self.display = RacePiStatusDisplay(SenseHat())
         self.imu_handler = RpiImuSensorHandler()
         self.gps_handler = GpsSensorHandler()
+        self.can_handler = CanSensorHandler()
 
     def start(self):
 
@@ -52,7 +54,7 @@ class SensorLogger:
         self.gps_handler.start()
            
         recording_active = False
-        last_display_update_time = 0;
+        last_display_update_time = 0
         last_gps_update_time = 0
         last_imu_update_time = 0        
 
@@ -75,7 +77,7 @@ class SensorLogger:
                     recording_active = True
 
                 if not is_moving and gps_data:
-                    recording_active = False;                    
+                    recording_active = False
 
                 if recording_active:
                     try:
@@ -103,7 +105,6 @@ class SensorLogger:
                 last_display_update_time = now
                 self.display.heartbeat()
                 self.display.set_recording_state(recording_active)
-
 
 
 if __name__ == "__main__":

@@ -16,7 +16,7 @@
 
 import uuid
 import sqlite3
-
+from gpsd import GPS_REQUIRED_FIELDS
 
 class DbHandler:
     """
@@ -27,14 +27,13 @@ class DbHandler:
         self.conn = sqlite3.connect(db_location)
         if self.conn is None:
             raise IOError("Could not open db: " + db_location)
-        self.conn.execute("PRAGMA foreign_keys = ON;");
+        self.conn.execute("PRAGMA foreign_keys = ON;")
         self.conn.execute("PRAGMA journal_mode=WAL;")
-        
-        
+
     def get_new_session(self):
         """
-        Create new session entry in DB and return the 
-        session ID.
+        Create new session entry in database
+        :return: session id as UUID
         """
         session_id = uuid.uuid1()
         insert_cmd = """
@@ -44,7 +43,6 @@ class DbHandler:
         self.conn.execute(insert_cmd)
         return session_id
 
-    
     def insert_imu_updates(self, imu_data, session_id):
         for sample in imu_data:
             if sample:
@@ -97,6 +95,16 @@ class DbHandler:
                 self.conn.execute(insert_cmd)
 
         if gps_data:
-            self.conn.commit()  
+            self.conn.commit()
+
+    def insert_can_updates(self, can_data, session_id):
+        for sample in can_data:
+            t = sample[0]
+            raw = sample[1]
+
+            # TODO: decode arbitrationID, RTR, message payload
+            # SQL insert
+
+        raise NotImplementedError("implementation incomplete")
 
 
