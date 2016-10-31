@@ -26,15 +26,15 @@ with WiFi bridged devices such as the OBDLink MX.
 import serial
 import time
 
-BAUD_RATE="576000"
-DEV_NAME="/dev/obdlink"
-FORCE_PROTOCOL=6
-ST_PROTOCOL=33
+BAUD_RATE = "576000"
+DEV_NAME = "/dev/obdlink"
+FORCE_PROTOCOL = 6
+ST_PROTOCOL = 33
 
 
 class STNHandler:
 
-    def __init__(self, dev = DEV_NAME, baud = BAUD_RATE):
+    def __init__(self, dev=DEV_NAME, baud=BAUD_RATE):
 
         # TODO autoset baudrate
         self.port = serial.Serial(dev, baud)
@@ -188,6 +188,6 @@ if __name__ == "__main__":
         now = time.time()
         if now - last_update > 0.2:
             last_update = now
-            os.write(1,"\r")
+            os.write(1, "\r")
             for k in last_mesg.keys():
                 os.write(1, "[%s] " % last_mesg[k])
