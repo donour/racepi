@@ -1,11 +1,4 @@
-                                               
- ,-.,-. ,------.                  ,------.,--. 
- \  \  \|  .--. ',--,--.,---.,---.|  .--. `--' 
-  \  \  |  '--'.' ,-.  | .--| .-. |  '--' ,--. 
-  /  /  |  |\  \\ '-'  \ `--\   --|  | --'|  | 
- /  /  /`--' '--'`--`--'`---'`----`--'    `--' 
- `-'`-'                                        
-
+RacePi
 =================
 
 RacePi is a software system for recording racecar sensor data on a Raspberry Pi. A variety of sensors sources are supported and it is easy to add more. The system is currently designed with autocross in mind with automatic record triggers. RacePi is implemented primary in Python with a few components in SQL and C.
