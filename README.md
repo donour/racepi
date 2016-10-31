@@ -5,10 +5,10 @@ RacePi is a software system for recording racecar sensor data on a Raspberry Pi.
 
 Software Components
 ---------------------
-1. ** SQLite Database: ** Standardized schema for sensor data 
-2. ** Sensor Recorder: ** Multiprocessing, multithreaded data logging program
-3. ** Web-based Analysis Tool: ** On-device webserver for performing immediate analysis and plotting
-4. ** Device Controls: ** Misc software tools for managing the device
+1. **SQLite Database:** Standardized schema for sensor data 
+2. **Sensor Recorder:** Multiprocessing, multithreaded data logging program
+3. **Web-based Analysis Tool:** On-device webserver for performing immediate analysis and plotting
+4. **Device Controls:** Misc software tools for managing the device
 
 
 Supported Sensor Sources
