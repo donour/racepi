@@ -145,18 +145,19 @@ class STNHandler:
 
     def __get_result(self):         
         if self.port:
-            buffer = ""
+            buf = ''
             while True:
                 c = self.port.read(1)
-                if c == '\r' and len(buffer) > 0:
+                if c == '\r' and len(buf) > 0:
                     break
                 else:
-                    if buffer != "" or c != ">": #if something is in buffer, add everything
-                        buffer = buffer + c
+                    # if something is in buffer, add everything
+                    if buf != '' or c != ">":
+                        buf = buf + c
 
-            if "no data" in buffer.lower():
+            if "no data" in buf.lower():
                 return None                            
-            return buffer
+            return buf
         else:
             return None
                                                                                      
