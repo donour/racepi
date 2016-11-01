@@ -26,7 +26,6 @@ import time, operator
 from gpsd import GpsSensorHandler
 from pi_sense_hat_imu import RpiImuSensorHandler
 from sqlite_handler import DbHandler
-from sense_hat import SenseHat
 from can_handler import CanSensorHandler
 from pi_sense_hat_display import RacePiStatusDisplay, GPS_COL, IMU_COL
 
@@ -41,7 +40,7 @@ class SensorLogger:
         print "Opening Database"
         self.db_handler = DbHandler(databaseLocation)
         print "Opening sensor handlers"
-        self.display = RacePiStatusDisplay(SenseHat())
+        self.display = RacePiStatusDisplay()
         self.imu_handler = RpiImuSensorHandler()
         self.gps_handler = GpsSensorHandler()
         self.can_handler = CanSensorHandler()

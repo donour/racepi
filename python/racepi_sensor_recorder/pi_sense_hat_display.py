@@ -16,12 +16,15 @@
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
 import atexit
+try:
+    from sense_hat import SenseHat
+except ImportError:
+    SenseHat = None
 
-IMU_COL=0
-GPS_COL=1
-OBD_COL=2
-
-BRIGHTNESS=80
+IMU_COL = 0
+GPS_COL = 1
+OBD_COL = 2
+BRIGHTNESS = 80
 
 
 class RacePiStatusDisplay:
@@ -29,7 +32,7 @@ class RacePiStatusDisplay:
     Helper class for displaying status information on the PiSenseHat LED matrix
     """
 
-    def __init__(self, senseHat):
+    def __init__(self, sense_hat=None):
         """
         Initialize display with SenseHat instance
         
@@ -37,7 +40,10 @@ class RacePiStatusDisplay:
         source to disconnected.
 
         """
-        self.sense = senseHat
+        if not sense_hat:
+            sense_hat = SenseHat()
+
+        self.sense = sense_hat
         self.__clear()
         self.sense.set_rotation(90)
         atexit.register(self.__shutdown_mesg)
@@ -109,7 +115,6 @@ class RacePiStatusDisplay:
 
 if __name__ == "__main__":
 
-    from sense_hat import SenseHat
     s = RacePiStatusDisplay(SenseHat())
     s.set_col_lost(IMU_COL)
     s.set_col_init(GPS_COL)

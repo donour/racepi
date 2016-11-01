@@ -15,8 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 import os, time
-import RTIMU
 from sensor_handler import SensorHandler
+try:
+    import RTIMU
+except ImportError:
+    RTIMU = None
 
 class RpiImuSensorHandler(SensorHandler):
 
