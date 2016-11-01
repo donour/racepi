@@ -48,6 +48,8 @@ class CanFrameValueExtractorTest(TestCase):
         self.nobits   = CanFrame('000', '0000000000000000')
         self.lastbit  = CanFrame('000', '0000000000000001')
         self.firstbit = CanFrame('000', '8000000000000000')
+        self.zerotps  = CanFrame('080', '90007D00007FF3F7')
+        self.fulltps  = CanFrame('080', '93E87D00007FF3F7')
 
     def test_init(self):
         self.assertIsNotNone(CanFrameValueExtractor(1, 2))
@@ -101,4 +103,7 @@ class CanFrameValueExtractorTest(TestCase):
         c = CanFrameValueExtractor(0, 64, custom_transform=lambda x: x-1)
         self.assertEqual(c.convert_frame(self.deadbeef), 0xdeadbeefdeadbeef - 1)
 
-
+    def test_ford_tps(self):
+        c = CanFrameValueExtractor(4, 12, a=0.1)
+        self.assertTrue(abs(c.convert_frame(self.zerotps) - 0.0) < 1e-19)
+        self.assertTrue(abs(c.convert_frame(self.fulltps)-100.0) < 1e-19)

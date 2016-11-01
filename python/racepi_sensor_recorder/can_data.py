@@ -79,7 +79,6 @@ class CanFrameValueExtractor:
         field = self.__get_field(frame.payload)
         if self.transform:
             return self.transform(field)
-
         return self.a*(field+self.b) + self.c
 
 
