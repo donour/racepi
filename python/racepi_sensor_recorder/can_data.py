@@ -14,31 +14,45 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
+"""
+Decoding and transform tools for CAN frames.
+"""
 
 
 class CanFrameValueExtractor:
+    """
+    This class extracts transformed frames from CanFrames. A
+    transform must be specified at object construction and
+    can be repeated applied to data.
+    """
 
-    def __init__(self, start_bit, bit_len, a=1, c=0, b=0):
+    def __init__(self, start_bit, bit_len, a=1, c=0, b=0, custom_transform=None):
         """
         Create extractor for a field within a CanDataFrame
-        object. Specify the start bit and lengh and the
-        value will be calculated as:
+        object. Specify the start bit and length to extract
+        the desired field.
+
+        The result can be transformed in a linear way by specifying
+        coefficients:
 
         value = a( FIELD + b) + c
 
-        This allows for simple scaling and unit conversion.
+        Alternatively, a custom transform function can be specified
 
         :param start_bit: first bit of field, zero indexed
         :param bit_len: number of bits in field
         :param a:
         :param c:
         :param b:
+        :param custom_transform: user-provided transform function
         """
+
         self.start = start_bit
         self.len = bit_len
         self.a = a
         self.b = b
         self.c = c
+        self.transform = custom_transform
 
     def __get_field(self, payload):
         # extract field value from bytes
@@ -47,12 +61,25 @@ class CanFrameValueExtractor:
             field <<= 8
             if i < len(payload):
                 field += payload[i]
-        return field
+
+        bas = 64 - self.start  # bits after start
+        mask = (field >> bas) << bas
+        return (mask ^ field) >> (bas-self.len)
 
     def convert_frame(self, frame):
+        """
+        Convert the specified data frame to a
+        scalar value.
+
+        :param frame: CanFrame
+        :return: translated value of specified field
+        """
         if not frame or not frame.payload:
             raise ValueError("Missing frame payload")
         field = self.__get_field(frame.payload)
+        if self.transform:
+            return self.transform(field)
+
         return self.a*(field+self.b) + self.c
 
 

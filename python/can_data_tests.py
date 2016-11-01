@@ -42,6 +42,13 @@ class CanDataFrameTest(TestCase):
 
 class CanFrameValueExtractorTest(TestCase):
 
+    def setUp(self):
+        self.deadbeef = CanFrame('000', 'deadbeefdeadbeef')
+        self.allbits  = CanFrame('000', 'ffffffffffffffff')
+        self.nobits   = CanFrame('000', '0000000000000000')
+        self.lastbit  = CanFrame('000', '0000000000000001')
+        self.firstbit = CanFrame('000', '8000000000000000')
+
     def test_init(self):
         self.assertIsNotNone(CanFrameValueExtractor(1, 2))
 
@@ -51,17 +58,47 @@ class CanFrameValueExtractorTest(TestCase):
         v = c.convert_frame(CanFrame("000", "00"))
         self.assertEqual(v, 0)
 
-        v = c.convert_frame(CanFrame("000", "deadbeefdeadbeef"))
+        v = c.convert_frame(self.deadbeef)
         self.assertEqual(v, 0xdeadbeefdeadbeef)
 
     def test_simple_convert_floats(self):
-
         c = CanFrameValueExtractor(0, 64, a=1.0)
-        v = c.convert_frame(CanFrame("000", "deadbeefdeadbeef"))
+        v = c.convert_frame(self.deadbeef)
         self.assertTrue(abs(v - float(0xdeadbeefdeadbeef)) < 1e-19)
 
         c = CanFrameValueExtractor(0, 64, a=10.0)
-        v = c.convert_frame(CanFrame("000", "deadbeefdeadbeef"))
-        self.assertTrue(abs(( v/float(0xdeadbeefdeadbeef) - 10.0)) < 1e-19)
+        v = c.convert_frame(self.deadbeef)
+        self.assertTrue(abs((v/float(0xdeadbeefdeadbeef) - 10.0)) < 1e-19)
+
+    def test_first_bit(self):
+        for i in range(0, 63):
+            c = CanFrameValueExtractor(i, 1)
+            self.assertEqual(c.convert_frame(self.firstbit), 1 if i == 0 else 0)
+
+    def test_last_bit(self):
+        for i in range(63):
+            c = CanFrameValueExtractor(i, 1)
+            self.assertEqual(c.convert_frame(self.lastbit), 1 if i == 63 else 0)
+
+    def test_all_bits(self):
+        c = CanFrameValueExtractor(0, 64)
+        self.assertEqual(c.convert_frame(self.allbits), 0xffffffffffffffff)
+        for i in range(63):
+            c = CanFrameValueExtractor(i, 1)
+            self.assertEqual(c.convert_frame(self.allbits), 1)
+
+    def test_no_bits(self):
+        c = CanFrameValueExtractor(0, 64)
+        self.assertEqual(c.convert_frame(self.nobits), 0)
+        for i in range(63):
+            c = CanFrameValueExtractor(i, 1)
+            self.assertEqual(c.convert_frame(self.nobits), 0)
+
+    def test_simple_custom_transform(self):
+        c = CanFrameValueExtractor(0, 64, custom_transform=lambda x: 0)
+        self.assertEqual(c.convert_frame(self.deadbeef), 0)
+
+        c = CanFrameValueExtractor(0, 64, custom_transform=lambda x: x-1)
+        self.assertEqual(c.convert_frame(self.deadbeef), 0xdeadbeefdeadbeef - 1)
 
 
