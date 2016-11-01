@@ -23,8 +23,8 @@ system resources.
 """
 
 import time, operator
-from gpsd import GpsSensorHandler
 from pi_sense_hat_imu import RpiImuSensorHandler
+from gps_handler import GpsSensorHandler
 from sqlite_handler import DbHandler
 from can_handler import CanSensorHandler
 from pi_sense_hat_display import RacePiStatusDisplay, GPS_COL, IMU_COL, CAN_COL
