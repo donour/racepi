@@ -27,7 +27,7 @@ from gpsd import GpsSensorHandler
 from pi_sense_hat_imu import RpiImuSensorHandler
 from sqlite_handler import DbHandler
 from can_handler import CanSensorHandler
-from pi_sense_hat_display import RacePiStatusDisplay, GPS_COL, IMU_COL
+from pi_sense_hat_display import RacePiStatusDisplay, GPS_COL, IMU_COL, CAN_COL
 
 DEFAULT_DB_LOCATION = "/external/racepi_data/test.db"
 MOVE_SPEED_THRESHOLD = 3.5
@@ -47,21 +47,22 @@ class SensorLogger:
 
     def start(self):
 
-        # TODO, add CAN logger
-        
         self.imu_handler.start()
         self.gps_handler.start()
-           
+        self.can_handler.start()
+        
         recording_active = False
         last_display_update_time = 0
         last_gps_update_time = 0
-        last_imu_update_time = 0        
+        last_imu_update_time = 0
+        last_can_update_time = 0        
 
         while True:
             imu_data = self.imu_handler.get_all_data()
             gps_data = self.gps_handler.get_all_data()
+            can_data = self.can_handler.get_all_data()
 
-            if not imu_data and not gps_data:
+            if not imu_data and not gps_data and not can_data:
                 # empty queues, relieve the CPU a little
                 time.sleep(0.02)
 
@@ -91,16 +92,27 @@ class SensorLogger:
                 last_gps_update_time = now
             if imu_data:
                 last_imu_update_time = now
+            if can_data:
+                last_can_update_time = now
+            
 
             if now - last_display_update_time >  DISPLAY_UPDATE_TIME :
+
                 if now - last_gps_update_time > SENSOR_DISPLAY_TIMEOUT:
                     self.display.set_col_init(GPS_COL)
                 else:
                     self.display.set_col_ready(GPS_COL)
+
                 if now - last_imu_update_time > SENSOR_DISPLAY_TIMEOUT:
                     self.display.set_col_init(IMU_COL)
                 else:
                     self.display.set_col_ready(IMU_COL)
+
+                if now - last_can_update_time > SENSOR_DISPLAY_TIMEOUT:
+                    self.display.set_col_init(CAN_COL)
+                else:
+                    self.display.set_col_ready(CAN_COL)
+
                 last_display_update_time = now
                 self.display.heartbeat()
                 self.display.set_recording_state(recording_active)

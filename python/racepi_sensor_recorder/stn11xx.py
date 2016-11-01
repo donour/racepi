@@ -36,6 +36,7 @@ class STNHandler:
 
     def __init__(self, dev=DEV_NAME, baud=BAUD_RATE):
 
+        print "Initializing STN11xx device on port", dev
         # TODO autoset baudrate
         self.port = serial.Serial(dev, baud)
         if dev != self.port.getPort():
@@ -63,6 +64,8 @@ class STNHandler:
         if not 'stn11' in self.stn_version.lower():
             raise IOError("Failed to find STN11xx device: " + self.stn_version )
 
+        print "Found device:", self.stn_version
+        
         # set manual protocol selection
         self.__run_config_cmd("stp " + str(ST_PROTOCOL))
         self.__run_config_cmd("atsp " + str(FORCE_PROTOCOL))

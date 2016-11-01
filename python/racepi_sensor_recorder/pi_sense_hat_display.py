@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
-import atexit
+import atexit, time
 try:
     from sense_hat import SenseHat
 except ImportError:
@@ -23,7 +23,7 @@ except ImportError:
 
 IMU_COL = 0
 GPS_COL = 1
-OBD_COL = 2
+CAN_COL = 2
 BRIGHTNESS = 80
 
 
@@ -50,7 +50,7 @@ class RacePiStatusDisplay:
 
         self.set_col_lost(IMU_COL)
         self.set_col_lost(GPS_COL)
-        self.set_col_lost(OBD_COL)
+        self.set_col_lost(CAN_COL)
         self.last_heartbeat = time.time()
         self.heartbeat_active = False
 
@@ -118,7 +118,7 @@ if __name__ == "__main__":
     s = RacePiStatusDisplay(SenseHat())
     s.set_col_lost(IMU_COL)
     s.set_col_init(GPS_COL)
-    s.set_col_ready(OBD_COL)
+    s.set_col_ready(CAN_COL)
     
     import time
     while True:
