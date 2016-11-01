@@ -107,3 +107,8 @@ class CanFrameValueExtractorTest(TestCase):
         c = CanFrameValueExtractor(4, 12, a=0.1)
         self.assertTrue(abs(c.convert_frame(self.zerotps) - 0.0) < 1e-19)
         self.assertTrue(abs(c.convert_frame(self.fulltps)-100.0) < 1e-19)
+
+    def test_ford_tps_offset(self):
+        c = CanFrameValueExtractor(4, 12, a=0.1, c=-1000.0)
+        self.assertTrue(abs(c.convert_frame(self.zerotps) + 1000.0) < 1e-19)
+        self.assertTrue(abs(c.convert_frame(self.fulltps) + 900.0) < 1e-19)
