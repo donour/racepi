@@ -61,6 +61,12 @@ class SensorLogger:
 
         try:
             while True:
+
+                # TODO: save data in ringbuffer while not recording
+                # when a recording starts, we should back up the
+                # history to the exact moment of car motion and
+                # write all of those samples
+                
                 imu_data = self.imu_handler.get_all_data()
                 gps_data = self.gps_handler.get_all_data()
                 can_data = self.can_handler.get_all_data()

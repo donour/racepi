@@ -18,7 +18,7 @@
 """
 This is a hacked up script to set system time from GPS time 
 without support for PPS or ntpd. Accuracy of the system clock
-will typically be no better than ±1s.
+will typically be no better than ~1s.
 
 Time is only set if the clock falls outside of a large, allowed
 window. This is useful for resetting time on a system without
