@@ -22,28 +22,34 @@ received, not decoded.
 import time
 from sensor_handler import SensorHandler
 from stn11xx import STNHandler
-
+from serial.serialutil import SerialException
 
 class CanSensorHandler(SensorHandler):
 
     def __init__(self, can_ids=None):
         SensorHandler.__init__(self, self.__record_from_canbus)
-        self.stn = STNHandler()
-        self.stn.set_monitor_ids(can_ids)
-        
+        try:
+            self.stn = STNHandler()
+            self.stn.set_monitor_ids(can_ids)
+        except SerialException:
+            print "Failed to initialize CAN device"
+            self.stn = None
+            
     def __record_from_canbus(self):
 
         if not self.data_q:
             raise ValueError("Illegal argument, no queue specified")
 
-        self.stn.start_monitor()
-        while not self.doneEvent.is_set():
-            data = self.stn.readline()
-            now = time.time()
-            self.data_q.put((now, data))
+        if self.stn:
+            self.stn.start_monitor()
 
-        # stop monitors
-        self.stn.stop_monitor()
+            while not self.doneEvent.is_set():
+                data = self.stn.readline()
+                now = time.time()
+                self.data_q.put((now, data))
+
+            # stop monitors
+            self.stn.stop_monitor()
 
 
 if __name__ == "__main__":
