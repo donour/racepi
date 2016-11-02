@@ -15,7 +15,15 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
+"""
+This is a hacked up script to set system time from GPS time 
+without support for PPS or ntpd. Accuracy of the system clock
+will typically be no better than ±1s.
 
+Time is only set if the clock falls outside of a large, allowed
+window. This is useful for resetting time on a system without
+a RTC, like the Raspberry Pi.
+"""
 import gps, datetime, os
 
 ALLOWED_DELTA_SECONDS=60*10
