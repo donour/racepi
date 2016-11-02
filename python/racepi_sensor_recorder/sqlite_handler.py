@@ -99,11 +99,21 @@ class DbHandler:
 
     def insert_can_updates(self, can_data, session_id):
         for sample in can_data:
-            t = sample[0]
-            raw = sample[1]
-            print sample
-            # TODO: decode arbitrationID, RTR, message payload
-            # SQL insert
-            raise NotImplementedError("implementation incomplete")
+            t, raw = sample
+            if len(raw) < 5:
+                raise TypeError("Invalid can data:" + raw)
 
+            arbId = raw[:3]
+            datalen = raw[3]  # unused
+            payload = raw[4:]
+            insert_cmd = """
+              insert into can_data
+              (session_id, timestamp, arbitration_id, rtr, msg)
+              values
+              ('%s', %s, %d, %d, '%s')
+            """ % (
+                (session_id.hex, t, int(arbId,16), 0, payload))
+            self.conn.execute(insert_cmd)
 
+        if can_data:
+            self.conn.commit()
