@@ -30,9 +30,11 @@ from can_handler import CanSensorHandler
 from pi_sense_hat_display import RacePiStatusDisplay, GPS_COL, IMU_COL, CAN_COL
 
 DEFAULT_DB_LOCATION = "/external/racepi_data/test.db"
-MOVE_SPEED_THRESHOLD = 3.5
-DISPLAY_UPDATE_TIME = 0.05
-SENSOR_DISPLAY_TIMEOUT = 1.0
+MOVE_SPEED_THRESHOLD = 0.01
+
+# TODO: make recorded can ids configurable
+FORD_FOCUS_RS_CAN_IDS = ["010", "080", "213"]
+
 
 class SensorLogger:
 
@@ -43,7 +45,7 @@ class SensorLogger:
         self.display = RacePiStatusDisplay()
         self.imu_handler = RpiImuSensorHandler()
         self.gps_handler = GpsSensorHandler()
-        self.can_handler = CanSensorHandler()
+        self.can_handler = CanSensorHandler(FORD_FOCUS_RS_CAN_IDS)
 
     def start(self):
 
@@ -57,67 +59,55 @@ class SensorLogger:
         last_imu_update_time = 0
         last_can_update_time = 0        
 
-        while True:
-            imu_data = self.imu_handler.get_all_data()
-            gps_data = self.gps_handler.get_all_data()
-            can_data = self.can_handler.get_all_data()
+        try:
+            while True:
+                imu_data = self.imu_handler.get_all_data()
+                gps_data = self.gps_handler.get_all_data()
+                can_data = self.can_handler.get_all_data()
 
-            if not imu_data and not gps_data and not can_data:
-                # empty queues, relieve the CPU a little
-                time.sleep(0.02)
+                if not imu_data and not gps_data and not can_data:
+                    # empty queues, relieve the CPU a little
+                    time.sleep(0.02)
 
-            else:                
-                is_moving = reduce(operator.or_ ,
-                    map(lambda s: s[1].get('speed') > MOVE_SPEED_THRESHOLD, gps_data), False)
+                else:                
+                    is_moving = reduce(operator.or_ ,
+                        map(lambda s: s[1].get('speed') > MOVE_SPEED_THRESHOLD, gps_data), False)
 
-                # record whenever velocity != 0, otherwise stop
-                if is_moving and not recording_active:
-                    session_id = self.db_handler.get_new_session()
-                    print "New session: " + str(session_id)
-                    recording_active = True
+                    # record whenever velocity != 0, otherwise stop
+                    if is_moving and not recording_active:
+                        session_id = self.db_handler.get_new_session()
+                        print "New session: " + str(session_id)
+                        recording_active = True
 
-                if not is_moving and gps_data:
-                    recording_active = False
+                    if not is_moving and gps_data:
+                        recording_active = False
 
-                if recording_active:
-                    try:
-                        self.db_handler.insert_gps_updates(gps_data, session_id)
-                        self.db_handler.insert_imu_updates(imu_data, session_id)
-                    except TypeError as te:
-                        print "Failed to insert data:", te
+                    if recording_active:
+                        try:
+                            self.db_handler.insert_gps_updates(gps_data, session_id)
+                            self.db_handler.insert_imu_updates(imu_data, session_id)
+                            self.db_handler.insert_can_updates(can_data, session_id)
+                        except TypeError as te:
+                            print "Failed to insert data:", te
 
-            # display update logic
-            now = time.time()
-            if gps_data:
-                last_gps_update_time = now
-            if imu_data:
-                last_imu_update_time = now
-            if can_data:
-                last_can_update_time = now
+                # display update logic
+                now = time.time()
+                if gps_data:
+                    last_gps_update_time = now
+                if imu_data:
+                    last_imu_update_time = now
+                if can_data:
+                    last_can_update_time = now
+
+                self.display.refresh_display(last_gps_update_time,
+                                             last_imu_update_time,
+                                             last_can_update_time,
+                                             recording_active)
+        finally:
+            self.gps_handler.stop()
+            self.can_handler.stop()
+            self.imu_handler.stop()
             
-
-            if now - last_display_update_time >  DISPLAY_UPDATE_TIME :
-
-                if now - last_gps_update_time > SENSOR_DISPLAY_TIMEOUT:
-                    self.display.set_col_init(GPS_COL)
-                else:
-                    self.display.set_col_ready(GPS_COL)
-
-                if now - last_imu_update_time > SENSOR_DISPLAY_TIMEOUT:
-                    self.display.set_col_init(IMU_COL)
-                else:
-                    self.display.set_col_ready(IMU_COL)
-
-                if now - last_can_update_time > SENSOR_DISPLAY_TIMEOUT:
-                    self.display.set_col_init(CAN_COL)
-                else:
-                    self.display.set_col_ready(CAN_COL)
-
-                last_display_update_time = now
-                self.display.heartbeat()
-                self.display.set_recording_state(recording_active)
-
-
 if __name__ == "__main__":
     sl = SensorLogger()
     sl.start()

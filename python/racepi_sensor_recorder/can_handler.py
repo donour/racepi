@@ -14,28 +14,24 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
-
-import time
-from sensor_handler import SensorHandler
-from stn11xx import STNHandler
 """
 SensorHandler for CAN bus data. The handler records all messages
 for a list of specified arbitration IDs. Messages are returned as
 received, not decoded.
 """
-FORD_FOCUS_RS_CAN_IDS = ["010", "080", "213"]
+import time
+from sensor_handler import SensorHandler
+from stn11xx import STNHandler
 
 
 class CanSensorHandler(SensorHandler):
 
-    def __init__(self, can_ids=FORD_FOCUS_RS_CAN_IDS):
+    def __init__(self, can_ids=None):
         SensorHandler.__init__(self, self.__record_from_canbus)
         self.stn = STNHandler()
         self.stn.set_monitor_ids(can_ids)
         
     def __record_from_canbus(self):
-        """
-        """
 
         if not self.data_q:
             raise ValueError("Illegal argument, no queue specified")

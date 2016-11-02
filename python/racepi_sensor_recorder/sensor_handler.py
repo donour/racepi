@@ -40,7 +40,8 @@ class SensorHandler:
         :return:
         """
         self.doneEvent.set()
-        self.process.join()
+        self.process.join(3)
+        self.process.terminate()
 
     def get_all_data(self):
         """

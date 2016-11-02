@@ -29,7 +29,6 @@ class GpsSensorHandler(SensorHandler):
     def __init__(self, gpsdev = '/dev/gps0'):
         SensorHandler.__init__(self, self.__record_from_gps)
         self.gpsdev = gpsdev
-        
 
     def __record_from_gps(self):
 
@@ -64,7 +63,7 @@ if __name__ == "__main__":
     while True:
         data = sh.get_all_data()
         if data:
-            print data
+            os.write(1, "\r" + str(data[0]))
 
 
     

@@ -101,10 +101,9 @@ class DbHandler:
         for sample in can_data:
             t = sample[0]
             raw = sample[1]
-
+            print sample
             # TODO: decode arbitrationID, RTR, message payload
             # SQL insert
-
-        raise NotImplementedError("implementation incomplete")
+            raise NotImplementedError("implementation incomplete")
 
 

@@ -14,6 +14,9 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
+"""
+Abtraction of RacePi's LED display interface
+"""
 
 import atexit, time
 try:
@@ -25,6 +28,8 @@ IMU_COL = 0
 GPS_COL = 1
 CAN_COL = 2
 BRIGHTNESS = 80
+DISPLAY_UPDATE_TIME = 0.05
+SENSOR_DISPLAY_TIMEOUT = 1.0
 
 
 class RacePiStatusDisplay:
@@ -53,6 +58,7 @@ class RacePiStatusDisplay:
         self.set_col_lost(CAN_COL)
         self.last_heartbeat = time.time()
         self.heartbeat_active = False
+        self.update_time = time.time()
 
     def __shutdown_mesg(self):
         self.sense.show_message(".");
@@ -82,7 +88,6 @@ class RacePiStatusDisplay:
         self.sense.set_pixel(1, colNumber, int(BRIGHTNESS*0.8), int(BRIGHTNESS*0.85), 0)
         self.sense.set_pixel(2, colNumber, 0, 0, 0)
 
-
     def set_col_ready(self, colNumber):
         """
         Set specified column to ready/connected
@@ -93,7 +98,6 @@ class RacePiStatusDisplay:
         self.sense.set_pixel(0, colNumber, 0, BRIGHTNESS, 0)
         self.sense.set_pixel(1, colNumber, 0, BRIGHTNESS, 0)
         self.sense.set_pixel(2, colNumber, 0, BRIGHTNESS, 0)
-
 
     def set_recording_state(self, state):
         """
@@ -111,8 +115,32 @@ class RacePiStatusDisplay:
                                  0)
             self.last_heartbeat = now
             self.heartbeat_active = not self.heartbeat_active
-    
 
+    def refresh_display(self, gps_time=0, imu_time=0, can_time=0, recording=False):
+
+        now = time.time()
+        if now - self.update_time >  DISPLAY_UPDATE_TIME :
+
+                if now - gps_time > SENSOR_DISPLAY_TIMEOUT:
+                    self.set_col_init(GPS_COL)
+                else:
+                    self.set_col_ready(GPS_COL)
+
+                if now - imu_time > SENSOR_DISPLAY_TIMEOUT:
+                    self.set_col_init(IMU_COL)
+                else:
+                    self.set_col_ready(IMU_COL)
+
+                if now - can_time > SENSOR_DISPLAY_TIMEOUT:
+                    self.set_col_init(CAN_COL)
+                else:
+                    self.set_col_ready(CAN_COL)
+
+                self.update_time = now
+                self.heartbeat()
+                self.set_recording_state(recording)
+
+        
 if __name__ == "__main__":
 
     s = RacePiStatusDisplay(SenseHat())

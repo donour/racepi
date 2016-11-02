@@ -70,9 +70,6 @@ class STNHandler:
         self.__run_config_cmd("stp " + str(ST_PROTOCOL))
         self.__run_config_cmd("atsp " + str(FORCE_PROTOCOL))
 
-        # clear CAN filters and block all messages
-        self.set_monitor_ids(None)
-
     def set_monitor_ids(self, ids):
         """
         Reset CAN monitors to only allow data from the list
