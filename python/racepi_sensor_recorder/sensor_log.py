@@ -33,7 +33,7 @@ DEFAULT_DB_LOCATION = "/external/racepi_data/test.db"
 MOVE_SPEED_THRESHOLD = 0.01
 
 # TODO: make recorded can ids configurable
-FORD_FOCUS_RS_CAN_IDS = ["010", "080", "213"]
+FORD_FOCUS_RS_CAN_IDS = ["010", "070", "080", "213", "420"]
 
 
 class SensorLogger:

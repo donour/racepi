@@ -36,8 +36,8 @@ class STNHandler:
 
     def __init__(self, dev=DEV_NAME, baud=BAUD_RATE):
 
+        # TODO autodetect and set baudrate
         print "Initializing STN11xx device on port", dev
-        # TODO autoset baudrate
         self.port = serial.Serial(dev, baud)
         if dev != self.port.getPort():
             raise IOError("Could not open" + dev)
@@ -69,7 +69,7 @@ class STNHandler:
         # set manual protocol selection
         self.__run_config_cmd("stp " + str(ST_PROTOCOL))
         self.__run_config_cmd("atsp " + str(FORCE_PROTOCOL))
-
+        
     def set_monitor_ids(self, ids):
         """
         Reset CAN monitors to only allow data from the list

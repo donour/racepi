@@ -34,7 +34,7 @@ class CanSensorHandler(SensorHandler):
         except SerialException:
             print "Failed to initialize CAN device"
             self.stn = None
-            
+
     def __record_from_canbus(self):
 
         if not self.data_q:
