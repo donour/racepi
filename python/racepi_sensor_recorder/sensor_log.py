@@ -58,6 +58,8 @@ class SensorLogger:
         last_imu_update_time = 0
         last_can_update_time = 0
 
+        session_id = None
+
         try:
             while True:
 
