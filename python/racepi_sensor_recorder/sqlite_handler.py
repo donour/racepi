@@ -18,6 +18,7 @@ import uuid
 import sqlite3
 from gpsd import GPS_REQUIRED_FIELDS
 
+
 class DbHandler:
     """
     Class for handling RacePi access to sqlite

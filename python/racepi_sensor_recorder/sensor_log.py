@@ -75,8 +75,12 @@ class SensorLogger:
                     time.sleep(0.02)
 
                 else:                
-                    is_moving = reduce(operator.or_ ,
-                        map(lambda s: s[1].get('speed') > MOVE_SPEED_THRESHOLD, gps_data), False)
+                    ## TODO remove me
+                    ## is_moving = reduce(operator.or_,
+                    ##    map(lambda s: s[1].get('speed') > MOVE_SPEED_THRESHOLD, gps_data), False)
+
+                    is_moving = True in \
+                                [s[1].get('speed') > MOVE_SPEED_THRESHOLD for s in gps_data]
 
                     # record whenever velocity != 0, otherwise stop
                     if is_moving and not recording_active:
