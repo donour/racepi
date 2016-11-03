@@ -19,11 +19,12 @@
 
 # Schema for the database. The order is important because
 # tables use foreign keys.
-SCHEMA_FILES=(           \
-    "schema/session.sql" \
-    "schema/gps.sql"     \
-    "schema/imu.sql"     \
-    "schema/can.sql"     \
+SCHEMA_FILES=(                \
+    "schema/session.sql"      \
+    "schema/session_info.sql" \
+    "schema/gps.sql"          \
+    "schema/imu.sql"          \
+    "schema/can.sql"          \
 )
 
 if [ -z $1 ]; then
