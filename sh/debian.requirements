@@ -16,6 +16,7 @@
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
 apt-get -y install     	\
+gpsd-clients            \
 python-gps		\
 sqlite3			\
 python-sense-hat	\
