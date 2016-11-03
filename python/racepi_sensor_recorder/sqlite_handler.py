@@ -146,7 +146,7 @@ join
     (select session_id,count(distinct timestamp) as can_count
     from can_data group by session_id) as can
     on can.session_id = session.id
-    where session_id='%s'
+    where session.id='%s'
     """ % session_id
         self.conn.execute(update_cmd)
         self.conn.commit()
