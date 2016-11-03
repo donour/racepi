@@ -4,8 +4,10 @@
             <thead>
             <tr>
                 <th>Session ID</th>
-                <th>GPS Samples</th>
-                <th>IMU Samples</th>
+                <th>Time</th>
+                <th>Max Speed</th>
+                <th>Num Samples</th>
+                <th>Duration (s)</th>
                 <th></th>
             </tr>
             </thead>
@@ -13,13 +15,21 @@
             <tr ng-repeat="session in vm.sessions">
                 <td>
                     <div>{{session[0]}}</div>
-                    <div style="font-size: 0.7em; color: #ddd;">{{session[1]}}</div>
+                </td>
+                <td>
+                    <div>{{session[1]}}</div>
                 </td>
                 <td>
                     <div>{{session[2]}}</div>
                 </td>
                 <td>
                     <div>{{session[3]}}</div>
+                </td>
+                <td>
+                    <div>{{session[4]}}</div>
+                </td>
+                <td>
+                    <div>{{session[5]}}</div>
                 </td>
                 <td width="125px">
                     <a ui-sref="details({sessionId: session[0]})">

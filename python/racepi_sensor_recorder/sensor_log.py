@@ -54,10 +54,9 @@ class SensorLogger:
         self.can_handler.start()
         
         recording_active = False
-        last_display_update_time = 0
         last_gps_update_time = 0
         last_imu_update_time = 0
-        last_can_update_time = 0        
+        last_can_update_time = 0
 
         try:
             while True:
@@ -76,8 +75,12 @@ class SensorLogger:
                     time.sleep(0.02)
 
                 else:                
-                    is_moving = reduce(operator.or_ ,
-                        map(lambda s: s[1].get('speed') > MOVE_SPEED_THRESHOLD, gps_data), False)
+                    ## TODO remove me
+                    ## is_moving = reduce(operator.or_,
+                    ##    map(lambda s: s[1].get('speed') > MOVE_SPEED_THRESHOLD, gps_data), False)
+
+                    is_moving = True in \
+                                [s[1].get('speed') > MOVE_SPEED_THRESHOLD for s in gps_data]
 
                     # record whenever velocity != 0, otherwise stop
                     if is_moving and not recording_active:
@@ -86,6 +89,7 @@ class SensorLogger:
                         recording_active = True
 
                     if not is_moving and gps_data:
+                        self.db_handler.populate_session_info(session_id)
                         recording_active = False
 
                     if recording_active:

@@ -66,23 +66,7 @@ def hello_world():
 
 @app.route('/data/sessions')
 def get_sessions():
-    #return get_sql_data("sessions", "1=1")
-
-    with db.connect() as c:
-        q = c.execute(
-            """
-            select
-                id, description, gps_count, imu_count
-                from sessions as session
-            join
-                (select session_id,count(distinct timestamp) as imu_count from imu_data group by session_id) as imu
-                on imu.session_id = session.id
-            join
-                (select session_id,count(distinct timestamp) as gps_count from gps_data group by session_id) as gps
-                on gps.session_id = session.id
-            """
-        )
-        return jsonify(result=q.cursor.fetchall())
+    return get_sql_data("session_info", "1=1")
 
 
 @app.route('/data/gps')
