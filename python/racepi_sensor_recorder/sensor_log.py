@@ -30,7 +30,7 @@ from can_handler import CanSensorHandler
 from pi_sense_hat_display import RacePiStatusDisplay, GPS_COL, IMU_COL, CAN_COL
 
 DEFAULT_DB_LOCATION = "/external/racepi_data/test.db"
-MOVE_SPEED_THRESHOLD = 0.01
+MOVE_SPEED_THRESHOLD = 4.0
 
 # TODO: make recorded can ids configurable
 FORD_FOCUS_RS_CAN_IDS = ["010", "070", "080", "213", "420"]
