@@ -1,4 +1,7 @@
 <div ng-if="vm.sessionId">
+    <div>
+        <a download="{{vm.sessionId}}.csv" ng-href="/export/csv?session_id={{vm.sessionId}}">[Download CSV]</a>
+    </div>
     <div class="row" ng-if="vm.runPlotConfig">
         <div class="col-sm-12">
             <rp-plotly config="vm.runPlotConfig"></rp-plotly>

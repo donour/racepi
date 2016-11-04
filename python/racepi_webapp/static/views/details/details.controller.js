@@ -29,6 +29,6 @@
         function setRunPlot(response) {
             vm.runPlotConfig = response.data;
         }
-
     }
+
 })();

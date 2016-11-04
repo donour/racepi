@@ -22,6 +22,7 @@ import pandas as pd
 app = Flask(__name__)
 db = create_engine('sqlite:////home/donour/test.db')
 
+
 def sfl(float_list, ndigits = 3):
     """
     Shorten a list of float by rounding to a small number of
@@ -32,6 +33,7 @@ def sfl(float_list, ndigits = 3):
     :return: list of values round to small number of digits
     """
     return [round(x, ndigits) for x in float_list]
+
 
 def get_scatterplot(series, w, title):
     """
@@ -149,7 +151,6 @@ def get_gpsplot_timeseries():
         return jsonify(data=fig.get('data'), layout=fig.get('layout'))
 
 
-
 @app.route('/plot/run')
 def get_singlerun_timeseries():
     session_id = request.args.get("session_id")
@@ -173,6 +174,7 @@ def get_singlerun_timeseries():
     )
     fig = pgo.Figure(data=data, layout=layout)
     return jsonify(data=fig.get('data'), layout=fig.get('layout'))
+
 
 @app.route('/export/csv')
 def get_run_csv():

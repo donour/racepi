@@ -4,7 +4,6 @@
             <thead>
             <tr>
                 <th>Session ID</th>
-                <th>Time</th>
                 <th>Max Speed</th>
                 <th>Num Samples</th>
                 <th>Duration (s)</th>
@@ -17,19 +16,13 @@
                     <div>{{session[0]}}</div>
                 </td>
                 <td>
-                    <div>{{session[1]}}</div>
-                </td>
-                <td>
-                    <div>{{session[2]}}</div>
-                </td>
-                <td>
                     <div>{{session[3]}}</div>
                 </td>
                 <td>
                     <div>{{session[4]}}</div>
                 </td>
                 <td>
-                    <div>{{session[5]}}</div>
+                    <div>{{session[2]}}</div>
                 </td>
                 <td width="125px">
                     <a ui-sref="details({sessionId: session[0]})">
