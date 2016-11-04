@@ -40,6 +40,7 @@ class CanSensorHandler(SensorHandler):
         if not self.data_q:
             raise ValueError("Illegal argument, no queue specified")
 
+        print "Starting CAN reader"
         if self.stn:
             self.stn.start_monitor()
 
@@ -47,10 +48,10 @@ class CanSensorHandler(SensorHandler):
                 data = self.stn.readline()
                 now = time.time()
                 self.data_q.put((now, data))
-
+                
             # stop monitors
             self.stn.stop_monitor()
-
+        print "Shutting down CAN reader"
 
 if __name__ == "__main__":
     sh = CanSensorHandler()
