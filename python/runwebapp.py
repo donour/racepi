@@ -1,3 +1,4 @@
+#!/usr/bin/env python2
 # Copyright 2016 Donour Sizemore
 #
 # This file is part of RacePi
@@ -15,4 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 from racepi_webapp import app
+
+# FIXME: disabling debugging causes 100% cpu usage, notifier?
 app.run(host='0.0.0.0', debug=True, threaded=True)
