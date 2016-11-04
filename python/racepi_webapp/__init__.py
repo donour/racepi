@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, Response
 from sqlalchemy import create_engine
 from plotly import graph_objs as pgo
 import pandas as pd
@@ -173,3 +173,43 @@ def get_singlerun_timeseries():
     )
     fig = pgo.Figure(data=data, layout=layout)
     return jsonify(data=fig.get('data'), layout=fig.get('layout'))
+
+@app.route('/export/csv')
+def get_run_csv():
+    session_id = request.args.get("session_id")
+    get_csv_cmd="""
+select * from
+(select
+    session_id,timestamp,'GPS' as type,time,speed,track,lat,lon,epx,epy,epv,
+    NULL as arbitration_id,NULL as msg,
+    NULL AS r,NULL AS p,NULL AS y,NULL AS x_accel,NULL AS y_accel,NULL AS z_accel,NULL AS x_gyro,NULL AS y_gyro,NULL AS z_gyro
+    from gps_data
+union
+select
+    session_id,timestamp,'CAN' as type, NULL as time, NULL as speed,NULL as track,NULL as lat,NULL as lon,NULL as epx,NULL as epy,NULL as epv,
+    arbitration_id, msg,
+    NULL AS r,NULL AS p,NULL AS y,NULL AS x_accel,NULL AS y_accel,NULL AS z_accel,NULL AS x_gyro,NULL AS y_gyro,NULL AS z_gyro
+    from can_data
+union
+select
+    session_id,timestamp,'IMU' as type, NULL as time, NULL as speed,NULL as track,NULL as lat,NULL as lon,NULL as epx,NULL as epy,NULL as epv,
+    NULL as arbitration_id, NULL as msg,
+    r,p,y,x_accel,y_accel,z_accel,x_gyro,y_gyro,z_gyro
+    from imu_data )
+
+
+where session_id = '%s'
+    """ % session_id
+    with db.connect() as c:
+        q = c.execute(get_csv_cmd)
+        results = ["#" + ','.join(q.keys())]
+        for row in q:
+            data = [str(x) if x else '' for x in row]
+            results.append(','.join(data))
+
+        # only column header available
+        if len(results) <= 1:
+            raise ValueError("Invalid session")
+
+        result = '\n'.join(results)
+        return Response(result, mimetype='text/csv')
