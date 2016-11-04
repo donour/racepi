@@ -20,7 +20,7 @@ from plotly import graph_objs as pgo
 import pandas as pd
 
 app = Flask(__name__)
-db = create_engine('sqlite:////home/donour/test.db')
+db = create_engine('sqlite:////external/racepi_data/test.db')
 
 
 def sfl(float_list, ndigits = 3):
