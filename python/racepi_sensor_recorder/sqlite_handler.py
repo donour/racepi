@@ -16,7 +16,7 @@
 
 import uuid
 import sqlite3
-from gpsd import GPS_REQUIRED_FIELDS
+from gps_handler import GPS_REQUIRED_FIELDS
 
 
 class DbHandler:
@@ -52,9 +52,6 @@ class DbHandler:
                 accel= sample[1]['accel']
                 gyro = sample[1]['gyro']
 
-                #os.write(1, "\r[%.3f] %2.4f %2.4f %2.4f" % (
-                #    t,pose[0], pose[1], pose[2]))
-
                 insert_cmd = """
                   insert into imu_data
                   (session_id, timestamp,
@@ -69,7 +66,6 @@ class DbHandler:
 
         if imu_data:
             self.conn.commit()
-                
 
     def insert_gps_updates(self, gps_data, session_id):
         field_names = GPS_REQUIRED_FIELDS
