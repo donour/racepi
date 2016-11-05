@@ -91,7 +91,7 @@ class SensorLogger:
                         recording_active = True
 
                     if not is_moving and gps_data:
-                        #self.db_handler.populate_session_info(session_id)
+                        self.db_handler.populate_session_info(session_id)
                         recording_active = False
 
                     if recording_active:
