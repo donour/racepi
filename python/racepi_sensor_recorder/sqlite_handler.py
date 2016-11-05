@@ -130,27 +130,32 @@ class DbHandler:
         
         update_cmd = """
         INSERT or REPLACE into session_info
-(session_id, start_time_utc, max_speed, num_data_samples, duration)
-select
-    session.id as session_id,
-    start_time_utc,
-    max_speed,
-    gps_count+imu_count+can_count as num_data_samples,
-    stop_time-start_time_utc as duration
-from sessions as session
-join
-    (select session_id,count(distinct timestamp) as imu_count
-    from imu_data group by session_id) as imu
-    on imu.session_id = session.id
-join
-    (select session_id,count(distinct timestamp) as gps_count, MAX(speed) as max_speed, MIN(timestamp) as start_time_utc, MAX(timestamp) as stop_time
-    from gps_data group by session_id) as gps
-    on gps.session_id = session.id
-join
-    (select session_id,count(distinct timestamp) as can_count
-    from can_data group by session_id) as can
-    on can.session_id = session.id
-    where session.id='%s'
-    """ % session_id
+        (session_id, start_time_utc, max_speed, num_data_samples, duration)
+        select
+          session.id as session_id,
+          start_time_utc,
+          max_speed,
+          gps_count+imu_count+can_count as num_data_samples,
+          stop_time-start_time_utc as duration
+        from sessions as session
+        join
+        (
+         select session_id,count(distinct timestamp) as imu_count
+         from imu_data group by session_id) as imu
+         on imu.session_id = session.id
+        join
+        (
+         select session_id,count(distinct timestamp) as gps_count, MAX(speed) as max_speed, MIN(timestamp) as start_time_utc, MAX(timestamp) as stop_time
+         from gps_data group by session_id) as gps
+         on gps.session_id = session.id
+        join
+        (
+         select session_id,count(distinct timestamp) as can_count
+         from can_data group by session_id) as can
+         on can.session_id = session.id
+        """
+        #--where session.id='%s'
+        #""" % session_id.hex
+        
         self.conn.execute(update_cmd)
         self.conn.commit()
