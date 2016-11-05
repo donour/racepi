@@ -40,6 +40,8 @@ class SensorLogger:
 
     def __init__(self, databaseLocation = DEFAULT_DB_LOCATION):
         print "Opening Database"
+        # TODO: look at opening DB as needed
+        # to avoid corruption of tables
         self.db_handler = DbHandler(databaseLocation)
         print "Opening sensor handlers"
         self.display = RacePiStatusDisplay()
