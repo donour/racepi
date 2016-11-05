@@ -124,6 +124,10 @@ class DbHandler:
         Populate the session info data with metadata from the
         sensor tables
         """
+
+        if not session_id:
+            return
+        
         update_cmd = """
         INSERT or REPLACE into session_info
 (session_id, start_time_utc, max_speed, num_data_samples, duration)
