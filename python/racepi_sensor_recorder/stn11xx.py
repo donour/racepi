@@ -37,7 +37,7 @@ class STNHandler:
     def __init__(self, dev=DEV_NAME, baud=BAUD_RATE):
 
         # TODO autodetect and set baudrate
-        print "Initializing STN11xx device on port", dev
+        print("Initializing STN11xx device on port %s" % dev)
         self.port = serial.Serial(dev, baud)
         if dev != self.port.getPort():
             raise IOError("Could not open" + dev)
@@ -64,7 +64,7 @@ class STNHandler:
         if not 'stn11' in self.stn_version.lower():
             raise IOError("Failed to find STN11xx device: " + self.stn_version )
 
-        print "Found device:", self.stn_version
+        print("Found device: %s" % self.stn_version)
         
         # set manual protocol selection
         self.__run_config_cmd("stp " + str(ST_PROTOCOL))
@@ -84,7 +84,7 @@ class STNHandler:
 
     def __run_config_cmd(self, cmd):
         r = self.get_sample(cmd)
-        print cmd, r
+        print(cmd, r)
         if 'ok' not in r.lower():
             raise IOError("Failed to run cmd: "+cmd)
     
@@ -164,7 +164,7 @@ if __name__ == "__main__":
     import time, sys, os
 
     if len(sys.argv) < 2:
-        print "Usage: %s <CAN ID> <CAN ID> ..." % sys.argv[0]
+        print("Usage: %s <CAN ID> <CAN ID> ..." % sys.argv[0])
         sys.exit(1)
 
     sh = STNHandler(DEV_NAME, BAUD_RATE)
