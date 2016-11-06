@@ -39,11 +39,11 @@ FORD_FOCUS_RS_CAN_IDS = ["010", "070", "080", "090", "213", "420"]
 class SensorLogger:
 
     def __init__(self, databaseLocation = DEFAULT_DB_LOCATION):
-        print "Opening Database"
+        print("Opening Database")
         # TODO: look at opening DB as needed
         # to avoid corruption of tables
         self.db_handler = DbHandler(databaseLocation)
-        print "Opening sensor handlers"
+        print("Opening sensor handlers")
         self.display = RacePiStatusDisplay()
         self.imu_handler = RpiImuSensorHandler()
         self.gps_handler = GpsSensorHandler()
@@ -85,7 +85,7 @@ class SensorLogger:
                     # record whenever velocity != 0, otherwise stop
                     if is_moving and not recording_active:
                         session_id = self.db_handler.get_new_session()
-                        print "New session: " + str(session_id)
+                        print("New session: %s" % str(session_id))
                         recording_active = True
 
                     if not is_moving and gps_data:
@@ -98,7 +98,7 @@ class SensorLogger:
                             self.db_handler.insert_imu_updates(imu_data, session_id)
                             self.db_handler.insert_can_updates(can_data, session_id)
                         except TypeError as te:
-                            print "Failed to insert data:", te
+                            print("Failed to insert data: %s" % te)
 
                 # display update logic
                 now = time.time()
