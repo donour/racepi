@@ -32,7 +32,7 @@ class CanSensorHandler(SensorHandler):
             self.stn = STNHandler()
             self.stn.set_monitor_ids(can_ids)
         except SerialException:
-            print "Failed to initialize CAN device"
+            print("Failed to initialize CAN device")
             self.stn = None
 
     def __record_from_canbus(self):
@@ -40,7 +40,7 @@ class CanSensorHandler(SensorHandler):
         if not self.data_q:
             raise ValueError("Illegal argument, no queue specified")
 
-        print "Starting CAN reader"
+        print("Starting CAN reader")
         if self.stn:
             self.stn.start_monitor()
 
@@ -51,7 +51,7 @@ class CanSensorHandler(SensorHandler):
                 
             # stop monitors
             self.stn.stop_monitor()
-        print "Shutting down CAN reader"
+        print("Shutting down CAN reader")
 
 if __name__ == "__main__":
     sh = CanSensorHandler()
@@ -59,4 +59,4 @@ if __name__ == "__main__":
     while True:
         data = sh.get_all_data()
         if data:
-            print data
+            print(data)
