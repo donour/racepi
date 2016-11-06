@@ -16,7 +16,8 @@
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
 from unittest import TestCase
-from racepi_sensor_recorder.can_data import CanFrameValueExtractor, CanFrame
+
+from python.racepi_webapp.can_data import CanFrameValueExtractor, CanFrame
 
 
 class CanDataFrameTest(TestCase):
@@ -50,6 +51,8 @@ class CanFrameValueExtractorTest(TestCase):
         self.firstbit = CanFrame('000', '8000000000000000')
         self.zerotps  = CanFrame('080', '90007D00007FF3F7')
         self.fulltps  = CanFrame('080', '93E87D00007FF3F7')
+        self.sdr      = CanFrame('010', '0229000080008036')
+        self.sdl      = CanFrame('010', '0229000000008036')
 
     def test_init(self):
         self.assertIsNotNone(CanFrameValueExtractor(1, 2))
@@ -112,3 +115,11 @@ class CanFrameValueExtractorTest(TestCase):
         c = CanFrameValueExtractor(4, 12, a=0.1, c=-1000.0)
         self.assertTrue(abs(c.convert_frame(self.zerotps) + 1000.0) < 1e-19)
         self.assertTrue(abs(c.convert_frame(self.fulltps) + 900.0) < 1e-19)
+
+    def test_ford_steering_direction_right(self):
+        c = CanFrameValueExtractor(32, 1)
+        self.assertNotEqual(0, c.convert_frame(self.sdr))
+
+    def test_ford_steering_direction_left(self):
+        c = CanFrameValueExtractor(32, 1)
+        self.assertEquals(0, c.convert_frame(self.sdl))

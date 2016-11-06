@@ -93,12 +93,7 @@ class CanFrame:
         :param arbitrationId: hex string of arbId
         :param payload: hex string of data payload
         """
-        if isinstance(arbitrationId, str) and isinstance(payload, str):
-            self.arbId, self.payload = self.__from_message_strings(arbitrationId, payload)
-
-        else:
-            raise ValueError("Illegal arguments : (%s,%s)" %
-                             (type(arbitrationId), type(payload)))
+        self.arbId, self.payload = self.__from_message_strings(arbitrationId, payload)
 
     def __from_message_strings(self, arbitrationID, payload):
         # append leading zero to 11-bit ids
@@ -106,5 +101,5 @@ class CanFrame:
             arbitrationID = '0' + arbitrationID
 
         cid = bytearray.fromhex(arbitrationID)
-        data = bytearray.fromhex(payload)
+        data = bytearray.fromhex(str(payload))
         return cid, data

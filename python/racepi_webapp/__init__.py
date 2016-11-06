@@ -18,9 +18,16 @@ from flask import Flask, jsonify, request, Response
 from sqlalchemy import create_engine
 from plotly import graph_objs as pgo
 import pandas as pd
+import can_data
+
 
 app = Flask(__name__)
-db = create_engine('sqlite:////external/racepi_data/test.db')
+db = create_engine('sqlite:////home/donour/test.db')
+
+tps_converter = can_data.CanFrameValueExtractor(4, 12, a=0.1)
+rpm_converter = can_data.CanFrameValueExtractor(49, 15, a=9.587e-5)
+steering_direction_converter = can_data.CanFrameValueExtractor(32, 1)
+brake_pressure_converter = can_data.CanFrameValueExtractor(24, 16, a=1e-3)
 
 
 def sfl(float_list, ndigits = 3):
@@ -157,20 +164,29 @@ def get_singlerun_timeseries():
     if 'smooth' in request.args:
         smoothing_window = int(request.args.get("smooth"))
     else:
-        smoothing_window = 2
+        smoothing_window = 3
 
     gps_data = pd.read_sql_query("select timestamp, speed, track, lat, lon FROM %s where session_id='%s'" % ("gps_data", session_id), db, index_col='timestamp')
     imu_data = pd.read_sql_query("select timestamp, x_accel, y_accel, z_accel FROM %s where session_id='%s'" % ("imu_data", session_id), db, index_col='timestamp')
+    can_samples = pd.read_sql_query("select timestamp, msg FROM %s where session_id='%s' and arbitration_id=112" % ("can_data", session_id), db, index_col='timestamp')
+
+    can_samples['Steering'] = [
+        (rpm_converter.convert_frame(can_data.CanFrame('010', '0'+x)) * 3000 *
+         ((-1)**steering_direction_converter.convert_frame(can_data.CanFrame('010', '0'+x))))
+        for x in can_samples.msg.tolist()]
+
+    can_samples['Brake'] = [brake_pressure_converter.convert_frame(can_data.CanFrame('213', '0'+x)) for x in can_samples.msg.tolist()]
 
     data = [
         get_scatterplot(gps_data.speed, smoothing_window, "Speed (avg)"),
-        get_scatterplot(imu_data.z_accel, smoothing_window, "ZAccel (avg)")
+        get_scatterplot(imu_data.z_accel, smoothing_window, "ZAccel (avg)"),
+        get_scatterplot(can_samples.Brake, smoothing_window, "Brake")
     ]
 
     layout = pgo.Layout(
         title="Run",
         xaxis=dict(title="time"),
-        yaxis=dict(title="value")
+        yaxis=dict(title="value"),
     )
     fig = pgo.Figure(data=data, layout=layout)
     return jsonify(data=fig.get('data'), layout=fig.get('layout'))
