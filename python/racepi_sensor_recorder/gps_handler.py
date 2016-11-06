@@ -35,7 +35,7 @@ class GpsSensorHandler(SensorHandler):
         if not self.data_q:
             raise ValueError("Illegal argument, no queue specified")
 
-        print "Starting GPS reader"
+        print("Starting GPS reader")
         session = gps.gps(mode = gps.WATCH_ENABLE)
         while not self.doneEvent.is_set():
             while not session:
@@ -53,7 +53,7 @@ class GpsSensorHandler(SensorHandler):
                 # 20hz is above the expected GPS sample rate
                 time.sleep(DEFAULT_WAIT_FOR_NO_DATA)
 
-        print "GPS reader shutdown"
+        print("GPS reader shutdown")
         
         
 if __name__ == "__main__":
