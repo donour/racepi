@@ -72,8 +72,8 @@ if __name__ == "__main__":
         data = sh.get_all_data()
         if data:
             s = data[0][1]
-            os.write(1, "\r" +
-                 "[% 1.2f,% 1.2f,% 1.2f % 1.2f] : " % s.get('fusionQPose') +
-                 "[% 1.2f,% 1.2f,% 1.2f] : " % s.get('fusionPose') +
-                 "[% 1.2f,% 1.2f,% 1.2f] : " % s.get('accel') +
-                 "[% 1.2f,% 1.2f,% 1.2f]" % s.get('gyro'))
+            print(\
+            "[% 1.2f,% 1.2f,% 1.2f % 1.2f] : " % s.get('fusionQPose') +
+            "[% 1.2f,% 1.2f,% 1.2f] : " % s.get('fusionPose') +
+            "[% 1.2f,% 1.2f,% 1.2f] : " % s.get('accel') +
+            "[% 1.2f,% 1.2f,% 1.2f]" % s.get('gyro'))
