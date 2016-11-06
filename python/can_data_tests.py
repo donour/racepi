@@ -23,15 +23,15 @@ from python.racepi_webapp.can_data import CanFrameValueExtractor, CanFrame
 class CanDataFrameTest(TestCase):
 
     def test_from_message_strings_None(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(Exception):
             CanFrame(None, None)
 
-    def test_from_message_strings_NoId(self):
-        with self.assertRaises(ValueError):
+    def test_from_message_strings_No_Id(self):
+        with self.assertRaises(Exception):
             CanFrame(None, 'FFFFFFFFFFFFFFFF')
 
-    def test_from_message_strings_NoId2(self):
-        with self.assertRaises(ValueError):
+    def test_from_message_strings_No_Id2(self):
+        with self.assertRaises(Exception):
             CanFrame(None, '00')
 
     def test_from_message_strings_short(self):
