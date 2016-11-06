@@ -78,11 +78,7 @@ class SensorLogger:
                     # empty queues, relieve the CPU a little
                     time.sleep(0.02)
 
-                else:                
-                    ## TODO remove me
-                    ## is_moving = reduce(operator.or_,
-                    ##    map(lambda s: s[1].get('speed') > MOVE_SPEED_THRESHOLD, gps_data), False)
-
+                else:
                     is_moving = True in \
                                 [s[1].get('speed') > MOVE_SPEED_THRESHOLD for s in gps_data]
 
