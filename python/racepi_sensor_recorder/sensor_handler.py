@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
-from multiprocessing import Queue, Event, Process
+from multiprocessing import Queue, Pipe, Event, Process
 
 
 class SensorHandler:
@@ -24,7 +24,7 @@ class SensorHandler:
     """
     def __init__(self, read_func):
         self.doneEvent = Event()
-        self.data_q = Queue()
+        self.pipe_out, self.pipe_in = Pipe()
         self.process = Process(target=read_func)
 
     def start(self):
@@ -33,7 +33,7 @@ class SensorHandler:
         :return:
         """
         self.process.start()
-
+        
     def stop(self):
         """
         Stop recording data
@@ -49,7 +49,7 @@ class SensorHandler:
         :return: list of sensor data tuples, each tuple is (time, value)
         """
         data = []
-        while not self.data_q.empty():
-            data.append(self.data_q.get())
+        while self.pipe_in.poll():
+            data.append(self.pipe_in.recv())
         return data
 

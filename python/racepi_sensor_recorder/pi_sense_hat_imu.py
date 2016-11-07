@@ -21,6 +21,8 @@ try:
 except ImportError:
     RTIMU = None
 
+SETTINGS_FILE = "/etc/RTIMULib.ini"
+
 class RpiImuSensorHandler(SensorHandler):
 
     def __init__(self):
@@ -32,10 +34,9 @@ class RpiImuSensorHandler(SensorHandler):
         specified Queue
         """
 
-        if not self.data_q:
+        if not self.pipe_out:
             raise ValueError("Illegal argument, no queue specified")
 
-        SETTINGS_FILE = "/etc/RTIMULib.ini"
         if not os.path.exists(SETTINGS_FILE):
             print("Settings file not found, creating file: " + SETTINGS_FILE)
         else:
@@ -60,8 +61,8 @@ class RpiImuSensorHandler(SensorHandler):
         while not self.doneEvent.is_set():
             if _IMU.IMURead():
                 data = _IMU.getIMUData()
-                self.data_q.put((time.time(), data))
-                time.sleep(_poll_interval * 0.5 / 1000.0)
+                self.pipe_out.send((time.time(), data))
+                time.sleep(_poll_interval * 0.5/ 10000.0)
 
 
 if __name__ == "__main__":

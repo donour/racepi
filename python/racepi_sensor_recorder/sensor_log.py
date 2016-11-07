@@ -109,7 +109,7 @@ class SensorLogger:
                 gps_data = self.gps_handler.get_all_data()
                 imu_data = self.imu_handler.get_all_data()
                 can_data = self.can_handler.get_all_data()
-
+                
                 self.data.add_sample('gps', gps_data)
                 self.data.add_sample('imu', imu_data)
                 self.data.add_sample('can', can_data)
@@ -137,9 +137,8 @@ class SensorLogger:
                     except TypeError as te:
                         print("Failed to insert data: %s" % te)
                 else:
-                    # clear old data in buffer
+                    # clear old data in buffer                    
                     self.data.expire_old_samples(time.time() - 10.0)
-                    time.sleep(0.01)
 
                 # display update logic
                 if gps_data: last_gps_update_time = gps_data[-1][0]
@@ -150,6 +149,9 @@ class SensorLogger:
                                              last_imu_update_time,
                                              last_can_update_time,
                                              recording_active)
+
+                time.sleep(0.25)  # there is no reason to ever poll faster than this
+
         finally:
             self.gps_handler.stop()
             self.can_handler.stop()

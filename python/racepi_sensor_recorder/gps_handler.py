@@ -32,7 +32,7 @@ class GpsSensorHandler(SensorHandler):
 
     def __record_from_gps(self):
 
-        if not self.data_q:
+        if not self.pipe_out:
             raise ValueError("Illegal argument, no queue specified")
 
         print("Starting GPS reader")
@@ -47,7 +47,7 @@ class GpsSensorHandler(SensorHandler):
             data = session.next()
             t = data.get('time')
             if t is not None and set(GPS_REQUIRED_FIELDS).issubset(set(data.keys())):
-                self.data_q.put( (time.time(), data))
+                self.pipe_out.send( (time.time(), data))
             else:
                 # relieve the CPU when getting unusable data
                 # 20hz is above the expected GPS sample rate
