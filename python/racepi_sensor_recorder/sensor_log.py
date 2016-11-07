@@ -22,32 +22,73 @@ for pre-emptive scheduling and to limit contention for
 system resources.
 """
 
-import time, operator
+import time
+from collections import defaultdict
 from pi_sense_hat_imu import RpiImuSensorHandler
 from gps_handler import GpsSensorHandler
 from sqlite_handler import DbHandler
 from can_handler import CanSensorHandler
-from pi_sense_hat_display import RacePiStatusDisplay, GPS_COL, IMU_COL, CAN_COL
+from pi_sense_hat_display import RacePiStatusDisplay
 
 DEFAULT_DB_LOCATION = "/external/racepi_data/test.db"
-MOVE_SPEED_THRESHOLD = 4.0
+MOVE_SPEED_THRESHOLD_M_PER_S = 4.0
+DEFAULT_DATA_BUFFER_TIME_SECONDS = 5.0
 
 # TODO: make recorded can ids configurable
 FORD_FOCUS_RS_CAN_IDS = ["010", "070", "080", "090", "213", "420"]
 
 
+class DataBuffer:
+    """
+    Simple collection of ringbuffers for sensor data
+    """
+    def __init__(self):
+        self.data = defaultdict(list)
+
+    def add_sample(self, source_name, values):
+        self.data[source_name].extend(values)
+
+    def expire_old_samples(self, expire_time):
+        """
+        Expire (remove) all samples older than specified time
+        :param expire_time: expiration age timestamp
+        """
+        for k in self.data:
+            while self.data[k] and self.data[k][0][0] < expire_time:
+                self.data[k].pop(0)
+
+    def get_available_sources(self):
+        return self.data.keys()
+
+    def get_sensor_data(self, sensor_source):
+        """
+        Get data for specified source and clear buffer
+        :param sensor_source: name of sensor source
+        :return: data for specified sensor source
+        """
+        # fail early if an invalid source is requested
+        if sensor_source not in self.data:
+            raise ValueError("Invalid source specified")
+
+        return self.data[sensor_source]
+
+    def clear(self):
+        self.data.clear()
+
+
 class SensorLogger:
 
-    def __init__(self, databaseLocation = DEFAULT_DB_LOCATION):
+    def __init__(self, database_location=DEFAULT_DB_LOCATION):
         print("Opening Database")
         # TODO: look at opening DB as needed
         # to avoid corruption of tables
-        self.db_handler = DbHandler(databaseLocation)
+        self.db_handler = DbHandler(database_location)
         print("Opening sensor handlers")
         self.display = RacePiStatusDisplay()
         self.imu_handler = RpiImuSensorHandler()
         self.gps_handler = GpsSensorHandler()
         self.can_handler = CanSensorHandler(FORD_FOCUS_RS_CAN_IDS)
+        self.data = DataBuffer()
 
     def start(self):
 
@@ -65,49 +106,45 @@ class SensorLogger:
         try:
             while True:
 
-                # TODO: save data in ringbuffer while not recording
-                # when a recording starts, we should back up the
-                # history to the exact moment of car motion and
-                # write all of those samples
-                
-                imu_data = self.imu_handler.get_all_data()
                 gps_data = self.gps_handler.get_all_data()
+                imu_data = self.imu_handler.get_all_data()
                 can_data = self.can_handler.get_all_data()
 
-                if not imu_data and not gps_data and not can_data:
-                    # empty queues, relieve the CPU a little
-                    time.sleep(0.02)
+                self.data.add_sample('gps', gps_data)
+                self.data.add_sample('imu', imu_data)
+                self.data.add_sample('can', can_data)
 
-                else:
+                if gps_data:
                     is_moving = True in \
-                                [s[1].get('speed') > MOVE_SPEED_THRESHOLD for s in gps_data]
+                                [s[1].get('speed') > MOVE_SPEED_THRESHOLD_M_PER_S for s in gps_data]
 
-                    # record whenever velocity != 0, otherwise stop
-                    if is_moving and not recording_active:
-                        session_id = self.db_handler.get_new_session()
-                        print("New session: %s" % str(session_id))
-                        recording_active = True
-
-                    if not is_moving and gps_data:
-                        self.db_handler.populate_session_info(session_id)
-                        recording_active = False
-
-                    if recording_active:
-                        try:
-                            self.db_handler.insert_gps_updates(gps_data, session_id)
-                            self.db_handler.insert_imu_updates(imu_data, session_id)
-                            self.db_handler.insert_can_updates(can_data, session_id)
-                        except TypeError as te:
-                            print("Failed to insert data: %s" % te)
+                    if is_moving:
+                        if not recording_active:  # activate recording
+                            session_id = self.db_handler.get_new_session()
+                            print("New session: %s" % str(session_id))
+                            recording_active = True
+                    else:
+                        if recording_active:  # deactivate recording
+                            self.db_handler.populate_session_info(session_id)
+                            recording_active = False
+                if recording_active:
+                    try:
+                        # TODO backup recording data and find launch moment
+                        self.db_handler.insert_gps_updates(self.data.get_sensor_data('gps'), session_id)
+                        self.db_handler.insert_imu_updates(self.data.get_sensor_data('imu'), session_id)
+                        self.db_handler.insert_can_updates(self.data.get_sensor_data('can'), session_id)
+                        self.data.clear()
+                    except TypeError as te:
+                        print("Failed to insert data: %s" % te)
+                else:
+                    # clear old data in buffer
+                    self.data.expire_old_samples(time.time() - 10.0)
+                    time.sleep(0.01)
 
                 # display update logic
-                now = time.time()
-                if gps_data:
-                    last_gps_update_time = now
-                if imu_data:
-                    last_imu_update_time = now
-                if can_data:
-                    last_can_update_time = now
+                if gps_data: last_gps_update_time = gps_data[-1][0]
+                if imu_data: last_imu_update_time = imu_data[-1][0]
+                if can_data: last_can_update_time = can_data[-1][0]
 
                 self.display.refresh_display(last_gps_update_time,
                                              last_imu_update_time,
