@@ -86,44 +86,41 @@ class SensorLogger:
     """
 
     def __init__(self, database_location=DEFAULT_DB_LOCATION):
+
+        self.display = RacePiStatusDisplay()
+        self.data = DataBuffer()
+
         print("Opening Database")
         # TODO: look at opening DB as needed
         # to avoid corruption of tables
         self.db_handler = DbHandler(database_location)
+
         print("Opening sensor handlers")
-        self.display = RacePiStatusDisplay()
-        self.imu_handler = RpiImuSensorHandler()
-        self.gps_handler = GpsSensorHandler()
-        self.can_handler = CanSensorHandler(FORD_FOCUS_RS_CAN_IDS)
-        self.data = DataBuffer()
+        self.handlers = {
+            'gps': GpsSensorHandler(),
+            'imu': RpiImuSensorHandler(),
+            'can': CanSensorHandler(FORD_FOCUS_RS_CAN_IDS),
+        }
 
     def start(self):
 
-        self.imu_handler.start()
-        self.gps_handler.start()
-        self.can_handler.start()
-        
-        recording_active = False
-        last_gps_update_time = 0
-        last_imu_update_time = 0
-        last_can_update_time = 0
+        for h in self.handlers.values():
+            h.start()
 
+        recording_active = False
+        update_times = defaultdict(int)
         session_id = None
 
         try:
             while True:
+                new_data = defaultdict(list)
+                for h in self.handlers:
+                    new_data[h] = self.handlers[h].get_all_data()
+                    self.data.add_sample(h, new_data[h])
 
-                gps_data = self.gps_handler.get_all_data()
-                imu_data = self.imu_handler.get_all_data()
-                can_data = self.can_handler.get_all_data()
-                
-                self.data.add_sample('gps', gps_data)
-                self.data.add_sample('imu', imu_data)
-                self.data.add_sample('can', can_data)
-
-                if gps_data:
+                if new_data['gps']:
                     is_moving = True in \
-                                [s[1].get('speed') > ACTIVATE_RECORDING_M_PER_S for s in gps_data]
+                                [s[1].get('speed') > ACTIVATE_RECORDING_M_PER_S for s in new_data['gps']]
 
                     if is_moving:
                         if not recording_active:  # activate recording
@@ -142,6 +139,7 @@ class SensorLogger:
                             recording_active = False
                 if recording_active:
                     try:
+                        # TODO: insert all in one call so we can do only one commit
                         self.db_handler.insert_gps_updates(self.data.get_sensor_data('gps'), session_id)
                         self.db_handler.insert_imu_updates(self.data.get_sensor_data('imu'), session_id)
                         self.db_handler.insert_can_updates(self.data.get_sensor_data('can'), session_id)
@@ -153,22 +151,22 @@ class SensorLogger:
                     self.data.expire_old_samples(time.time() - 10.0)
 
                 # display update logic
-                if gps_data: last_gps_update_time = gps_data[-1][0]
-                if imu_data: last_imu_update_time = imu_data[-1][0]
-                if can_data: last_can_update_time = can_data[-1][0]
+                for h in self.handlers:
+                    if new_data[h]:
+                        update_times[h] = new_data[h][-1][0]
 
-                self.display.refresh_display(last_gps_update_time,
-                                             last_imu_update_time,
-                                             last_can_update_time,
+                self.display.refresh_display(update_times['gps'],
+                                             update_times['imu'],
+                                             update_times['can'],
                                              recording_active)
 
                 time.sleep(0.25)  # there is no reason to ever poll faster than this
 
         finally:
-            self.gps_handler.stop()
-            self.can_handler.stop()
-            self.imu_handler.stop()
-            
+            for h in self.handlers.values():
+                h.stop()
+
+
 if __name__ == "__main__":
     sl = SensorLogger()
     sl.start()
