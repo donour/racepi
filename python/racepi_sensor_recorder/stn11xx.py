@@ -89,7 +89,7 @@ class STNHandler:
 
     def __run_config_cmd(self, cmd):
         r = self.get_sample(cmd)
-        print("STN11XX: %s => %s" %
+        print("STN11XX: %s\t=> %s" %
               (GREEN+cmd+ENDC, BOLD+r+ENDC))
         if 'ok' not in r.lower():
             raise IOError("Failed to run cmd: "+cmd)
