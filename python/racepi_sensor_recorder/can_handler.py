@@ -37,7 +37,7 @@ class CanSensorHandler(SensorHandler):
 
     def __record_from_canbus(self):
 
-        if not self.data_q:
+        if not self.pipe_out:
             raise ValueError("Illegal argument, no queue specified")
 
         print("Starting CAN reader")
@@ -47,7 +47,7 @@ class CanSensorHandler(SensorHandler):
             while not self.doneEvent.is_set():
                 data = self.stn.readline()
                 now = time.time()
-                self.data_q.put((now, data))
+                self.pipe_out.send((now, data))
                 
             # stop monitors
             self.stn.stop_monitor()

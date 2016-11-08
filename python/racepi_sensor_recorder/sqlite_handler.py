@@ -103,7 +103,7 @@ class DbHandler:
 
             arbId = raw[:3]
             datalen = raw[3]  # unused
-            payload = raw[4:]
+            payload = raw[3:]
             insert_cmd = """
               insert into can_data
               (session_id, timestamp, arbitration_id, rtr, msg)
