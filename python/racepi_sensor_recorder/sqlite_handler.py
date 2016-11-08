@@ -110,7 +110,7 @@ class DbHandler:
               values
               ('%s', %s, %d, %d, '%s')
             """ % (
-                (session_id.hex, t, int(arbId,16), 0, payload))
+                (session_id.hex, t, int(arbId, 16), 0, payload))
             self.conn.execute(insert_cmd)
 
         if can_data:
@@ -128,12 +128,12 @@ class DbHandler:
         update_cmd = """
 INSERT OR REPLACE into session_info
 (session_id, start_time_utc, max_speed, num_data_samples, duration)
-        select
-          sessions.id as session_id,
-          start_time_utc,
-          max_speed,
-          gps_count+imu_count+ COALESCE(can_count,0) as num_data_samples,
-          stop_time-start_time_utc as duration
+    select
+        sessions.id as session_id,
+        start_time_utc,
+        max_speed,
+        gps_count+imu_count+ COALESCE(can_count,0) as num_data_samples,
+        stop_time-start_time_utc as duration
 from sessions
 join
     (select session_id,count(distinct timestamp) as gps_count, MAX(speed) as max_speed, MIN(timestamp) as start_time_utc, MAX(timestamp) as stop_time
@@ -143,7 +143,6 @@ left join
     (select session_id,count(distinct timestamp) as imu_count
     from imu_data group by session_id) as imu
     on imu.session_id = sessions.id
-
 left join
     (select session_id,count(distinct timestamp) as can_count
     from can_data group by session_id) as can
@@ -151,6 +150,6 @@ left join
         where sessions.id = '%s'
         """ % (session_id.hex)
         
-        result = self.conn.execute(update_cmd)
+        self.conn.execute(update_cmd)
         self.conn.commit()
 
