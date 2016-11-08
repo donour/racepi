@@ -22,6 +22,7 @@ import atexit, time
 try:
     from sense_hat import SenseHat
 except ImportError:
+    print("No Pi Sense Hat hardware found")
     SenseHat = None
 
 IMU_COL = 0
@@ -142,9 +143,7 @@ class RacePiStatusDisplay:
 
         
 if __name__ == "__main__":
-    if not SenseHat:
-        print "No Pi Sense Hat hardware found"
-    else:
+    if SenseHat:
         s = RacePiStatusDisplay(SenseHat())
         s.set_col_lost(IMU_COL)
         s.set_col_init(GPS_COL)
