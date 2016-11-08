@@ -28,9 +28,9 @@ from pi_sense_hat_imu import RpiImuSensorHandler
 from gps_handler import GpsSensorHandler
 from sqlite_handler import DbHandler
 from can_handler import CanSensorHandler
-from pi_sense_hat_display import RacePiStatusDisplay
+from pi_sense_hat_display import RacePiStatusDisplay, SenseHat
 
-DEFAULT_DB_LOCATION = "/external/racepi_data/test.db"
+DEFAULT_DB_LOCATION = "/home/donour/test.db"
 ACTIVATE_RECORDING_M_PER_S = 6.0
 MOVEMENT_THRESHOLD_M_PER_S = 1.0
 DEFAULT_DATA_BUFFER_TIME_SECONDS = 10.0
@@ -87,8 +87,10 @@ class SensorLogger:
 
     def __init__(self, database_location=DEFAULT_DB_LOCATION):
 
-        self.display = RacePiStatusDisplay()
         self.data = DataBuffer()
+        self.display = None
+        if SenseHat:
+            self.display = RacePiStatusDisplay()
 
         print("Opening Database")
         # TODO: look at opening DB as needed
@@ -155,10 +157,11 @@ class SensorLogger:
                     if new_data[h]:
                         update_times[h] = new_data[h][-1][0]
 
-                self.display.refresh_display(update_times['gps'],
-                                             update_times['imu'],
-                                             update_times['can'],
-                                             recording_active)
+                if self.display:
+                    self.display.refresh_display(update_times['gps'],
+                                                 update_times['imu'],
+                                                 update_times['can'],
+                                                 recording_active)
 
                 time.sleep(0.25)  # there is no reason to ever poll faster than this
 
