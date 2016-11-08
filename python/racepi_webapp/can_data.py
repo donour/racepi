@@ -88,18 +88,19 @@ class CanFrame:
     from various representations.
     """
 
-    def __init__(self, arbitrationId, payload):
+    def __init__(self, arbitration_id, payload):
         """
-        :param arbitrationId: hex string of arbId
+        :param arbitration_id: hex string of arbId
         :param payload: hex string of data payload
         """
-        self.arbId, self.payload = self.__from_message_strings(arbitrationId, payload)
+        self.arbId, self.payload = self.__from_message_strings(arbitration_id, payload)
 
-    def __from_message_strings(self, arbitrationID, payload):
+    @staticmethod
+    def __from_message_strings(arbitration_id, payload):
         # append leading zero to 11-bit ids
-        if len(arbitrationID) == 3:
-            arbitrationID = '0' + arbitrationID
+        if len(arbitration_id) == 3:
+            arbitration_id = '0' + arbitration_id
 
-        cid = bytearray.fromhex(arbitrationID)
+        cid = bytearray.fromhex(arbitration_id)
         data = bytearray.fromhex(str(payload))
         return cid, data
