@@ -35,9 +35,6 @@ ACTIVATE_RECORDING_M_PER_S = 6.0
 MOVEMENT_THRESHOLD_M_PER_S = 1.0
 DEFAULT_DATA_BUFFER_TIME_SECONDS = 10.0
 
-# TODO: make recorded can ids configurable
-FORD_FOCUS_RS_CAN_IDS = ["010", "070", "080", "090", "213", "420"]
-
 
 class DataBuffer:
     """
@@ -85,7 +82,7 @@ class SensorLogger:
     sessions. Without GPS speed data, a manual triggering is required.
     """
 
-    def __init__(self, database_location=DEFAULT_DB_LOCATION):
+    def __init__(self, database_location=DEFAULT_DB_LOCATION, can_ids=[]):
 
         self.data = DataBuffer()
         self.display = None
@@ -101,7 +98,7 @@ class SensorLogger:
         self.handlers = {
             'gps': GpsSensorHandler(),
             'imu': RpiImuSensorHandler(),
-            'can': CanSensorHandler(FORD_FOCUS_RS_CAN_IDS),
+            'can': CanSensorHandler(can_ids),
         }
 
     def start(self):
