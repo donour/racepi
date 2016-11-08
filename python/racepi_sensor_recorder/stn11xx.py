@@ -32,6 +32,10 @@ FORCE_PROTOCOL = 6
 ST_PROTOCOL = 33
 RESET_WAIT_TIME_SECONDS = 6.0
 
+GREEN = '\033[92m'
+ENDC = '\033[0m'
+BOLD = '\033[1m'
+
 
 class STNHandler:
 
@@ -85,7 +89,8 @@ class STNHandler:
 
     def __run_config_cmd(self, cmd):
         r = self.get_sample(cmd)
-        print("STN11XX: %s => %s"%(cmd, r))
+        print("STN11XX: %s => %s" %
+              (GREEN+cmd+ENDC, BOLD+r+ENDC))
         if 'ok' not in r.lower():
             raise IOError("Failed to run cmd: "+cmd)
     

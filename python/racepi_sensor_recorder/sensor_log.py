@@ -83,7 +83,6 @@ class SensorLogger:
     """
 
     def __init__(self, database_location=DEFAULT_DB_LOCATION, can_ids=[]):
-
         self.data = DataBuffer()
         self.display = None
         if SenseHat:
@@ -102,7 +101,7 @@ class SensorLogger:
         }
 
     def start(self):
-
+        
         for h in self.handlers.values():
             h.start()
 
