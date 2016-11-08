@@ -31,7 +31,7 @@ from can_handler import CanSensorHandler
 from pi_sense_hat_display import RacePiStatusDisplay, SenseHat
 
 DEFAULT_DB_LOCATION = "/home/donour/test.db"
-ACTIVATE_RECORDING_M_PER_S = 6.0
+ACTIVATE_RECORDING_M_PER_S = 0.01
 MOVEMENT_THRESHOLD_M_PER_S = 1.0
 DEFAULT_DATA_BUFFER_TIME_SECONDS = 10.0
 

@@ -15,14 +15,14 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
-import logo
-import racepi_sensor_recorder
-SQLITE_FILE = '/external/racepi_data/test.db'
-# TODO: make recorded can ids configurable
-FORD_FOCUS_RS_CAN_IDS = ["010", "070", "080", "090", "213", "420"]
-ENDCOLOR  = '\033[0m'
-UNDERLINE = '\033[4m'
-
-print(UNDERLINE+"Starting RacePi Sensor Logger"+ENDCOLOR)
-sl = racepi_sensor_recorder.SensorLogger(SQLITE_FILE, FORD_FOCUS_RS_CAN_IDS)
-sl.start()
+logo='''\033[1m
+  _____                _____ _ 
+ |  __ \              |  __ (_)
+ | |__) |__ _  ___ ___| |__) | 
+ |  _  // _` |/ __/ _ \  ___/ |
+ | | \ \ (_| | (_|  __/ |   | |
+ |_|  \_\__,_|\___\___|_|   |_|
+                               
+\033[0m
+'''
+print(logo)

@@ -22,7 +22,7 @@ import can_data
 
 
 app = Flask(__name__)
-db = create_engine('sqlite:////home/donour/test.db')
+db = create_engine('sqlite:////external/racepi_data/test.db')
 
 tps_converter = can_data.CanFrameValueExtractor(4, 12, a=0.1)
 rpm_converter = can_data.CanFrameValueExtractor(49, 15, a=9.587e-5)

@@ -15,6 +15,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
+import logo
 from racepi_webapp import app
 
 # FIXME: disabling debugging causes 100% cpu usage, notifier?
