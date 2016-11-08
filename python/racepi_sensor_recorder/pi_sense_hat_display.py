@@ -119,7 +119,7 @@ class RacePiStatusDisplay:
     def refresh_display(self, gps_time=0, imu_time=0, can_time=0, recording=False):
 
         now = time.time()
-        if now - self.update_time >  DISPLAY_UPDATE_TIME :
+        if now - self.update_time >  DISPLAY_UPDATE_TIME:
 
                 if now - gps_time > SENSOR_DISPLAY_TIMEOUT:
                     self.set_col_init(GPS_COL)
@@ -142,14 +142,14 @@ class RacePiStatusDisplay:
 
         
 if __name__ == "__main__":
-
-    s = RacePiStatusDisplay(SenseHat())
-    s.set_col_lost(IMU_COL)
-    s.set_col_init(GPS_COL)
-    s.set_col_ready(CAN_COL)
-    
-    import time
-    while True:
+    if not SenseHat:
+        print "No Pi Sense Hat hardware found"
+    else:
+        s = RacePiStatusDisplay(SenseHat())
+        s.set_col_lost(IMU_COL)
+        s.set_col_init(GPS_COL)
+        s.set_col_ready(CAN_COL)
+        while True:
             time.sleep(1)
-            s.set_recording_state(int(time.time()) % 2  == 0)
+            s.set_recording_state(int(time.time()) % 2 == 0)
             s.heartbeat(3)
