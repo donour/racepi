@@ -32,6 +32,7 @@ FORCE_PROTOCOL = 6
 ST_PROTOCOL = 33
 RESET_WAIT_TIME_SECONDS = 6.0
 
+
 class STNHandler:
 
     def __init__(self, dev=DEV_NAME, baud=BAUD_RATE):
