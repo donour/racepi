@@ -31,7 +31,8 @@ from can_handler import CanSensorHandler
 from pi_sense_hat_display import RacePiStatusDisplay
 
 DEFAULT_DB_LOCATION = "/external/racepi_data/test.db"
-MOVE_SPEED_THRESHOLD_M_PER_S = 6.0
+ACTIVATE_RECORDING_M_PER_S = 6.0
+MOVEMENT_THRESHOLD_M_PER_S = 1.0
 DEFAULT_DATA_BUFFER_TIME_SECONDS = 10.0
 
 # TODO: make recorded can ids configurable
@@ -40,7 +41,7 @@ FORD_FOCUS_RS_CAN_IDS = ["010", "070", "080", "090", "213", "420"]
 
 class DataBuffer:
     """
-    Simple collection of ringbuffers for sensor data
+    Simple collection of buffers for sensor data
     """
     def __init__(self):
         self.data = defaultdict(list)
@@ -77,6 +78,12 @@ class DataBuffer:
 
 
 class SensorLogger:
+    """
+    Main control logic for logging and writing to database
+
+    The logger relies on GPS speed data for activating and deactivating
+    sessions. Without GPS speed data, a manual triggering is required.
+    """
 
     def __init__(self, database_location=DEFAULT_DB_LOCATION):
         print("Opening Database")
@@ -116,12 +123,18 @@ class SensorLogger:
 
                 if gps_data:
                     is_moving = True in \
-                                [s[1].get('speed') > MOVE_SPEED_THRESHOLD_M_PER_S for s in gps_data]
+                                [s[1].get('speed') > ACTIVATE_RECORDING_M_PER_S for s in gps_data]
 
                     if is_moving:
                         if not recording_active:  # activate recording
                             session_id = self.db_handler.get_new_session()
                             print("New session: %s" % str(session_id))
+                            # look for last sample before car moved, clear samples before that
+                            gps_history = self.data.get_sensor_data('gps')
+                            self.data.expire_old_samples(
+                                max(
+                                    [s[0] if s[1]['speed'] < MOVEMENT_THRESHOLD_M_PER_S else 0 for s in gps_history]
+                                ))
                             recording_active = True
                     else:
                         if recording_active:  # deactivate recording
@@ -129,7 +142,6 @@ class SensorLogger:
                             recording_active = False
                 if recording_active:
                     try:
-                        # TODO backup recording data and find launch moment
                         self.db_handler.insert_gps_updates(self.data.get_sensor_data('gps'), session_id)
                         self.db_handler.insert_imu_updates(self.data.get_sensor_data('imu'), session_id)
                         self.db_handler.insert_can_updates(self.data.get_sensor_data('can'), session_id)
