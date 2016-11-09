@@ -22,3 +22,4 @@ sqlite3			\
 python-sense-hat	\
 python-serial		\
 python-numpy		\
+python-pandas		\
