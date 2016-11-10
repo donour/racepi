@@ -17,12 +17,13 @@
 from flask import Flask, jsonify, request, Response
 from sqlalchemy import create_engine
 from plotly import graph_objs as pgo
+from plotly import tools
 import pandas as pd
 import can_data
 
 
 app = Flask(__name__)
-db = create_engine('sqlite:////external/racepi_data/test.db')
+db = create_engine('sqlite:////home/donour/test.db')
 
 tps_converter = can_data.CanFrameValueExtractor(4, 12, a=0.1)
 rpm_converter = can_data.CanFrameValueExtractor(49, 15, a=9.587e-5)
@@ -55,6 +56,15 @@ def get_scatterplot(series, w, title):
     t0 = data.index.values.tolist()[0]
     data.offset_time = [x-t0 for x in data.index.values.tolist()]
     return pgo.Scatter(x=sfl(data.offset_time[w:-w]), y=sfl(data.values.tolist()[w:-w]), name=title)
+
+
+def get_and_transform_can_data(session_id, arbitration_id, value_converter):
+    data = pd.read_sql_query(
+        "select timestamp, msg FROM %s where session_id='%s' and arbitration_id=%s" %
+        ("can_data", session_id, arbitration_id), db, index_col='timestamp')
+    data['result'] = \
+        [value_converter.convert_frame(can_data.CanFrame('999', '0'+x)) for x in data.msg.tolist()]
+    return data
 
 
 def get_sql_data(table, filter):
@@ -166,29 +176,37 @@ def get_singlerun_timeseries():
     else:
         smoothing_window = 3
 
+    can_channels = {
+        'TPS': get_and_transform_can_data(session_id, 128, tps_converter),
+        'Brake Pressure': get_and_transform_can_data(session_id, 531, brake_pressure_converter)
+    }
     gps_data = pd.read_sql_query("select timestamp, speed, track, lat, lon FROM %s where session_id='%s'" % ("gps_data", session_id), db, index_col='timestamp')
     imu_data = pd.read_sql_query("select timestamp, x_accel, y_accel, z_accel FROM %s where session_id='%s'" % ("imu_data", session_id), db, index_col='timestamp')
-    can_samples = pd.read_sql_query("select timestamp, msg FROM %s where session_id='%s' and arbitration_id=112" % ("can_data", session_id), db, index_col='timestamp')
+    can_samples = pd.read_sql_query("select timestamp, msg FROM %s where session_id='%s' and arbitration_id=16" % ("can_data", session_id), db, index_col='timestamp')
 
     can_samples['Steering'] = [
         (rpm_converter.convert_frame(can_data.CanFrame('010', '0'+x)) * 3000 *
          ((-1)**steering_direction_converter.convert_frame(can_data.CanFrame('010', '0'+x))))
         for x in can_samples.msg.tolist()]
 
-    can_samples['Brake'] = [brake_pressure_converter.convert_frame(can_data.CanFrame('213', '0'+x)) for x in can_samples.msg.tolist()]
 
-    data = [
-        get_scatterplot(gps_data.speed, smoothing_window, "Speed (avg)"),
-        get_scatterplot(imu_data.z_accel, smoothing_window, "ZAccel (avg)"),
-        get_scatterplot(can_samples.Brake, smoothing_window, "Brake")
-    ]
+    data = []
 
     layout = pgo.Layout(
         title="Run",
         xaxis=dict(title="time"),
         yaxis=dict(title="value"),
     )
-    fig = pgo.Figure(data=data, layout=layout)
+
+    #fig = pgo.Figure(data=data, layout=layout)
+    fig = tools.make_subplots(rows=4, cols=1)
+    fig.append_trace(get_scatterplot(gps_data.speed, smoothing_window, "Speed (m/s)"), 1, 1)
+    fig.append_trace(get_scatterplot(imu_data.y_accel, smoothing_window<<3, "YAccel (avg)"), 2, 1)
+    fig.append_trace(get_scatterplot(imu_data.x_accel, smoothing_window<<3, "XAccel (avg)"), 2, 1)
+    for c in can_channels:
+        fig.append_trace(get_scatterplot(can_channels[c].result, smoothing_window, c), 3, 1)
+    fig.append_trace(get_scatterplot(can_samples['Steering'], smoothing_window, "Steering"), 4, 1)
+
     return jsonify(data=fig.get('data'), layout=fig.get('layout'))
 
 
