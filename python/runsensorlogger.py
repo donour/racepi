@@ -33,5 +33,10 @@ handlers = {
     'imu': RpiImuSensorHandler(),
     'can': CanSensorHandler([])
 }
-sl = racepi_sensor_recorder.SensorLogger(SQLITE_FILE, handlers)
+
+print("Opening Database")
+# TODO: look at opening DB as needed
+# to avoid corruption of tables
+db_handler = racepi_sensor_recorder.sqlite_handler.DbHandler(SQLITE_FILE)
+sl = racepi_sensor_recorder.SensorLogger(db_handler, handlers)
 sl.start()

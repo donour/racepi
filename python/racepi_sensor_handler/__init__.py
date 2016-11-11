@@ -1,3 +1,3 @@
 from can_handler import CanSensorHandler
-from gps_handler import GpsSensorHandler
+from gps_handler import GpsSensorHandler, GPS_REQUIRED_FIELDS
 from pi_sense_hat_imu import RpiImuSensorHandler

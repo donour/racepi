@@ -80,7 +80,7 @@ class SensorLogger:
     sessions. Without GPS speed data, a manual triggering is required.
     """
 
-    def __init__(self, database_location=DEFAULT_DB_LOCATION, handlers={}):
+    def __init__(self, db_handler, handlers={}):
         """
 
         :param database_location:
@@ -89,12 +89,7 @@ class SensorLogger:
         self.data = DataBuffer()
         self.display = None
         if SenseHat:
-            self.display = RacePiStatusDisplay()
-
-        print("Opening Database")
-        # TODO: look at opening DB as needed
-        # to avoid corruption of tables
-        self.db_handler = DbHandler(database_location)
+            self.display = RacePiStatusDisplay()        
 
         print("Opening sensor handlers")
         self.handlers = handlers

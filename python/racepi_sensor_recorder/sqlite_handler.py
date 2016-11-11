@@ -17,21 +17,19 @@
 import sqlite3
 import uuid
 
-from python.racepi_sensor_handler.gps_handler import GPS_REQUIRED_FIELDS
-
-
 class DbHandler:
     """
     Class for handling RacePi access to sqlite
     """
-    def __init__(self, db_location):
+    def __init__(self, db_location, gps_fields=[]):
         
         self.conn = sqlite3.connect(db_location)
         if self.conn is None:
             raise IOError("Could not open db: " + db_location)
         self.conn.execute("PRAGMA foreign_keys = ON;")
         self.conn.execute("PRAGMA journal_mode=WAL;")
-
+        self.gps_fields = gps_fields
+        
     def get_new_session(self):
         """
         Create new session entry in database
@@ -70,13 +68,12 @@ class DbHandler:
             self.conn.commit()
 
     def insert_gps_updates(self, gps_data, session_id):
-        field_names = GPS_REQUIRED_FIELDS
-
+        
         for sample in gps_data:
             # system time of sample
             t = sample[0]   
             # extract just the fields we use
-            d = map(sample[1].get, field_names)
+            d = map(sample[1].get, self.gps_fields)
             available_fields = sample[1].keys()          
 
             # the sample is only usuable if it has velocity
@@ -89,7 +86,7 @@ class DbHandler:
                   ('%s', %s,
                    '%s', %f, %f, %f, %f, %f, %f, %f)
                 """ % (
-                    (','.join(field_names),
+                    (','.join(self.gps_fields),
                     session_id.hex, t)  + tuple(d))
                 self.conn.execute(insert_cmd)
 
