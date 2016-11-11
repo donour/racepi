@@ -18,9 +18,9 @@
 import numpy as np
 
 
-class RingBuffer():
+class SampleBuffers:
     """
-    A 1D ring buffer using numpy arrays
+    A collection of data buffers using numpy arrays
     """
     def __init__(self, length):
         self.data = np.zeros(length, dtype='f')
@@ -34,5 +34,5 @@ class RingBuffer():
 
     def get(self):
         """Returns the first-in-first-out data in the ring buffer"""
-        idx = (self.index + np.arange(self.data.size)) %vself.data.size
+        idx = (self.index + np.arange(self.data.size)) % self.data.size
         return self.data[idx]

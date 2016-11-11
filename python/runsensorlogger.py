@@ -15,8 +15,11 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
-import logo
+
+import logo  # display logo
 import racepi_sensor_recorder
+from racepi_sensor_handler import GpsSensorHandler, RpiImuSensorHandler, CanSensorHandler
+
 SQLITE_FILE = '/external/racepi_data/test.db'
 # TODO: make recorded can ids configurable
 FORD_FOCUS_RS_CAN_IDS = ["010", "070", "080", "090", "213", "420"]
@@ -24,5 +27,11 @@ ENDCOLOR  = '\033[0m'
 UNDERLINE = '\033[4m'
 
 print(UNDERLINE+"Starting RacePi Sensor Logger"+ENDCOLOR)
-sl = racepi_sensor_recorder.SensorLogger(SQLITE_FILE, FORD_FOCUS_RS_CAN_IDS)
+
+handlers = {
+    'gps': GpsSensorHandler(),
+    'imu': RpiImuSensorHandler(),
+    'can': CanSensorHandler([])
+}
+sl = racepi_sensor_recorder.SensorLogger(SQLITE_FILE, handlers)
 sl.start()

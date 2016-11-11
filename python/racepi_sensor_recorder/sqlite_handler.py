@@ -14,9 +14,10 @@
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
-import uuid
 import sqlite3
-from gps_handler import GPS_REQUIRED_FIELDS
+import uuid
+
+from python.racepi_sensor_handler.gps_handler import GPS_REQUIRED_FIELDS
 
 
 class DbHandler:
