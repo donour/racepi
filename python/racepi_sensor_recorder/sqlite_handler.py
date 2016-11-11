@@ -75,7 +75,6 @@ class DbHandler:
             # extract just the fields we use
             d = map(sample[1].get, self.gps_fields)
             available_fields = sample[1].keys()          
-
             # the sample is only usuable if it has velocity
             if 'speed' in available_fields:                
                 insert_cmd = """
@@ -108,7 +107,7 @@ class DbHandler:
               values
               ('%s', %s, %d, %d, '%s')
             """ % (
-                (session_id.hex, t, int(arbId, 16), 0, payload))
+                (session_id.hex, t, int(arbId, 16), 0, payload))            
             self.conn.execute(insert_cmd)
 
         if can_data:
@@ -147,7 +146,7 @@ left join
     on can.session_id = sessions.id
         where sessions.id = '%s'
         """ % (session_id.hex)
-        
+
         self.conn.execute(update_cmd)
         self.conn.commit()
 

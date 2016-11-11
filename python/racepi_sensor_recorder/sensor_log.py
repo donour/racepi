@@ -29,7 +29,7 @@ from pi_sense_hat_display import RacePiStatusDisplay, SenseHat
 from sqlite_handler import DbHandler
 
 DEFAULT_DB_LOCATION = "/home/donour/test.db"
-ACTIVATE_RECORDING_M_PER_S = 6.0
+ACTIVATE_RECORDING_M_PER_S = 5
 MOVEMENT_THRESHOLD_M_PER_S = 1.0
 DEFAULT_DATA_BUFFER_TIME_SECONDS = 10.0
 
@@ -80,19 +80,15 @@ class SensorLogger:
     sessions. Without GPS speed data, a manual triggering is required.
     """
 
-    def __init__(self, db_handler, handlers={}):
-        """
+    def __init__(self, db_handler, sensor_handlers={}):
 
-        :param database_location:
-        :param handlers:
-        """
         self.data = DataBuffer()
         self.display = None
         if SenseHat:
             self.display = RacePiStatusDisplay()        
 
-        print("Opening sensor handlers")
-        self.handlers = handlers
+        self.handlers = sensor_handlers
+        self.db_handler = db_handler
 
     def start(self):
         

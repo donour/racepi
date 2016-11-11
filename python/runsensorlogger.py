@@ -18,7 +18,7 @@
 
 import logo  # display logo
 import racepi_sensor_recorder
-from racepi_sensor_handler import GpsSensorHandler, RpiImuSensorHandler, CanSensorHandler
+from racepi_sensor_handler import GpsSensorHandler, RpiImuSensorHandler, CanSensorHandler, GPS_REQUIRED_FIELDS
 
 SQLITE_FILE = '/external/racepi_data/test.db'
 # TODO: make recorded can ids configurable
@@ -28,15 +28,16 @@ UNDERLINE = '\033[4m'
 
 print(UNDERLINE+"Starting RacePi Sensor Logger"+ENDCOLOR)
 
+print "Opening Sensor Handlers"
 handlers = {
     'gps': GpsSensorHandler(),
     'imu': RpiImuSensorHandler(),
     'can': CanSensorHandler([])
 }
 
-print("Opening Database")
+print("Opening Database: %s" % SQLITE_FILE)
 # TODO: look at opening DB as needed
 # to avoid corruption of tables
-db_handler = racepi_sensor_recorder.sqlite_handler.DbHandler(SQLITE_FILE)
+db_handler = racepi_sensor_recorder.sqlite_handler.DbHandler(SQLITE_FILE, GPS_REQUIRED_FIELDS)
 sl = racepi_sensor_recorder.SensorLogger(db_handler, handlers)
 sl.start()
