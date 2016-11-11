@@ -52,10 +52,16 @@ def get_scatterplot(series, w, title):
     :param title: title for plot
     :return: scatterplot graph object
     """
-    data = pd.Series(series).rolling(window=w, center=True).mean()
-    t0 = data.index.values.tolist()[0]
-    data.offset_time = [x-t0 for x in data.index.values.tolist()]
-    return pgo.Scatter(x=sfl(data.offset_time[w:-w]), y=sfl(data.values.tolist()[w:-w]), name=title)
+    xdata = None
+    ydata = None
+    if len(series > (2*w)):
+        data = pd.Series(series).rolling(window=w, center=True).mean()
+        t0 = data.index.values.tolist()[0]
+        data.offset_time = [x-t0 for x in data.index.values.tolist()]
+        xdata = sfl(data.offset_time[w:-w])
+        ydata = sfl(data.values.tolist()[w:-w])
+
+    return pgo.Scatter(x=xdata, y=ydata, name=title)
 
 
 def get_and_transform_can_data(session_id, arbitration_id, value_converter):
@@ -201,8 +207,8 @@ def get_singlerun_timeseries():
     #fig = pgo.Figure(data=data, layout=layout)
     fig = tools.make_subplots(rows=4, cols=1)
     fig.append_trace(get_scatterplot(gps_data.speed, smoothing_window, "Speed (m/s)"), 1, 1)
-    fig.append_trace(get_scatterplot(imu_data.y_accel, smoothing_window<<3, "YAccel (avg)"), 2, 1)
-    fig.append_trace(get_scatterplot(imu_data.x_accel, smoothing_window<<3, "XAccel (avg)"), 2, 1)
+    fig.append_trace(get_scatterplot(imu_data.y_accel, smoothing_window << 3, "YAccel (avg)"), 2, 1)
+    fig.append_trace(get_scatterplot(imu_data.x_accel, smoothing_window << 3, "XAccel (avg)"), 2, 1)
     for c in can_channels:
         fig.append_trace(get_scatterplot(can_channels[c].result, smoothing_window, c), 3, 1)
     fig.append_trace(get_scatterplot(can_samples['Steering'], smoothing_window, "Steering"), 4, 1)
