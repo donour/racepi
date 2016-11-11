@@ -15,14 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
-import os
 import gps
+import os
 import time
+
 from sensor_handler import SensorHandler
 
-BAUD_RATE="38400"
+BAUD_RATE = "38400"
 GPS_REQUIRED_FIELDS = ['time','lat','lon','speed','track','epx','epy','epv']
-DEFAULT_WAIT_FOR_NO_DATA=0.05
+DEFAULT_WAIT_FOR_NO_DATA = 0.05
+
 
 class GpsSensorHandler(SensorHandler):
 

@@ -14,14 +14,18 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
-import os, time
+import os
+import time
+
 from sensor_handler import SensorHandler
+
 try:
     import RTIMU
 except ImportError:
     RTIMU = None
 
 SETTINGS_FILE = "/etc/RTIMULib.ini"
+
 
 class RpiImuSensorHandler(SensorHandler):
 

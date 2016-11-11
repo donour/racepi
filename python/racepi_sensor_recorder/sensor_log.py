@@ -24,11 +24,9 @@ system resources.
 
 import time
 from collections import defaultdict
-from pi_sense_hat_imu import RpiImuSensorHandler
-from gps_handler import GpsSensorHandler
-from sqlite_handler import DbHandler
-from can_handler import CanSensorHandler
+
 from pi_sense_hat_display import RacePiStatusDisplay, SenseHat
+from sqlite_handler import DbHandler
 
 DEFAULT_DB_LOCATION = "/home/donour/test.db"
 ACTIVATE_RECORDING_M_PER_S = 6.0
@@ -82,7 +80,12 @@ class SensorLogger:
     sessions. Without GPS speed data, a manual triggering is required.
     """
 
-    def __init__(self, database_location=DEFAULT_DB_LOCATION, can_ids=[]):
+    def __init__(self, database_location=DEFAULT_DB_LOCATION, handlers={}):
+        """
+
+        :param database_location:
+        :param handlers:
+        """
         self.data = DataBuffer()
         self.display = None
         if SenseHat:
@@ -94,11 +97,7 @@ class SensorLogger:
         self.db_handler = DbHandler(database_location)
 
         print("Opening sensor handlers")
-        self.handlers = {
-            'gps': GpsSensorHandler(),
-            'imu': RpiImuSensorHandler(),
-            'can': CanSensorHandler(can_ids),
-        }
+        self.handlers = handlers
 
     def start(self):
         

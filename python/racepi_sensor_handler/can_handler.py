@@ -20,9 +20,12 @@ for a list of specified arbitration IDs. Messages are returned as
 received, not decoded.
 """
 import time
+
+from serial.serialutil import SerialException
+
 from sensor_handler import SensorHandler
 from stn11xx import STNHandler
-from serial.serialutil import SerialException
+
 
 class CanSensorHandler(SensorHandler):
 

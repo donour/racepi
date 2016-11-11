@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
-from multiprocessing import Queue, Pipe, Event, Process
+from multiprocessing import Pipe, Event, Process
 
 
 class SensorHandler:
