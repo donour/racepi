@@ -39,7 +39,7 @@ if __name__ == "__main__":
     handlers = {
         'gps': GpsSensorHandler(),
         'imu': RpiImuSensorHandler(),
-        'can': CanSensorHandler([])
+        'can': CanSensorHandler(FORD_FOCUS_RS_CAN_IDS)
     }
 
     print("Opening Database: %s" % dbfile)
