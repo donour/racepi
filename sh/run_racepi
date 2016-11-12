@@ -1,0 +1,44 @@
+#!/bin/bash
+# Copyright 2016 Donour Sizemore
+#
+# This file is part of RacePi
+#
+# RacePi is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, version 2.
+#
+# RacePi is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
+
+set -xe
+RACEPI_HOME=$(dirname "$0")"/.."
+CREATE_DB="${RACEPI_HOME}/sh/createdb"
+WEBAPP="${RACEPI_HOME}/python/runwebapp.py"
+LOGGER="${RACEPI_HOME}/python/runsensorlogger.py"
+SQLITE_FILE="/external/racepi_data/test.db"
+set +x
+
+if [ ! -e "${WEBAPP}" ];
+then
+    echo "Could not file webapp"
+    exit -1
+fi
+
+if [ ! -e "${SQLITE_FILE}" ];
+then
+    echo "${SQLITE_FILE} does not exist, creating"
+    "${CREATE_DB}" "${SQLITE_FILE}"
+else
+    echo "[found ${SQLITE_FILE}]"
+fi
+
+if [ ! -e "${LOGGER}" ];
+then
+    echo "Could not file logger"
+    exit -1
+else
