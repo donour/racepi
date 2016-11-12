@@ -15,20 +15,19 @@
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
 from flask import Flask, jsonify, request, Response
-from sqlalchemy import create_engine
 from plotly import graph_objs as pgo
 from plotly import tools
 import pandas as pd
 import can_data
 
-
 app = Flask(__name__)
-db = create_engine('sqlite:////home/donour/test.db')
 
 tps_converter = can_data.CanFrameValueExtractor(4, 12, a=0.1)
 rpm_converter = can_data.CanFrameValueExtractor(49, 15, a=9.587e-5)
 steering_direction_converter = can_data.CanFrameValueExtractor(32, 1)
 brake_pressure_converter = can_data.CanFrameValueExtractor(24, 16, a=1e-3)
+
+# TODO: sanitize all sql statements by remove ; character
 
 
 def sfl(float_list, ndigits = 3):
@@ -74,7 +73,7 @@ def get_and_transform_can_data(session_id, arbitration_id, value_converter):
 
 
 def get_sql_data(table, filter):
-    with db.connect() as c:
+    with app.db.connect() as c:
         q = c.execute("select * FROM %s where %s " % (table, filter))
         return jsonify(result=q.cursor.fetchall())
 
@@ -108,7 +107,7 @@ def get_imu_data():
 def get_plot_timeseries():
     session_id = request.args.get("session_id")
     # TODO fail on bad session_id
-    with db.connect() as c:
+    with app.db.connect() as c:
         q = c.execute("select timestamp,x_accel,y_accel,z_accel FROM %s where %s " % ("imu_data", "session_id='%s'" % session_id))
         t = []
         x = []
@@ -139,7 +138,7 @@ def get_plot_timeseries():
 def get_gpsplot_timeseries():
     session_id = request.args.get("session_id")
     # TODO fail on bad session_id
-    with db.connect() as c:
+    with app.db.connect() as c:
         q = c.execute("select timestamp,speed,track FROM %s where %s " % ("gps_data", "session_id='%s'" % session_id))
         t = []
         x = []
@@ -186,9 +185,9 @@ def get_singlerun_timeseries():
         'TPS': get_and_transform_can_data(session_id, 128, tps_converter),
         'Brake Pressure': get_and_transform_can_data(session_id, 531, brake_pressure_converter)
     }
-    gps_data = pd.read_sql_query("select timestamp, speed, track, lat, lon FROM %s where session_id='%s'" % ("gps_data", session_id), db, index_col='timestamp')
-    imu_data = pd.read_sql_query("select timestamp, x_accel, y_accel, z_accel FROM %s where session_id='%s'" % ("imu_data", session_id), db, index_col='timestamp')
-    can_samples = pd.read_sql_query("select timestamp, msg FROM %s where session_id='%s' and arbitration_id=16" % ("can_data", session_id), db, index_col='timestamp')
+    gps_data = pd.read_sql_query("select timestamp, speed, track, lat, lon FROM %s where session_id='%s'" % ("gps_data", session_id), app.db, index_col='timestamp')
+    imu_data = pd.read_sql_query("select timestamp, x_accel, y_accel, z_accel FROM %s where session_id='%s'" % ("imu_data", session_id), app.db, index_col='timestamp')
+    can_samples = pd.read_sql_query("select timestamp, msg FROM %s where session_id='%s' and arbitration_id=16" % ("can_data", session_id), app.db, index_col='timestamp')
 
     can_samples['Steering'] = [
         (rpm_converter.convert_frame(can_data.CanFrame('010', '0'+x)) * 3000 *
@@ -242,7 +241,7 @@ select
 
 where session_id = '%s'
     """ % session_id
-    with db.connect() as c:
+    with app.db.connect() as c:
         q = c.execute(get_csv_cmd)
         results = ["#" + ','.join(q.keys())]
         for row in q:

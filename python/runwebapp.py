@@ -16,7 +16,9 @@
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 import logo
+from sqlalchemy import create_engine
 from racepi_webapp import app
 
+app.db = create_engine('sqlite:////home/donour/test.db')
 # FIXME: disabling debugging causes 100% cpu usage, notifier?
 app.run(host='0.0.0.0', debug=True, threaded=True)
