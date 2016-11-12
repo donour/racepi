@@ -40,5 +40,6 @@ fi
 if [ ! -e "${LOGGER}" ];
 then
     echo "Could not file logger"
-    exit -1
+else
+    "$LOGGER"
 else
