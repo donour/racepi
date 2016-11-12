@@ -17,14 +17,16 @@
 
 # Create empty db file with proper schema
 
+SCHEMA_HOME=$(dirname "$0")"/../sql/schema"
+
 # Schema for the database. The order is important because
 # tables use foreign keys.
 SCHEMA_FILES=(                \
-    "schema/session.sql"      \
-    "schema/session_info.sql" \
-    "schema/gps.sql"          \
-    "schema/imu.sql"          \
-    "schema/can.sql"          \
+    "${SCHEMA_HOME}/session.sql"      \
+    "${SCHEMA_HOME}/session_info.sql" \
+    "${SCHEMA_HOME}/gps.sql"          \
+    "${SCHEMA_HOME}/imu.sql"          \
+    "${SCHEMA_HOME}/can.sql"          \
 )
 
 if [ -z $1 ]; then

@@ -29,6 +29,12 @@ then
     exit -1
 fi
 
+if [ ! -e "${LOGGER}" ];
+then
+    echo "Could not file logger"
+    exit 1
+fi
+
 if [ ! -e "${SQLITE_FILE}" ];
 then
     echo "${SQLITE_FILE} does not exist, creating"
@@ -37,9 +43,13 @@ else
     echo "[found ${SQLITE_FILE}]"
 fi
 
-if [ ! -e "${LOGGER}" ];
-then
-    echo "Could not file logger"
-else
-    "$LOGGER"
-else
+"${WEBAPP}" "${SQLITE_FILE}" & WEBPID=$!
+
+function cleanup {
+    kill -9 ${WEBPID}
+}
+trap cleanup INT TERM EXIT QUIT
+
+"${LOGGER}" "${SQLITE_FILE}"
+
+

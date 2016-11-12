@@ -16,28 +16,35 @@
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
-import logo  # display logo
 import racepi_sensor_recorder
 from racepi_sensor_handler import GpsSensorHandler, RpiImuSensorHandler, CanSensorHandler, GPS_REQUIRED_FIELDS
 
-SQLITE_FILE = '/external/racepi_data/test.db'
+DEFAULT_SQLITE_FILE = '/external/racepi_data/test.db'
 # TODO: make recorded can ids configurable
 FORD_FOCUS_RS_CAN_IDS = ["010", "070", "080", "090", "213", "420"]
 ENDCOLOR  = '\033[0m'
 UNDERLINE = '\033[4m'
 
-print(UNDERLINE+"Starting RacePi Sensor Logger"+ENDCOLOR)
+if __name__ == "__main__":   
+    import sys, logo  # display logo
 
-print "Opening Sensor Handlers"
-handlers = {
-    'gps': GpsSensorHandler(),
-    'imu': RpiImuSensorHandler(),
-    'can': CanSensorHandler([])
-}
+    if len(sys.argv) < 2:
+        dbfile = DEFAULT_SQLITE_FILE
+    else:
+        dbfile = sys.argv[1]
 
-print("Opening Database: %s" % SQLITE_FILE)
-# TODO: look at opening DB as needed
-# to avoid corruption of tables
-db_handler = racepi_sensor_recorder.sqlite_handler.DbHandler(SQLITE_FILE, GPS_REQUIRED_FIELDS)
-sl = racepi_sensor_recorder.SensorLogger(db_handler, handlers)
-sl.start()
+    print(UNDERLINE+"Starting RacePi Sensor Logger"+ENDCOLOR)
+
+    print "Opening Sensor Handlers"
+    handlers = {
+        'gps': GpsSensorHandler(),
+        'imu': RpiImuSensorHandler(),
+        'can': CanSensorHandler([])
+    }
+
+    print("Opening Database: %s" % dbfile)
+    # TODO: look at opening DB as needed
+    # to avoid corruption of tables
+    db_handler = racepi_sensor_recorder.sqlite_handler.DbHandler(dbfile, GPS_REQUIRED_FIELDS)
+    sl = racepi_sensor_recorder.SensorLogger(db_handler, handlers)
+    sl.start()
