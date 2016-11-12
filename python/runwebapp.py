@@ -31,5 +31,5 @@ if __name__ == "__main__":
 
     app.db = create_engine("sqlite:///"+dbfile)
     # FIXME: disabling debugging causes 100% cpu usage, notifier?
-    app.run(host='0.0.0.0', threaded=True)
+    app.run(host='0.0.0.0', debug=True, threaded=True)
 

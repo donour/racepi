@@ -43,13 +43,15 @@ else
     echo "[found ${SQLITE_FILE}]"
 fi
 
-"${WEBAPP}" "${SQLITE_FILE}" & WEBPID=$!
+
+"${LOGGER}" "${SQLITE_FILE}" & LOGPID=$!
 
 function cleanup {
-    kill -9 ${WEBPID}
+    kill -2 ${LOGPID}
 }
 trap cleanup INT TERM EXIT QUIT
 
-"${LOGGER}" "${SQLITE_FILE}"
+"${WEBAPP}" "${SQLITE_FILE}"
+
 
 
