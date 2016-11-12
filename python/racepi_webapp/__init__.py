@@ -66,7 +66,7 @@ def get_scatterplot(series, w, title):
 def get_and_transform_can_data(session_id, arbitration_id, value_converter):
     data = pd.read_sql_query(
         "select timestamp, msg FROM %s where session_id='%s' and arbitration_id=%s" %
-        ("can_data", session_id, arbitration_id), db, index_col='timestamp')
+        ("can_data", session_id, arbitration_id), app.db, index_col='timestamp')
     data['result'] = \
         [value_converter.convert_frame(can_data.CanFrame('999', '0'+x)) for x in data.msg.tolist()]
     return data
@@ -194,16 +194,6 @@ def get_singlerun_timeseries():
          ((-1)**steering_direction_converter.convert_frame(can_data.CanFrame('010', '0'+x))))
         for x in can_samples.msg.tolist()]
 
-
-    data = []
-
-    layout = pgo.Layout(
-        title="Run",
-        xaxis=dict(title="time"),
-        yaxis=dict(title="value"),
-    )
-
-    #fig = pgo.Figure(data=data, layout=layout)
     fig = tools.make_subplots(rows=4, cols=1)
     fig.append_trace(get_scatterplot(gps_data.speed, smoothing_window, "Speed (m/s)"), 1, 1)
     fig.append_trace(get_scatterplot(imu_data.y_accel, smoothing_window << 3, "YAccel (avg)"), 2, 1)
