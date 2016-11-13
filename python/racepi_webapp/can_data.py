@@ -101,6 +101,9 @@ class CanFrame:
         if len(arbitration_id) == 3:
             arbitration_id = '0' + arbitration_id
 
-        cid = bytearray.fromhex(arbitration_id)
-        data = bytearray.fromhex(str(payload))
-        return cid, data
+        try:
+            cid = bytearray.fromhex(arbitration_id)
+            data = bytearray.fromhex(str(payload))
+            return cid, data
+        except ValueError as ve:
+            raise ValueError("(%s:%s)" % (arbitration_id, payload))

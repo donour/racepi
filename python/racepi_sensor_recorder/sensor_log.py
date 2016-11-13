@@ -29,7 +29,7 @@ from pi_sense_hat_display import RacePiStatusDisplay, SenseHat
 from sqlite_handler import DbHandler
 
 DEFAULT_DB_LOCATION = "/home/donour/test.db"
-ACTIVATE_RECORDING_M_PER_S = 5
+ACTIVATE_RECORDING_M_PER_S = 2.5
 MOVEMENT_THRESHOLD_M_PER_S = 1.0
 DEFAULT_DATA_BUFFER_TIME_SECONDS = 10.0
 
@@ -100,6 +100,9 @@ class SensorLogger:
         session_id = None
 
         try:
+            # TODO: this code makes a lot of assumptions about
+            # what handlers are available. cleanup.
+            
             while True:
                 new_data = defaultdict(list)
                 for h in self.handlers:
@@ -114,12 +117,14 @@ class SensorLogger:
                         if not recording_active:  # activate recording
                             session_id = self.db_handler.get_new_session()
                             print("New session: %s" % str(session_id))
+
+                            # TODO: enable this
                             # look for last sample before car moved, clear samples before that
-                            gps_history = self.data.get_sensor_data('gps')
-                            self.data.expire_old_samples(
-                                max(
-                                    [s[0] if s[1]['speed'] < MOVEMENT_THRESHOLD_M_PER_S else 0 for s in gps_history]
-                                ))
+                            #gps_history = self.data.get_sensor_data('gps')
+                            #self.data.expire_old_samples(
+                            #    max(
+                            #        [s[0] if s[1]['speed'] < MOVEMENT_THRESHOLD_M_PER_S else 0 for s in gps_history]
+                            #    ))
                             recording_active = True
                     else:
                         if recording_active:  # deactivate recording
@@ -149,13 +154,9 @@ class SensorLogger:
                                                  update_times['can'],
                                                  recording_active)
 
-                time.sleep(0.25)  # there is no reason to ever poll faster than this
+                time.sleep(0.2)  # there is no reason to ever poll faster than this
 
         finally:
             for h in self.handlers.values():
                 h.stop()
 
-
-if __name__ == "__main__":
-    sl = SensorLogger()
-    sl.start()

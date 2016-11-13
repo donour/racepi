@@ -99,7 +99,6 @@ class DbHandler:
                 raise TypeError("Invalid can data:" + raw)
 
             arbId = raw[:3]
-            datalen = raw[3]  # unused
             payload = raw[3:]
             insert_cmd = """
               insert into can_data

@@ -68,7 +68,7 @@ def get_and_transform_can_data(session_id, arbitration_id, value_converter):
         "select timestamp, msg FROM %s where session_id='%s' and arbitration_id=%s" %
         ("can_data", session_id, arbitration_id), app.db, index_col='timestamp')
     data['result'] = \
-        [value_converter.convert_frame(can_data.CanFrame('999', '0'+x)) for x in data.msg.tolist()]
+        [value_converter.convert_frame(can_data.CanFrame('999', x)) for x in data.msg.tolist()]
     return data
 
 
@@ -190,8 +190,8 @@ def get_singlerun_timeseries():
     can_samples = pd.read_sql_query("select timestamp, msg FROM %s where session_id='%s' and arbitration_id=16" % ("can_data", session_id), app.db, index_col='timestamp')
 
     can_samples['Steering'] = [
-        (rpm_converter.convert_frame(can_data.CanFrame('010', '0'+x)) * 3000 *
-         ((-1)**steering_direction_converter.convert_frame(can_data.CanFrame('010', '0'+x))))
+        (rpm_converter.convert_frame(can_data.CanFrame('010', x)) * 3000 *
+         ((-1)**steering_direction_converter.convert_frame(can_data.CanFrame('010', x))))
         for x in can_samples.msg.tolist()]
 
     fig = tools.make_subplots(rows=4, cols=1)
