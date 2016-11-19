@@ -90,6 +90,17 @@ class SensorLogger:
         self.handlers = sensor_handlers
         self.db_handler = db_handler
 
+    def get_new_data(self):
+        """
+        Get dictionary of new data from all handlers
+        :return:
+        """
+        new_data = defaultdict(list)
+        for h in self.handlers:
+            new_data[h] = self.handlers[h].get_all_data()
+            self.data.add_sample(h, new_data[h])
+        return new_data
+
     def start(self):
         
         for h in self.handlers.values():
@@ -104,10 +115,7 @@ class SensorLogger:
             # what handlers are available. cleanup.
             
             while True:
-                new_data = defaultdict(list)
-                for h in self.handlers:
-                    new_data[h] = self.handlers[h].get_all_data()
-                    self.data.add_sample(h, new_data[h])
+                new_data = self.get_new_data()
 
                 if new_data['gps']:
                     is_moving = True in \
