@@ -15,14 +15,13 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
-logo='''\033[1m
+logo='''\033[1m\
   _____                _____ _ 
  |  __ \              |  __ (_)
  | |__) |__ _  ___ ___| |__) | 
  |  _  // _` |/ __/ _ \  ___/ |
  | | \ \ (_| | (_|  __/ |   | |
- |_|  \_\__,_|\___\___|_|   |_|
-                               
+ |_|  \_\__,_|\___\___|_|   |_|                               
 \033[0m
 '''
 print(logo)
