@@ -4,6 +4,7 @@
             <thead>
             <tr>
                 <th>Session ID</th>
+                <th>Time</th>
                 <th>Max Speed</th>
                 <th>Num Samples</th>
                 <th>Duration (s)</th>
@@ -14,6 +15,9 @@
             <tr ng-repeat="session in vm.sessions">
                 <td>
                     <div>{{session[0]}}</div>
+                </td>
+                <td>
+                    <div>{{session[1]*1000 | date : "yyyy-MM-dd HH:mm"}}</div>
                 </td>
                 <td>
                     <div>{{session[3]}}</div>

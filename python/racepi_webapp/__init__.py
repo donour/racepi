@@ -23,8 +23,9 @@ import can_data
 app = Flask(__name__)
 
 tps_converter = can_data.CanFrameValueExtractor(4, 12, a=0.1)
-rpm_converter = can_data.CanFrameValueExtractor(49, 15, a=9.587e-5)
+steering_angle_converter = can_data.CanFrameValueExtractor(49, 15, a=9.587e-5)
 steering_direction_converter = can_data.CanFrameValueExtractor(32, 1)
+rpm_converter = can_data.CanFrameValueExtractor(36, 12, a=4)
 brake_pressure_converter = can_data.CanFrameValueExtractor(24, 16, a=1e-3)
 
 # TODO: sanitize all sql statements by remove ; character
@@ -183,14 +184,15 @@ def get_singlerun_timeseries():
 
     can_channels = {
         'TPS': get_and_transform_can_data(session_id, 128, tps_converter),
-        'Brake Pressure': get_and_transform_can_data(session_id, 531, brake_pressure_converter)
+        'Brake Pressure': get_and_transform_can_data(session_id, 531, brake_pressure_converter),
+        'RPM': get_and_transform_can_data(session_id, 144, rpm_converter)
     }
     gps_data = pd.read_sql_query("select timestamp, speed, track, lat, lon FROM %s where session_id='%s'" % ("gps_data", session_id), app.db, index_col='timestamp')
     imu_data = pd.read_sql_query("select timestamp, x_accel, y_accel, z_accel FROM %s where session_id='%s'" % ("imu_data", session_id), app.db, index_col='timestamp')
     can_samples = pd.read_sql_query("select timestamp, msg FROM %s where session_id='%s' and arbitration_id=16" % ("can_data", session_id), app.db, index_col='timestamp')
 
     can_samples['Steering'] = [
-        (rpm_converter.convert_frame(can_data.CanFrame('010', x)) * 3000 *
+        (steering_angle_converter.convert_frame(can_data.CanFrame('010', x)) * 3000 *
          ((-1)**steering_direction_converter.convert_frame(can_data.CanFrame('010', x))))
         for x in can_samples.msg.tolist()]
 
