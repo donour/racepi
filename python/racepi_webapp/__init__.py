@@ -54,7 +54,7 @@ def get_scatterplot(series, w, title):
     """
     xdata = None
     ydata = None
-    if len(series > (2*w)):
+    if len(series) > (2*w):
         data = pd.Series(series).rolling(window=w, center=True).mean()
         t0 = data.index.values.tolist()[0]
         data.offset_time = [x-t0 for x in data.index.values.tolist()]
