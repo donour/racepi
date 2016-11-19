@@ -86,7 +86,7 @@ class DbHandler:
                    '%s', %f, %f, %f, %f, %f, %f, %f)
                 """ % (
                     (','.join(self.gps_fields),
-                    session_id.hex, t)  + tuple(d))
+                    session_id.hex, t) + tuple(d))
                 self.conn.execute(insert_cmd)
 
         if gps_data:
@@ -144,7 +144,7 @@ left join
     from can_data group by session_id) as can
     on can.session_id = sessions.id
         where sessions.id = '%s'
-        """ % (session_id.hex)
+        """ % session_id.hex
 
         self.conn.execute(update_cmd)
         self.conn.commit()
