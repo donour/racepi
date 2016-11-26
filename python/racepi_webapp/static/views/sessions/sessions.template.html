@@ -3,9 +3,9 @@
         <table class="table table-striped">
             <thead>
             <tr>
-                <th>Session ID</th>
+                <!--<th>Session ID</th>-->
                 <th>Time</th>
-                <th>Max Speed</th>
+                <th>Vmax</th>
                 <th>Num Samples</th>
                 <th>Duration (s)</th>
                 <th></th>
@@ -13,20 +13,22 @@
             </thead>
             <tbody>
             <tr ng-repeat="session in vm.sessions">
+                <!--
                 <td>
                     <div>{{session[0]}}</div>
                 </td>
+                -->
                 <td>
                     <div>{{session[1]*1000 | date : "yyyy-MM-dd HH:mm"}}</div>
                 </td>
                 <td>
-                    <div>{{session[3]}}</div>
+                    <div>{{session[3] | number : 1}}</div>
                 </td>
                 <td>
                     <div>{{session[4]}}</div>
                 </td>
                 <td>
-                    <div>{{session[2]}}</div>
+                    <div>{{session[2] | number : 1}}</div>
                 </td>
                 <td width="125px">
                     <a ui-sref="details({sessionId: session[0]})">
