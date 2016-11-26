@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
+from plotly_helpers import get_scatterplot
 from flask import Flask, jsonify, request, Response
 from plotly import graph_objs as pgo
 from plotly import tools
@@ -29,39 +30,6 @@ rpm_converter = can_data.CanFrameValueExtractor(36, 12, a=2.0)
 brake_pressure_converter = can_data.CanFrameValueExtractor(24, 16, a=1e-3)
 
 # TODO: sanitize all sql statements by remove ; character
-
-
-def sfl(float_list, ndigits = 3):
-    """
-    Shorten a list of float by rounding to a small number of
-    decimals. This significantly speeds up loading large datasets
-    as JSON
-    :param float_list: list of float values
-    :param ndigits: number of rounding digits
-    :return: list of values round to small number of digits
-    """
-    return [round(x, ndigits) for x in float_list]
-
-
-def get_scatterplot(series, w, title):
-    """
-    Generate plotly scatter plot from pandas timeseries data
-
-    :param series: plot dataframe series
-    :param w: rolling averge window radius
-    :param title: title for plot
-    :return: scatterplot graph object
-    """
-    xdata = None
-    ydata = None
-    if len(series) > (2*w):
-        data = pd.Series(series).rolling(window=w, center=True).mean()
-        t0 = data.index.values.tolist()[0]
-        data.offset_time = [x-t0 for x in data.index.values.tolist()]
-        xdata = sfl(data.offset_time[w:-w])
-        ydata = sfl(data.values.tolist()[w:-w])
-
-    return pgo.Scatter(x=xdata, y=ydata, name=title)
 
 
 def get_and_transform_can_data(session_id, arbitration_id, value_converter):
@@ -180,7 +148,7 @@ def get_singlerun_timeseries():
     if 'smooth' in request.args:
         smoothing_window = int(request.args.get("smooth"))
     else:
-        smoothing_window = 3
+        smoothing_window = 10
 
     can_channels = {
         'TPS (%)': get_and_transform_can_data(session_id, 128, tps_converter),
@@ -196,16 +164,37 @@ def get_singlerun_timeseries():
          ((-1)**steering_direction_converter.convert_frame(can_data.CanFrame('010', x))))
         for x in can_samples.msg.tolist()]
 
-    fig = tools.make_subplots(rows=4, cols=1)
+    fig = tools.make_subplots(rows=6, cols=1)
     fig.append_trace(get_scatterplot(gps_data.speed, smoothing_window, "Speed (m/s)"), 1, 1)
     fig.append_trace(get_scatterplot(imu_data.y_accel, smoothing_window << 3, "YAccel (avg)"), 2, 1)
     fig.append_trace(get_scatterplot(imu_data.x_accel, smoothing_window << 3, "XAccel (avg)"), 2, 1)
+    fig.append_trace(get_scatterplot(can_samples['Steering'], smoothing_window, "Steering"), 3, 1)
+    i = 4
     for c in can_channels:
-        fig.append_trace(get_scatterplot(can_channels[c].result, smoothing_window, c), 3, 1)
-    fig.append_trace(get_scatterplot(can_samples['Steering'], smoothing_window, "Steering"), 4, 1)
+        fig.append_trace(get_scatterplot(can_channels[c].result, smoothing_window, c), int(i), 1)
+        i += 0.5
 
     return jsonify(data=fig.get('data'), layout=fig.get('layout'))
 
+
+@app.route('/plot/speed')
+def get_plots_speed():
+    session_id = request.args.get("session_id")
+    smoothing_window = 10
+
+    can_channels = {
+        'TPS (%)': get_and_transform_can_data(session_id, 128, tps_converter),
+        'Brake Pressure (kPa)': get_and_transform_can_data(session_id, 531, brake_pressure_converter),
+    }
+    gps_data = pd.read_sql_query("select timestamp, speed, track, lat, lon FROM %s where session_id='%s'" % ("gps_data", session_id), app.db, index_col='timestamp')
+
+    sources = []
+    sources.append((gps_data.speed, smoothing_window, "Speed (m/s)"))
+    for c in can_channels:
+        sources.append((can_channels[c].result, smoothing_window, c))
+
+    fig = plotly_helpers.get_xy_combined_plot(sources, "Speed")
+    return jsonify(data=fig.get('data'), layout=fig.get('layout'))
 
 @app.route('/export/csv')
 def get_run_csv():

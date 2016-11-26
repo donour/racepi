@@ -20,6 +20,9 @@
             $http.get('/plot/run?session_id=' + sessionId)
                 .then(setRunPlot);
 
+            $http.get('/plot/speed?session_id=' + sessionId)
+                .then(setSpeedPlot);
+
         }
 
         function setGpsData(response) {
@@ -29,6 +32,10 @@
         function setRunPlot(response) {
             vm.runPlotConfig = response.data;
         }
+        function setSpeedPlot(response) {
+            vm.speedPlot = response.data;
+        }
+
     }
 
 })();
