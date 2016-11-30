@@ -22,6 +22,12 @@ import pandas as pd
 import can_data
 
 app = Flask(__name__)
+try:
+    from flask_compress import Compress
+    Compress(app)
+    print("Text response compression enabled")
+except ImportError:
+    print("Compress library not found")
 
 tps_converter = can_data.CanFrameValueExtractor(6, 10, a=0.1)
 steering_angle_converter = can_data.CanFrameValueExtractor(49, 15, a=9.587e-5)
