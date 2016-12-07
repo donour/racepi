@@ -15,8 +15,8 @@
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
 from bokeh.io import curdoc
-from racepi_analysis import widgets
+from racepi_analysis import RacePiAnalysis
 
-curdoc().add_root(widgets)
+curdoc().add_root(RacePiAnalysis().widgets)
 curdoc().title = "RacePI :: Analysis"
 

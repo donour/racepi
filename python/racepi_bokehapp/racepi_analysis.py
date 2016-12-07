@@ -14,14 +14,16 @@
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
+from datetime import datetime
+
 import pandas as pd
-from bokeh.models.widgets import PreText, Select, DateRangeSlider
+from bokeh.models.widgets import PreText, Select
 from bokeh.models import ColumnDataSource
 from bokeh.layouts import row, column
 from sqlalchemy import create_engine
 from bokeh.plotting import figure
 
-DEFAULT_SQLITE_FILE = '/home/donour/saturday-drives.db'
+DEFAULT_SQLITE_FILE = '/home/donour/crimson_day.db'
 
 
 class RacePiDBSession:
@@ -48,39 +50,49 @@ class RacePiDBSession:
             ("imu_data", session_id), self.db, index_col='timestamp')
 
 
-db = RacePiDBSession()
-sessions = {"%s:%s" % (s[1], s[2]) : s for s in db.get_sessions()}
+class RacePiAnalysis:
 
-session_selector = Select(options=sessions.keys())
+    def load_data(self, session_info_primary,  session_info_compares=[]):
 
-# set up layout
-stats = PreText(text='', width=500, height=150)
-details = PreText(text='', width=300, height=100)
+        # TODO convert all timestamps to deltas
 
-speed_source = ColumnDataSource(data=dict(timestamp=[], speed=[], lat=[], lon=[]))
-accel_source = ColumnDataSource(data=dict(timestamp=[], x_accel=[]))
-s1 = figure(width=800, plot_height=200, title="speed")
-s1.line('timestamp', 'speed', source=speed_source)
-s2 = figure(width=800, plot_height=200, title="xaccel", x_range=s1.x_range, y_range=[-1.5, 1.5])
-s2.line('timestamp', 'x_accel', source=accel_source)
+        # load primary run data
+        session_id = session_info_primary[0]
+        gps_data = self.db.get_gps_data(session_id)
+        imu_data = self.db.get_imu_data(session_id)
+        gps_data = gps_data.rolling(min_periods=1, window=8, center=True).mean()
+        imu_data = imu_data.rolling(min_periods=1, window=32, center=True).mean()
+
+        self.speed_source.data = ColumnDataSource(gps_data).data
+        self.accel_source.data = ColumnDataSource(imu_data).data
+        self.stats.text = str(gps_data.describe())
+        self.details.text = "date:%s\nduration:%.0f\nVmax:%.0f\nsamples:%d" % session_info[1:5]
+
+        # load compare run data
+
+    def session_change(self, attrname, old, new):
+        self.load_data(self.sessions[new])
+
+    def __init__(self):
+        self.db = RacePiDBSession()
+
+        self.sessions = {"%s:%.0f" % (datetime.fromtimestamp(s[1]).isoformat(), s[2]): s for s in self.db.get_sessions()}
+        session_selector = Select(options=self.sessions.keys())
+
+        # set up layout
+        self.stats = PreText(text='', width=500, height=150)
+        self.details = PreText(text='', width=300, height=100)
+
+        self.speed_source = ColumnDataSource(data=dict(timestamp=[], speed=[], lat=[], lon=[]))
+        self.accel_source = ColumnDataSource(data=dict(timestamp=[], x_accel=[]))
+        s1 = figure(width=800, plot_height=200, title="speed")
+        s1.line('timestamp', 'speed', source=self.speed_source)
+        s2 = figure(width=800, plot_height=200, title="xaccel", x_range=s1.x_range, y_range=[-1.5, 1.5], tools=[])
+        s2.line('timestamp', 'x_accel', source=self.accel_source)
+        session_selector.on_change('value', self.session_change)
+
+        self.widgets = column(row(self.stats, column(session_selector, self.details)), s1, s2)
 
 
-def session_change(attrname, old, new):
-    load_data(sessions[new])
 
 
-def load_data(session_info):
-    session_id = session_info[0]
-    gps_data = db.get_gps_data(session_id)
-    imu_data = db.get_imu_data(session_id)
-    gps_data = gps_data.rolling(min_periods=1, window=8, center=True).mean()
-    imu_data = imu_data.rolling(min_periods=1, window=32, center=True).mean()
-
-    speed_source.data = ColumnDataSource(gps_data).data
-    accel_source.data = ColumnDataSource(imu_data).data
-    stats.text = str(gps_data.describe())
-    details.text = "date:%s\nduration:%s\nVmax:%s\nsamples:%s" % session_info[1:5]
-
-
-session_selector.on_change('value', session_change)
-widgets = column(row(stats, column(session_selector, details)), s1, s2)
