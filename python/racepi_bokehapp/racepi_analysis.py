@@ -20,8 +20,10 @@ import pandas as pd
 from bokeh.models.widgets import PreText, Select
 from bokeh.models import ColumnDataSource
 from bokeh.layouts import row, column
+from bokeh.palettes import Blues4
 from sqlalchemy import create_engine
 from bokeh.plotting import figure
+from scipy.signal import savgol_filter
 
 DEFAULT_SQLITE_FILE = '/home/donour/crimson_day.db'
 
@@ -62,8 +64,11 @@ class RunView:
 
 class RacePiAnalysis:
 
-    def load_data(self, session_info, v):
+    def convert_dataframe_index_to_timedelta(self, dataframe):
+        if not dataframe.empty:
+            dataframe.index = dataframe.index - dataframe.index[0]
 
+    def load_data(self, session_info, v):
 
         # TODO convert all timestamps to deltas
 
@@ -71,8 +76,15 @@ class RacePiAnalysis:
         session_id = session_info[0]
         gps_data = self.db.get_gps_data(session_id)
         imu_data = self.db.get_imu_data(session_id)
-        gps_data = gps_data.rolling(min_periods=1, window=8, center=True).mean()
-        imu_data = imu_data.rolling(min_periods=1, window=32, center=True).mean()
+
+        self.convert_dataframe_index_to_timedelta(gps_data)
+        self.convert_dataframe_index_to_timedelta(imu_data)
+
+        #gps_data = gps_data.rolling(min_periods=1, window=8, center=True).mean()
+        for k in imu_data:
+            imu_data[k] = savgol_filter(imu_data[k], 13, 3)
+        for k in gps_data:
+            gps_data[k] = savgol_filter(gps_data[k], 13, 3)
 
         v.speed_source.data = ColumnDataSource(gps_data).data
         v.accel_source.data = ColumnDataSource(imu_data).data
@@ -96,11 +108,11 @@ class RacePiAnalysis:
         cv.session_selector = Select(options=self.sessions.keys())
 
         s1 = figure(width=800, plot_height=200, title="speed")
-        s1.line('timestamp', 'speed', source=pv.speed_source)
-        s1.line('timestamp', 'speed', source=cv.speed_source)
+        s1.line('timestamp', 'speed', source=pv.speed_source, color=Blues4[0])
+        s1.line('timestamp', 'speed', source=cv.speed_source, color=Blues4[2])
         s2 = figure(width=800, plot_height=200, title="xaccel", x_range=s1.x_range, y_range=[-1.5, 1.5], tools=[])
-        s2.line('timestamp', 'x_accel', source=pv.accel_source)
-        s2.line('timestamp', 'x_accel', source=cv.accel_source)
+        s2.line('timestamp', 'x_accel', source=pv.accel_source,color=Blues4[0])
+        s2.line('timestamp', 'x_accel', source=cv.accel_source,color=Blues4[2])
 
         pv.session_selector.on_change('value', self.session_change_primary)
         cv.session_selector.on_change('value', self.session_change_compare)
@@ -112,7 +124,10 @@ class RacePiAnalysis:
             ),
             s1,
             s2,
-            pv.stats
+            row(
+                pv.stats,
+                cv.stats
+            )
         )
 
 
