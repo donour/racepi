@@ -25,7 +25,7 @@ from sqlalchemy import create_engine
 from bokeh.plotting import figure
 from scipy.signal import savgol_filter
 
-DEFAULT_SQLITE_FILE = '/home/donour/crimson_day.db'
+DEFAULT_SQLITE_FILE = '/external/racepi_data/saturday-drives.db'
 
 
 class RacePiDBSession:
