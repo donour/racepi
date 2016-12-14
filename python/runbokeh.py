@@ -25,8 +25,8 @@ d = dirname(argv[0])
 args=[
     argv[0],
     'serve',
-    '--host', '192.168.11.6:5006',
-    '--allow-websocket-origin', '192.168.11.6:5006',
+    '--host', "*:5006",
+    '--allow-websocket-origin', "*:5006",
     d+'/racepi_bokehapp']
 
 main(args)
