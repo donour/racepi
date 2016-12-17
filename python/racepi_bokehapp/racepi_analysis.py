@@ -25,21 +25,11 @@ from sqlalchemy import create_engine
 from bokeh.plotting import figure
 from scipy.signal import savgol_filter
 
-import can_data
-
-# Ford Focus RS MK3 can converters
-tps_converter = can_data.CanFrameValueExtractor(6, 10, a=0.1)
-steering_angle_converter = can_data.CanFrameValueExtractor(49, 15, a=9.587e-5)
-steering_direction_converter = can_data.CanFrameValueExtractor(32, 1)
-rpm_converter = can_data.CanFrameValueExtractor(36, 12, a=2.0)
-brake_pressure_converter = can_data.CanFrameValueExtractor(24, 16, a=1e-3)
-
 
 class RacePiDBSession:
 
     def __init__(self, db_location):
         self.db = create_engine("sqlite:///" + db_location)
-        # TODO verify that expected tables exist
 
     def __get_sql_data(self, table, row_filter="1=1"):
         with self.db.connect() as c:
@@ -59,14 +49,6 @@ class RacePiDBSession:
             "select timestamp, x_accel, y_accel, z_accel FROM %s where session_id='%s'" %
             ("imu_data", session_id), self.db, index_col='timestamp')
 
-    def get_and_transform_can_data(self, session_id, arbitration_id, value_converter):
-        data = pd.read_sql_query(
-            "select timestamp, msg FROM %s where session_id='%s' and arbitration_id=%s" %
-            ("can_data", session_id, arbitration_id), self.db, index_col='timestamp')
-        data['result'] = \
-            [value_converter.convert_frame(can_data.CanFrame('999', x)) for x in data.msg.tolist()]
-        return data
-
 
 class RunView:
 
@@ -76,25 +58,23 @@ class RunView:
         self.details = PreText(text='', width=300, height=100)
         self.speed_source = ColumnDataSource(data=dict(timestamp=[], speed=[], lat=[], lon=[]))
         self.accel_source = ColumnDataSource(data=dict(timestamp=[], x_accel=[]))
-        self.tps_source = ColumnDataSource(data=dict(timestamp=[], result=[]))
 
 
 class RacePiAnalysis:
 
-    @staticmethod
-    def convert_dataframe_index_to_timedelta(dataframe):
+    def convert_dataframe_index_to_timedelta(self, dataframe):
         if not dataframe.empty:
             dataframe.index = dataframe.index - dataframe.index[0]
 
     def load_data(self, session_info, v):
         """
+
         :param session_info:
         :param v: view
         """
         session_id = session_info[0]
         gps_data = self.db.get_gps_data(session_id)
         imu_data = self.db.get_imu_data(session_id)
-        tps_data = self.db.get_and_transform_can_data(session_id, 128, tps_converter)
 
         self.convert_dataframe_index_to_timedelta(gps_data)
         self.convert_dataframe_index_to_timedelta(imu_data)
@@ -142,3 +122,7 @@ class RacePiAnalysis:
                 cv.stats
             )
         )
+
+
+
+
