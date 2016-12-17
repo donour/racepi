@@ -17,6 +17,7 @@
 from bokeh.io import curdoc
 from racepi_analysis import RacePiAnalysis
 
-curdoc().add_root(RacePiAnalysis().widgets)
+DEFAULT_SQLITE_FILE = '/home/donour/saturday-drives.db'
+curdoc().add_root(RacePiAnalysis(DEFAULT_SQLITE_FILE).widgets)
 curdoc().title = "RacePI :: Analysis"
 
