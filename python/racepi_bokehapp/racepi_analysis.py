@@ -24,6 +24,7 @@ from bokeh.palettes import Blues4
 from sqlalchemy import create_engine
 from bokeh.plotting import figure
 from scipy.signal import savgol_filter
+from bokeh.charts import Histogram, output_file, show
 
 import can_data
 
@@ -38,6 +39,7 @@ class RacePiDBSession:
 
     def __init__(self, db_location):
         self.db = create_engine("sqlite:///" + db_location)
+        # TODO: sanity check that expected tables exist
 
     def __get_sql_data(self, table, row_filter="1=1"):
         with self.db.connect() as c:
@@ -75,6 +77,7 @@ class RunView:
         self.speed_source = ColumnDataSource(data=dict(timestamp=[], speed=[], lat=[], lon=[]))
         self.accel_source = ColumnDataSource(data=dict(timestamp=[], x_accel=[]))
         self.tps_source = ColumnDataSource(data=dict(timestamp=[], result=[]))
+        self.rpm_source = ColumnDataSource(data=dict(timestamp=[], result=[]))
 
 
 class RacePiAnalysis:
@@ -114,6 +117,7 @@ class RacePiAnalysis:
         v.speed_source.data = ColumnDataSource(gps_data).data
         v.accel_source.data = ColumnDataSource(imu_data).data
         v.tps_source.data = ColumnDataSource(can_channels['tps']).data
+        v.rpm_source.data = ColumnDataSource(can_channels['rpm']).data
 
         v.stats.text = str(gps_data.describe())
         v.details.text = "date:%s\nduration:%.0f\nVmax:%.0f\nsamples:%d" % session_info[1:5]
@@ -138,6 +142,17 @@ class RacePiAnalysis:
         s3 = figure(width=900, plot_height=200, title="Input", tools=TOOLS, x_range=s1.x_range)
         s3.line('timestamp', 'result', source=pv.tps_source, color=Blues4[0])
         s3.line('timestamp', 'result', source=cv.tps_source, color=Blues4[2])
+        s4 = figure(width=900, plot_height=200, title="RPM", tools=TOOLS, x_range=s1.x_range)
+        s4.line('timestamp', 'result', source=pv.rpm_source, color=Blues4[0])
+        s4.line('timestamp', 'result', source=cv.rpm_source, color=Blues4[2])
+
+
+        tps_hist = figure(width=900, plot_height=200, title="TPS", tools=TOOLS)
+        hh1 = tps_hist.quad(bottom=0, left=[], right=[], top=[], alpha=0.5)
+        # TODO finish tps histogram
+        #self.tps_hist = Histogram({'result':[1]}, values='result', title="TPS", width=900, height=200, tools=TOOLS)
+        #self.tps_hist = Histogram(pv.tps_source.data, values='result', title="TPS", width=900, height=200, tools=TOOLS)
+        #tps_hist = Histogram(cv.tps_source, values='result', title="TPS")
 
         pv.session_selector.on_change('value', lambda a, o, n: self.load_data(self.sessions[n], self.primary_view))
         cv.session_selector.on_change('value', lambda a, o, n: self.load_data(self.sessions[n], self.compare_view))
@@ -150,6 +165,8 @@ class RacePiAnalysis:
             s1,
             s2,
             s3,
+            s4,
+            tps_hist,
             row(
                 pv.stats,
                 cv.stats

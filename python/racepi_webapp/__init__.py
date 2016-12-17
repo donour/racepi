@@ -78,6 +78,11 @@ def get_imu_data():
     return get_data("imu_data")
 
 
+@app.route('/data/stats/<session_id>')
+def get_stats_session(session_id):
+    return jsonify(data="")
+
+
 @app.route('/plot/accel')
 def get_plot_timeseries():
     session_id = request.args.get("session_id")
@@ -241,3 +246,47 @@ where session_id = '%s'
 
         result = '\n'.join(results)
         return Response(result, mimetype='text/csv')
+
+@app.route('/plot/bokeh_test/<session_id>')
+def get_plots_bokeh_test(session_id):
+
+    from bokeh.embed import components
+    from bokeh.plotting import figure
+    from bokeh.layouts import gridplot
+    from bokeh.resources import INLINE
+    from bokeh.util.string import encode_utf8
+    import flask
+
+    can_channels = {
+        'TPS (%)': get_and_transform_can_data(session_id, 128, tps_converter),
+        'Brake Pressure (kPa)': get_and_transform_can_data(session_id, 531, brake_pressure_converter),
+    }
+    gps_data = pd.read_sql_query("select timestamp, speed, track, lat, lon FROM %s where session_id='%s'" % ("gps_data", session_id), app.db, index_col='timestamp')
+    imu_data = pd.read_sql_query("select timestamp, x_accel, y_accel, z_accel FROM %s where session_id='%s'" % ("imu_data", session_id), app.db, index_col='timestamp')
+
+    gps_data = gps_data.rolling(min_periods=1, window=8, center=True).mean()
+    imu_data = imu_data.rolling(min_periods=1, window=32, center=True).mean()
+
+    s1 = figure(width=800, plot_height=250, title="speed")
+    s1.line(gps_data.index, gps_data.speed)
+    s2 = figure(width=800, plot_height=250, title="xaccel", x_range=s1.x_range)
+    s2.line(imu_data.index, imu_data.x_accel)
+    subplots = [[s1],[s2]]
+    for c in can_channels:
+        s = figure(width=800, plot_height=250, title=c, x_range=s1.x_range)
+        s.line(can_channels[c].index, can_channels[c].result)
+        subplots.append([s])
+        print "added"
+
+    js_resources = INLINE.render_js()
+    css_resources = INLINE.render_css()
+
+    script, div = components(gridplot(subplots))
+    html = flask.render_template(
+        'embed.html',
+        plot_script=script,
+        plot_div=div,
+        js_resources=js_resources,
+        css_resources=css_resources,
+    )
+    return encode_utf8(html)

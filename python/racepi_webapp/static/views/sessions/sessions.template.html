@@ -9,6 +9,8 @@
                 <th>Num Samples</th>
                 <th>Duration (s)</th>
                 <th></th>
+                <th></th>
+                <th></th>
             </tr>
             </thead>
             <tbody>
@@ -37,6 +39,9 @@
                 </td>
                 <td>
                     <a download="{{session[0]}}.csv" ng-href="/export/csv?session_id={{session[0]}}">[Download CSV]</a>
+                </td>
+                <td>
+                    <a ng-href="/plot/bokeh_test/{{session[0]}}">[BOKEH]</a>
                 </td>
             </tr>
             </tbody>

@@ -18,6 +18,7 @@
 from sensor_handler import SensorHandler
 import time
 
+
 class SimulatedCanSensorHandler(SensorHandler):
 
     def __init__(self, msg_defs):
@@ -49,7 +50,7 @@ class SimulatedCanSensorHandler(SensorHandler):
         print("Shutting down CAN reader")
 
 if __name__ == "__main__":
-    sh = SimulatedCanSensorHandler([("foo",500), ("bar",1000)])
+    sh = SimulatedCanSensorHandler([("foo", 500), ("bar", 1000)])
     sh.start()
     while True:
         data = sh.get_all_data()
