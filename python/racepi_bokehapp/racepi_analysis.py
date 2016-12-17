@@ -25,6 +25,14 @@ from sqlalchemy import create_engine
 from bokeh.plotting import figure
 from scipy.signal import savgol_filter
 
+import can_data
+
+# Focus RS Mk3 CAN converters
+tps_converter = can_data.CanFrameValueExtractor(6, 10, a=0.1)
+steering_angle_converter = can_data.CanFrameValueExtractor(49, 15, a=9.587e-5)
+steering_direction_converter = can_data.CanFrameValueExtractor(32, 1)
+rpm_converter = can_data.CanFrameValueExtractor(36, 12, a=2.0)
+brake_pressure_converter = can_data.CanFrameValueExtractor(24, 16, a=1e-3)
 
 class RacePiDBSession:
 
@@ -49,6 +57,14 @@ class RacePiDBSession:
             "select timestamp, x_accel, y_accel, z_accel FROM %s where session_id='%s'" %
             ("imu_data", session_id), self.db, index_col='timestamp')
 
+    def get_and_transform_can_data(self, session_id, arbitration_id, value_converter):
+        data = pd.read_sql_query(
+            "select timestamp, msg FROM %s where session_id='%s' and arbitration_id=%s" %
+            ("can_data", session_id, arbitration_id), self.db, index_col='timestamp')
+        data['result'] = \
+            [value_converter.convert_frame(can_data.CanFrame('999', x)) for x in data.msg.tolist()]
+        return data
+
 
 class RunView:
 
@@ -58,11 +74,13 @@ class RunView:
         self.details = PreText(text='', width=300, height=100)
         self.speed_source = ColumnDataSource(data=dict(timestamp=[], speed=[], lat=[], lon=[]))
         self.accel_source = ColumnDataSource(data=dict(timestamp=[], x_accel=[]))
+        self.tps_source = ColumnDataSource(data=dict(timestamp=[], result=[]))
 
 
 class RacePiAnalysis:
 
-    def convert_dataframe_index_to_timedelta(self, dataframe):
+    @staticmethod
+    def convert_dataframe_index_to_timedelta(dataframe):
         if not dataframe.empty:
             dataframe.index = dataframe.index - dataframe.index[0]
 
@@ -76,8 +94,17 @@ class RacePiAnalysis:
         gps_data = self.db.get_gps_data(session_id)
         imu_data = self.db.get_imu_data(session_id)
 
+        can_channels = {
+            'tps': self.db.get_and_transform_can_data(session_id, 128, tps_converter),
+            'b_pres': self.db.get_and_transform_can_data(session_id, 531, brake_pressure_converter),
+            'rpm': self.db.get_and_transform_can_data(session_id, 144, rpm_converter)
+        }
+
         self.convert_dataframe_index_to_timedelta(gps_data)
         self.convert_dataframe_index_to_timedelta(imu_data)
+        for c in can_channels:
+            self.convert_dataframe_index_to_timedelta(imu_data)
+            self.convert_dataframe_index_to_timedelta(can_channels[c])
 
         for k in imu_data:
             imu_data[k] = savgol_filter(imu_data[k], 13, 3)
@@ -86,6 +113,8 @@ class RacePiAnalysis:
 
         v.speed_source.data = ColumnDataSource(gps_data).data
         v.accel_source.data = ColumnDataSource(imu_data).data
+        v.tps_source.data = ColumnDataSource(can_channels['tps']).data
+
         v.stats.text = str(gps_data.describe())
         v.details.text = "date:%s\nduration:%.0f\nVmax:%.0f\nsamples:%d" % session_info[1:5]
 
@@ -106,6 +135,9 @@ class RacePiAnalysis:
         s2 = figure(width=900, plot_height=200, title="xaccel", tools=TOOLS, x_range=s1.x_range, y_range=[-1.5, 1.5])
         s2.line('timestamp', 'x_accel', source=pv.accel_source,color=Blues4[0])
         s2.line('timestamp', 'x_accel', source=cv.accel_source,color=Blues4[2])
+        s3 = figure(width=900, plot_height=200, title="Input", tools=TOOLS, x_range=s1.x_range)
+        s3.line('timestamp', 'result', source=pv.tps_source, color=Blues4[0])
+        s3.line('timestamp', 'result', source=cv.tps_source, color=Blues4[2])
 
         pv.session_selector.on_change('value', lambda a, o, n: self.load_data(self.sessions[n], self.primary_view))
         cv.session_selector.on_change('value', lambda a, o, n: self.load_data(self.sessions[n], self.compare_view))
@@ -117,6 +149,7 @@ class RacePiAnalysis:
             ),
             s1,
             s2,
+            s3,
             row(
                 pv.stats,
                 cv.stats
