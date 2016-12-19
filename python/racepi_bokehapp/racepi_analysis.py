@@ -87,7 +87,8 @@ class RacePiAnalysis:
     @staticmethod
     def convert_dataframe_index_to_timedelta(dataframe):
         if not dataframe.empty:
-            dataframe.index = dataframe.index - dataframe.index[0]
+            t0 = dataframe.index[0]
+            dataframe.index = dataframe.index - t0
 
     def load_data(self, session_info, v):
         """
@@ -111,9 +112,7 @@ class RacePiAnalysis:
             self.convert_dataframe_index_to_timedelta(can_channels[c])
 
         for k in imu_data:
-            imu_data[k] = savgol_filter(imu_data[k], 13, 3)
-        for k in gps_data:
-            gps_data[k] = savgol_filter(gps_data[k], 13, 3)
+            imu_data[k] = savgol_filter(imu_data[k], 13, 6)
 
         v.speed_source.data = ColumnDataSource(gps_data).data
         v.accel_source.data = ColumnDataSource(imu_data).data
