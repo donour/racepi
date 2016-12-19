@@ -108,7 +108,6 @@ class RacePiAnalysis:
         self.convert_dataframe_index_to_timedelta(gps_data)
         self.convert_dataframe_index_to_timedelta(imu_data)
         for c in can_channels:
-            self.convert_dataframe_index_to_timedelta(imu_data)
             self.convert_dataframe_index_to_timedelta(can_channels[c])
 
         for k in imu_data:
