@@ -15,12 +15,13 @@
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
 from datetime import datetime
+from os import listdir
 
 import pandas as pd
 from bokeh.models.widgets import PreText, Select
-from bokeh.models import ColumnDataSource
+from bokeh.models import ColumnDataSource, Range1d, LinearAxis
 from bokeh.layouts import row, column
-from bokeh.palettes import Blues4
+from bokeh.palettes import Blues4, Reds4
 from sqlalchemy import create_engine
 from bokeh.plotting import figure
 from scipy.signal import savgol_filter
@@ -72,11 +73,12 @@ class RunView:
 
     def __init__(self):
         self.session_selector = None
-        self.stats = PreText(text='', width=500, height=150)
-        self.details = PreText(text='', width=300, height=100)
+        self.stats = PreText(text='Run Stats', width=500, height=150)
+        self.details = PreText(text='Run Details', width=300, height=100)
         self.speed_source = ColumnDataSource(data=dict(timestamp=[], speed=[], lat=[], lon=[]))
         self.accel_source = ColumnDataSource(data=dict(timestamp=[], x_accel=[]))
         self.tps_source = ColumnDataSource(data=dict(timestamp=[], result=[]))
+        self.bps_source = ColumnDataSource(data=dict(timestamp=[], result=[]))
         self.rpm_source = ColumnDataSource(data=dict(timestamp=[], result=[]))
 
 
@@ -118,9 +120,10 @@ class RacePiAnalysis:
         v.accel_source.data = ColumnDataSource(imu_data).data
         v.tps_source.data = ColumnDataSource(can_channels['tps']).data
         v.rpm_source.data = ColumnDataSource(can_channels['rpm']).data
+        v.bps_source.data = ColumnDataSource(can_channels['b_pres']).data
 
         v.stats.text = str(gps_data.describe())
-        v.details.text = "date:%s\nduration:%.0f\nVmax:%.0f\nsamples:%d" % session_info[1:5]
+        v.details.text = "duration:%.0f\nVmax:%.0f\nsamples:%d" % session_info[2:5]
 
     def __init__(self, db_location):
         self.db = RacePiDBSession(db_location)
@@ -133,18 +136,22 @@ class RacePiAnalysis:
         cv.session_selector = Select(options=self.sessions.keys())
 
         TOOLS=['pan, box_zoom, reset']
-        s1 = figure(width=900, plot_height=200, title="speed", tools=TOOLS)
+        s1 = figure(width=900, plot_height=200, title="Speed (m/s)", tools=TOOLS)
         s1.line('timestamp', 'speed', source=pv.speed_source, color=Blues4[0])
-        s1.line('timestamp', 'speed', source=cv.speed_source, color=Blues4[2])
-        s2 = figure(width=900, plot_height=200, title="xaccel", tools=TOOLS, x_range=s1.x_range, y_range=[-1.5, 1.5])
-        s2.line('timestamp', 'x_accel', source=pv.accel_source,color=Blues4[0])
-        s2.line('timestamp', 'x_accel', source=cv.accel_source,color=Blues4[2])
+        s1.line('timestamp', 'speed', source=cv.speed_source, color=Reds4[0])
+        s2 = figure(width=900, plot_height=200, title="Accel (g)", tools=TOOLS, x_range=s1.x_range, y_range=[-1.5, 1.5])
+        s2.line('timestamp', 'x_accel', source=pv.accel_source, color=Blues4[0])
+        s2.line('timestamp', 'x_accel', source=cv.accel_source, color=Reds4[0])
         s3 = figure(width=900, plot_height=200, title="Input", tools=TOOLS, x_range=s1.x_range)
-        s3.line('timestamp', 'result', source=pv.tps_source, color=Blues4[0])
-        s3.line('timestamp', 'result', source=cv.tps_source, color=Blues4[2])
+        s3.line('timestamp', 'result', source=pv.bps_source, legend="PBrake", color=Blues4[0])
+        s3.line('timestamp', 'result', source=cv.bps_source, legend="CBrake", color=Reds4[0])
+        s3.extra_y_ranges = {"TPS": Range1d(start=0, end=100)}
+        s3.add_layout(LinearAxis(y_range_name="TPS"), 'right')
+        s3.line('timestamp', 'result', source=pv.tps_source, y_range_name="TPS", legend="PTPS", color=Blues4[1])
+        s3.line('timestamp', 'result', source=cv.tps_source, y_range_name="TPS", legend="CTPS", color=Reds4[1])
         s4 = figure(width=900, plot_height=200, title="RPM", tools=TOOLS, x_range=s1.x_range)
         s4.line('timestamp', 'result', source=pv.rpm_source, color=Blues4[0])
-        s4.line('timestamp', 'result', source=cv.rpm_source, color=Blues4[2])
+        s4.line('timestamp', 'result', source=cv.rpm_source, color=Reds4[0])
 
 
         tps_hist = figure(width=900, plot_height=200, title="TPS", tools=TOOLS)
