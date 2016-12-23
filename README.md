@@ -33,3 +33,11 @@ RacePi can be used to build a full-featured datalogging system with modest hardw
 Copyright and License
 ---------------------
 RacePi is licensed under the [GPLv2](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html), version 2 only.
+
+Developers Wanted
+---------------------
+There are several areas left for green-field development, within the project. I am actively looking for
+
+* Experienced webapp developers, interested in building interactive analysis applications
+* Realtime Kinematics (RTKlib), precision GNSS developers
+* Manufacturer/model specific CAN decoders
