@@ -14,10 +14,15 @@
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
+# Main entry point for bokeh app
+
+import os
 from bokeh.io import curdoc
-from racepi_analysis import RacePiAnalysis
+from python.racepi_bokehapp.racepi_analysis import RacePiAnalysis
 
 DEFAULT_SQLITE_FILE = '/external/racepi_data/test.db'
+if not os.path.exists(DEFAULT_SQLITE_FILE):
+    raise IOError("Missing DB file: " + DEFAULT_SQLITE_FILE)
 
 curdoc().add_root(RacePiAnalysis(DEFAULT_SQLITE_FILE).widgets)
 curdoc().title = "RacePI :: Analysis"

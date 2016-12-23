@@ -22,12 +22,13 @@ from os.path import dirname
 from bokeh.command.bootstrap import main
 
 d = dirname(argv[0])
-args=[
+args = [
     argv[0],
     'serve',
     '--host', "*:5006",
     '--allow-websocket-origin', "*:5006",
-    d+'/racepi_bokehapp']
+    d
+]
 
 main(args)
 

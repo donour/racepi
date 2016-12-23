@@ -15,19 +15,17 @@
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
 from datetime import datetime
-from os import listdir
+from sqlalchemy import create_engine
 
 import pandas as pd
-from bokeh.models.widgets import PreText, Select
-from bokeh.models import ColumnDataSource, Range1d, LinearAxis
 from bokeh.layouts import row, column
+from bokeh.models import ColumnDataSource, Range1d, LinearAxis
+from bokeh.models.widgets import PreText, Select
 from bokeh.palettes import Blues4, Reds4
-from sqlalchemy import create_engine
 from bokeh.plotting import figure
 from scipy.signal import savgol_filter
-from bokeh.charts import Histogram, output_file, show
 
-import can_data
+from python.racepi_can_decoder import can_data
 
 # Focus RS Mk3 CAN converters
 tps_converter = can_data.CanFrameValueExtractor(6, 10, a=0.1)
@@ -100,11 +98,15 @@ class RacePiAnalysis:
         gps_data = self.db.get_gps_data(session_id)
         imu_data = self.db.get_imu_data(session_id)
 
-        can_channels = {
-            'tps': self.db.get_and_transform_can_data(session_id, 128, tps_converter),
-            'b_pres': self.db.get_and_transform_can_data(session_id, 531, brake_pressure_converter),
-            'rpm': self.db.get_and_transform_can_data(session_id, 144, rpm_converter)
-        }
+        try:
+            can_channels = {
+                 'tps': self.db.get_and_transform_can_data(session_id, 128, tps_converter),
+                 'b_pres': self.db.get_and_transform_can_data(session_id, 531, brake_pressure_converter),
+                 'rpm': self.db.get_and_transform_can_data(session_id, 144, rpm_converter)
+            }
+        except ValueError as e:
+            print("Error loading can channels: " + str(e))
+            can_channels = {}
 
         self.convert_dataframe_index_to_timedelta(gps_data)
         self.convert_dataframe_index_to_timedelta(imu_data)
@@ -116,9 +118,12 @@ class RacePiAnalysis:
 
         v.speed_source.data = ColumnDataSource(gps_data).data
         v.accel_source.data = ColumnDataSource(imu_data).data
-        v.tps_source.data = ColumnDataSource(can_channels['tps']).data
-        v.rpm_source.data = ColumnDataSource(can_channels['rpm']).data
-        v.bps_source.data = ColumnDataSource(can_channels['b_pres']).data
+        if 'tps' in can_channels:
+            v.tps_source.data = ColumnDataSource(can_channels['tps']).data
+        if 'rpm' in can_channels:
+            v.rpm_source.data = ColumnDataSource(can_channels['rpm']).data
+        if 'b_pres' in can_channels:
+            v.bps_source.data = ColumnDataSource(can_channels['b_pres']).data
 
         v.stats.text = str(gps_data.describe())
         v.details.text = "duration:%.0f\nVmax:%.0f\nsamples:%d" % session_info[2:5]
