@@ -19,6 +19,7 @@
 import racepi_sensor_recorder
 from racepi_sensor_handler import GpsSensorHandler, RpiImuSensorHandler, CanSensorHandler, GPS_REQUIRED_FIELDS
 
+# TODO: move the DB filename ot a config file in /etc
 DEFAULT_SQLITE_FILE = '/external/racepi_data/test.db'
 # TODO: make recorded can ids configurable
 FORD_FOCUS_RS_CAN_IDS = ["010", "070", "080", "090", "213", "420"]
