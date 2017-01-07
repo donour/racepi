@@ -77,11 +77,17 @@ class SensorLogger:
     Main control logic for logging and writing to database
 
     The logger relies on GPS speed data for activating and deactivating
-    sessions. Without GPS speed data, a manual triggering is required.
+    sessions. Without GPS speed data, a manual trigger is required.
     """
 
     def __init__(self, db_handler, sensor_handlers={}):
+        """
+        Create new logger instance with specified handlers. Input and output
+        handlers are required.
 
+        :param db_handler: output handler for writing sensor data to a database
+        :param sensor_handlers: input data handlers, these should be racepi sensor_handlers
+        """
         self.data = DataBuffer()
         self.display = None
         if SenseHat:
@@ -102,7 +108,10 @@ class SensorLogger:
         return new_data
 
     def start(self):
-        
+        """
+        Start handlers and begin recording. The function does not
+        normally terminate. New sessions are created as neededed.
+        """
         for h in self.handlers.values():
             h.start()
 
@@ -117,6 +126,7 @@ class SensorLogger:
             while True:
                 new_data = self.get_new_data()
 
+                # motion is only detected via GPS speed
                 if new_data['gps']:
                     is_moving = True in \
                                 [s[1].get('speed') > ACTIVATE_RECORDING_M_PER_S for s in new_data['gps']]
