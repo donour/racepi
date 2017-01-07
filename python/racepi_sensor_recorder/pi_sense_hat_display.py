@@ -25,9 +25,10 @@ except ImportError:
     print("No Pi Sense Hat hardware found")
     SenseHat = None
 
-IMU_COL = 0
-GPS_COL = 1
-CAN_COL = 2
+DB_COL = 0
+IMU_COL = 1
+GPS_COL = 2
+CAN_COL = 3
 BRIGHTNESS = 80
 DISPLAY_UPDATE_TIME = 0.05
 SENSOR_DISPLAY_TIMEOUT = 1.0
@@ -117,11 +118,16 @@ class RacePiStatusDisplay:
             self.last_heartbeat = now
             self.heartbeat_active = not self.heartbeat_active
 
-    def refresh_display(self, gps_time=0, imu_time=0, can_time=0, recording=False):
+    def refresh_display(self, db_time=0, gps_time=0, imu_time=0, can_time=0, recording=False):
 
         now = time.time()
         if now - self.update_time >  DISPLAY_UPDATE_TIME:
 
+                if now - db_time > SENSOR_DISPLAY_TIMEOUT:
+                    self.set_col_lost(DB_COL)
+                else:
+                    self.set_col_ready(DB_COL)
+            
                 if now - gps_time > SENSOR_DISPLAY_TIMEOUT:
                     self.set_col_init(GPS_COL)
                 else:
@@ -145,6 +151,7 @@ class RacePiStatusDisplay:
 if __name__ == "__main__":
     if SenseHat:
         s = RacePiStatusDisplay(SenseHat())
+        s.set_col_lost(DB_COL)
         s.set_col_lost(IMU_COL)
         s.set_col_init(GPS_COL)
         s.set_col_ready(CAN_COL)
