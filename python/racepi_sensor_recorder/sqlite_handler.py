@@ -22,13 +22,16 @@ class DbHandler:
     Class for handling RacePi access to sqlite
     """
     def __init__(self, db_location, gps_fields=[]):
-        
-        self.conn = sqlite3.connect(db_location)
-        if self.conn is None:
-            raise IOError("Could not open db: " + db_location)
-        self.conn.execute("PRAGMA foreign_keys = ON;")
-        self.conn.execute("PRAGMA journal_mode=WAL;")
+        self.db_location = db_location
         self.gps_fields = gps_fields
+        
+    def connect(self):
+
+        self.conn = sqlite3.connect(self.db_location)
+        if self.conn is None:
+            raise IOError("Could not open db: " + self.db_location)
+        self.conn.execute("PRAGMA foreign_keys = ON;")
+        self.conn.execute("PRAGMA journal_mode = WAL;")
         
     def get_new_session(self):
         """

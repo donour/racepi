@@ -95,7 +95,12 @@ class SensorLogger:
 
         self.handlers = sensor_handlers
         self.db_handler = db_handler
-
+        try:
+            self.db_handler.connect()
+        except Exception as e:
+            print e
+            self.db_handler = None
+            
     def get_new_data(self):
         """
         Get dictionary of new data from all handlers
@@ -127,7 +132,7 @@ class SensorLogger:
                 new_data = self.get_new_data()
 
                 # motion is only detected via GPS speed
-                if new_data['gps']:
+                if new_data['gps'] and self.db_handler:
                     is_moving = True in \
                                 [s[1].get('speed') > ACTIVATE_RECORDING_M_PER_S for s in new_data['gps']]
 
@@ -165,12 +170,13 @@ class SensorLogger:
                 for h in self.handlers:
                     if new_data[h]:
                         update_times[h] = new_data[h][-1][0]
-
+                        
                 if self.display:
-                    self.display.refresh_display(update_times['gps'],
-                                                 update_times['imu'],
-                                                 update_times['can'],
-                                                 recording_active)
+                    self.display.refresh_display(time.time() if self.db_handler else 0,
+                                                 gps_time=update_times['gps'],
+                                                 imu_time=update_times['imu'],
+                                                 can_time=update_times['can'],
+                                                 recording=recording_active)
 
                 time.sleep(0.2)  # there is no reason to ever poll faster than this
 
