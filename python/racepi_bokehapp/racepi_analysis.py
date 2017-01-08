@@ -74,7 +74,7 @@ class RunView:
         self.stats = PreText(text='Run Stats', width=500, height=150)
         self.details = PreText(text='Run Details', width=300, height=100)
         self.speed_source = ColumnDataSource(data=dict(timestamp=[], speed=[], lat=[], lon=[]))
-        self.accel_source = ColumnDataSource(data=dict(timestamp=[], x_accel=[]))
+        self.accel_source = ColumnDataSource(data=dict(timestamp=[], x_accel=[], y_accel=[]))
         self.tps_source = ColumnDataSource(data=dict(timestamp=[], result=[]))
         self.bps_source = ColumnDataSource(data=dict(timestamp=[], result=[]))
         self.rpm_source = ColumnDataSource(data=dict(timestamp=[], result=[]))
@@ -135,16 +135,19 @@ class RacePiAnalysis:
         self.primary_view = pv = RunView()
         self.compare_view = cv = RunView()
 
-        pv.session_selector = Select(options=self.sessions.keys())
-        cv.session_selector = Select(options=self.sessions.keys())
+        pv.session_selector = Select(options=sorted(self.sessions.keys()))
+        cv.session_selector = Select(options=sorted(self.sessions.keys()))
 
         TOOLS=['pan, box_zoom, reset']
         s1 = figure(width=900, plot_height=200, title="Speed (m/s)", tools=TOOLS)
         s1.line('timestamp', 'speed', source=pv.speed_source, color=Blues4[0])
         s1.line('timestamp', 'speed', source=cv.speed_source, color=Reds4[0])
-        s2 = figure(width=900, plot_height=200, title="Accel (g)", tools=TOOLS, x_range=s1.x_range, y_range=[-1.5, 1.5])
-        s2.line('timestamp', 'x_accel', source=pv.accel_source, color=Blues4[0])
-        s2.line('timestamp', 'x_accel', source=cv.accel_source, color=Reds4[0])
+        x_accel_fig = figure(width=900, plot_height=200, title="X Accel (g)", tools=TOOLS, x_range=s1.x_range, y_range=[-1.5, 1.5])
+        x_accel_fig.line('timestamp', 'x_accel', source=pv.accel_source, color=Blues4[0])
+        x_accel_fig.line('timestamp', 'x_accel', source=cv.accel_source, color=Reds4[0])
+        y_accel_fig = figure(width=900, plot_height=200, title="Y Accel (g)", tools=TOOLS, x_range=s1.x_range, y_range=[-1.5, 1.5])
+        y_accel_fig.line('timestamp', 'y_accel', source=pv.accel_source, color=Blues4[0])
+        y_accel_fig.line('timestamp', 'y_accel', source=cv.accel_source, color=Reds4[0])
         s3 = figure(width=900, plot_height=200, title="Input", tools=TOOLS, x_range=s1.x_range)
         s3.line('timestamp', 'result', source=pv.bps_source, legend="PBrake", color=Blues4[0])
         s3.line('timestamp', 'result', source=cv.bps_source, legend="CBrake", color=Reds4[0])
@@ -173,7 +176,8 @@ class RacePiAnalysis:
                 column(cv.session_selector, cv.details)
             ),
             s1,
-            s2,
+            x_accel_fig,
+            y_accel_fig,
             s3,
             s4,
             tps_hist,
