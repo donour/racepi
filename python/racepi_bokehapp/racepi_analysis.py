@@ -46,11 +46,14 @@ class RacePiDBSession:
             return q.cursor.fetchall()
 
     def get_sessions(self):
-        return self.__get_sql_data("session_info")
+        return self.__get_sql_data("session_info", "max_speed>10")
 
     def get_gps_data(self, session_id):
+
+        # no gps speed samples are really zero, but we only
+        # need the ones that indicate motion
         return pd.read_sql_query(
-            "select timestamp, speed, track, lat, lon FROM %s where session_id='%s'" %
+            "select timestamp, speed, track, lat, lon FROM %s where speed>0.25 and session_id='%s'" %
             ("gps_data", session_id), self.db, index_col='timestamp')
 
     def get_imu_data(self, session_id):
@@ -79,13 +82,11 @@ class RunView:
         self.bps_source = ColumnDataSource(data=dict(timestamp=[], result=[]))
         self.rpm_source = ColumnDataSource(data=dict(timestamp=[], result=[]))
 
-
 class RacePiAnalysis:
 
     @staticmethod
-    def convert_dataframe_index_to_timedelta(dataframe):
+    def convert_dataframe_index_to_timedelta(dataframe, t0):
         if not dataframe.empty:
-            t0 = dataframe.index[0]
             dataframe.index = dataframe.index - t0
 
     def load_data(self, session_info, v):
@@ -108,13 +109,16 @@ class RacePiAnalysis:
             print("Error loading can channels: " + str(e))
             can_channels = {}
 
-        self.convert_dataframe_index_to_timedelta(gps_data)
-        self.convert_dataframe_index_to_timedelta(imu_data)
+        # find first time vehicle moved
+        t0 = gps_data.index[0]
+
+        self.convert_dataframe_index_to_timedelta(gps_data, t0)
+        self.convert_dataframe_index_to_timedelta(imu_data, t0)
         for c in can_channels:
-            self.convert_dataframe_index_to_timedelta(can_channels[c])
+            self.convert_dataframe_index_to_timedelta(can_channels[c], t0)
 
         for k in imu_data:
-            imu_data[k] = savgol_filter(imu_data[k], 13, 6)
+            imu_data[k] = savgol_filter(imu_data[k], 31, 3)
 
         v.speed_source.data = ColumnDataSource(gps_data).data
         v.accel_source.data = ColumnDataSource(imu_data).data
@@ -142,10 +146,10 @@ class RacePiAnalysis:
         s1 = figure(width=900, plot_height=200, title="Speed (m/s)", tools=TOOLS)
         s1.line('timestamp', 'speed', source=pv.speed_source, color=Blues4[0])
         s1.line('timestamp', 'speed', source=cv.speed_source, color=Reds4[0])
-        x_accel_fig = figure(width=900, plot_height=200, title="X Accel (g)", tools=TOOLS, x_range=s1.x_range, y_range=[-1.5, 1.5])
+        x_accel_fig = figure(width=900, plot_height=200, title="X Accel (g)", tools=TOOLS, x_range=s1.x_range, y_range=[-2, 2])
         x_accel_fig.line('timestamp', 'x_accel', source=pv.accel_source, color=Blues4[0])
         x_accel_fig.line('timestamp', 'x_accel', source=cv.accel_source, color=Reds4[0])
-        y_accel_fig = figure(width=900, plot_height=200, title="Y Accel (g)", tools=TOOLS, x_range=s1.x_range, y_range=[-1.5, 1.5])
+        y_accel_fig = figure(width=900, plot_height=200, title="Y Accel (g)", tools=TOOLS, x_range=s1.x_range, y_range=[-1.25, 1.25])
         y_accel_fig.line('timestamp', 'y_accel', source=pv.accel_source, color=Blues4[0])
         y_accel_fig.line('timestamp', 'y_accel', source=cv.accel_source, color=Reds4[0])
         s3 = figure(width=900, plot_height=200, title="Input", tools=TOOLS, x_range=s1.x_range)
@@ -159,6 +163,10 @@ class RacePiAnalysis:
         s4.line('timestamp', 'result', source=pv.rpm_source, color=Blues4[0])
         s4.line('timestamp', 'result', source=cv.rpm_source, color=Reds4[0])
 
+        # TODO scale distances to appear as more reasonable projections
+        map_fig = figure(width=600, height=600, title="Map", tools=TOOLS)
+        map_fig.line('lon', 'lat', source=pv.speed_source, color=Blues4[0])
+        map_fig.line('lon', 'lat', source=cv.speed_source, color=Reds4[0])
 
         tps_hist = figure(width=900, plot_height=200, title="TPS", tools=TOOLS)
         hh1 = tps_hist.quad(bottom=0, left=[], right=[], top=[], alpha=0.5)
@@ -181,10 +189,12 @@ class RacePiAnalysis:
             s3,
             s4,
             tps_hist,
+            map_fig,
             row(
                 pv.stats,
                 cv.stats
             )
+
         )
 
 
