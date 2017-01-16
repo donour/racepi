@@ -34,6 +34,8 @@ steering_direction_converter = can_data.CanFrameValueExtractor(32, 1)
 rpm_converter = can_data.CanFrameValueExtractor(36, 12, a=2.0)
 brake_pressure_converter = can_data.CanFrameValueExtractor(24, 16, a=1e-3)
 
+RACEPI_MAP_SIZE = 600
+
 class RacePiDBSession:
 
     def __init__(self, db_location):
@@ -49,7 +51,6 @@ class RacePiDBSession:
         return self.__get_sql_data("session_info", "max_speed>10")
 
     def get_gps_data(self, session_id):
-
         # no gps speed samples are really zero, but we only
         # need the ones that indicate motion
         return pd.read_sql_query(
@@ -111,7 +112,6 @@ class RacePiAnalysis:
 
         # find first time vehicle moved
         t0 = gps_data.index[0]
-
         self.convert_dataframe_index_to_timedelta(gps_data, t0)
         self.convert_dataframe_index_to_timedelta(imu_data, t0)
         for c in can_channels:
@@ -139,8 +139,8 @@ class RacePiAnalysis:
         self.primary_view = pv = RunView()
         self.compare_view = cv = RunView()
 
-        pv.session_selector = Select(options=sorted(self.sessions.keys()))
-        cv.session_selector = Select(options=sorted(self.sessions.keys()))
+        pv.session_selector = Select(options=sorted(self.sessions.keys()), width=200)
+        cv.session_selector = Select(options=sorted(self.sessions.keys()), width=200)
 
         TOOLS=['pan, box_zoom, reset']
         s1 = figure(width=900, plot_height=200, title="Speed (m/s)", tools=TOOLS)
@@ -164,9 +164,20 @@ class RacePiAnalysis:
         s4.line('timestamp', 'result', source=cv.rpm_source, color=Reds4[0])
 
         # TODO scale distances to appear as more reasonable projections
-        map_fig = figure(width=600, height=600, title="Map", tools=TOOLS)
+        # 1.2 is a hack to work around 35 deg latitude
+        map_fig = figure(width=RACEPI_MAP_SIZE, height=int(RACEPI_MAP_SIZE*1.2), title="Map", tools=TOOLS)
         map_fig.line('lon', 'lat', source=pv.speed_source, color=Blues4[0])
         map_fig.line('lon', 'lat', source=cv.speed_source, color=Reds4[0])
+
+        minimap_fig = figure(width=150, height=150, tools=[])
+        minimap_fig.line('lon', 'lat', source=pv.speed_source, color=Blues4[0])
+        minimap_fig.line('lon', 'lat', source=cv.speed_source, color=Reds4[0])
+        minimap_fig.axis.visible=False
+
+        g_g_fig = figure(width=200, height=150, tools=[])
+        g_g_fig.circle('x_accel', 'y_accel', source=pv.accel_source, color=Blues4[0], size=2)
+        g_g_fig.circle('x_accel', 'y_accel', source=cv.accel_source, color=Reds4[0], size=2)
+
 
         tps_hist = figure(width=900, plot_height=200, title="TPS", tools=TOOLS)
         hh1 = tps_hist.quad(bottom=0, left=[], right=[], top=[], alpha=0.5)
@@ -181,7 +192,9 @@ class RacePiAnalysis:
         self.widgets = column(
             row(
                 column(pv.session_selector, pv.details),
-                column(cv.session_selector, cv.details)
+                column(cv.session_selector, cv.details),
+                g_g_fig,
+                minimap_fig
             ),
             s1,
             x_accel_fig,
