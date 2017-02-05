@@ -27,7 +27,7 @@ from sensor_handler import SensorHandler
 from stn11xx import STNHandler
 
 
-class CanSensorHandler(SensorHandler):
+class STN11XXCanSensorHandler(SensorHandler):
 
     def __init__(self, can_ids=None):
         SensorHandler.__init__(self, self.__record_from_canbus)
@@ -57,7 +57,7 @@ class CanSensorHandler(SensorHandler):
         print("Shutting down CAN reader")
 
 if __name__ == "__main__":
-    sh = CanSensorHandler()
+    sh = STN11XXCanSensorHandler()
     sh.start()
     while True:
         data = sh.get_all_data()

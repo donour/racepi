@@ -17,7 +17,7 @@
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
 import racepi_sensor_recorder
-from racepi_sensor_handler import GpsSensorHandler, RpiImuSensorHandler, CanSensorHandler, GPS_REQUIRED_FIELDS
+from racepi_sensor_handler import GpsSensorHandler, RpiImuSensorHandler, STN11XXCanSensorHandler, GPS_REQUIRED_FIELDS
 
 # TODO: move the DB filename ot a config file in /etc
 DEFAULT_SQLITE_FILE = '/external/racepi_data/test.db'
@@ -36,11 +36,11 @@ if __name__ == "__main__":
 
     print(UNDERLINE+"Starting RacePi Sensor Logger"+ENDCOLOR)
 
-    print "Opening Sensor Handlers"
+    print("Opening Sensor Handlers")
     handlers = {
         'gps': GpsSensorHandler(),
         'imu': RpiImuSensorHandler(),
-        'can': CanSensorHandler(FORD_FOCUS_RS_CAN_IDS)
+        'can': STN11XXCanSensorHandler(FORD_FOCUS_RS_CAN_IDS)
     }
 
     print("Opening Database: %s" % dbfile)

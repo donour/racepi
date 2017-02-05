@@ -115,7 +115,7 @@ class SensorLogger:
     def start(self):
         """
         Start handlers and begin recording. The function does not
-        normally terminate. New sessions are created as neededed.
+        normally terminate. New sessions are created as needed.
         """
         for h in self.handlers.values():
             h.start()
