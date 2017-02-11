@@ -98,7 +98,7 @@ class SensorLogger:
         try:
             self.db_handler.connect()
         except Exception as e:
-            print e
+            print(e)
             self.db_handler = None
             
     def get_new_data(self):
