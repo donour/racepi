@@ -17,6 +17,15 @@
 import sqlite3
 import uuid
 
+
+def uptime_helper():
+    """Simple helper function to get the current system uptime in seconds on Linux"""
+    with open('/proc/uptime', 'r') as f:
+        uptime_seconds = float(f.readline().split()[0])
+        return uptime_seconds
+    return -1.0
+
+
 class DbHandler:
     """
     Class for handling RacePi access to sqlite
@@ -36,13 +45,15 @@ class DbHandler:
     def get_new_session(self):
         """
         Create new session entry in database
+        The session name includes the current system uptime.
+
         :return: session id as UUID
         """
         session_id = uuid.uuid1()
         insert_cmd = """
         insert into sessions (id, description)
-        values ('%s', 'Created by RacePi')
-        """ % session_id.hex
+        values ('%s', 'Created by RacePi (uptime: '%.0f')')
+        """ % (session_id.hex, uptime_helper())
         self.conn.execute(insert_cmd)
         self.conn.commit()
         return session_id
