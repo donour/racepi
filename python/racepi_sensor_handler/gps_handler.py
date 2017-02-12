@@ -19,7 +19,7 @@ import gps3.gps3 as gps3
 import os
 import time
 
-from sensor_handler import SensorHandler
+from .sensor_handler import SensorHandler
 
 GPS_REQUIRED_FIELDS = ['time', 'lat', 'lon', 'speed', 'track', 'epx', 'epy', 'epv']
 DEFAULT_WAIT_FOR_NO_DATA = 0.05

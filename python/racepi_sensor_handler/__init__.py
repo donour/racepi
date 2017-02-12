@@ -1,3 +1,3 @@
-from stn11xx_can_handler import STN11XXCanSensorHandler
-from gps_handler import GpsSensorHandler, GPS_REQUIRED_FIELDS
-from pi_sense_hat_imu import RpiImuSensorHandler
+from .stn11xx_can_handler import STN11XXCanSensorHandler
+from .gps_handler import GpsSensorHandler, GPS_REQUIRED_FIELDS
+from .pi_sense_hat_imu import RpiImuSensorHandler

@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # Copyright 2016 Donour Sizemore
 #
 # This file is part of RacePi
@@ -46,6 +46,6 @@ if __name__ == "__main__":
     print("Opening Database: %s" % dbfile)
     # TODO: look at opening DB as needed
     # to avoid corruption of tables
-    db_handler = racepi_sensor_recorder.sqlite_handler.DbHandler(dbfile, GPS_REQUIRED_FIELDS)
+    db_handler = racepi_sensor_recorder.DbHandler(dbfile, GPS_REQUIRED_FIELDS)
     sl = racepi_sensor_recorder.SensorLogger(db_handler, handlers)
     sl.start()

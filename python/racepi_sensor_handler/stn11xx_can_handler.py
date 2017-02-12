@@ -23,8 +23,8 @@ import time
 
 from serial.serialutil import SerialException
 
-from sensor_handler import SensorHandler
-from stn11xx import STNHandler
+from .sensor_handler import SensorHandler
+from .stn11xx import STNHandler
 
 
 class STN11XXCanSensorHandler(SensorHandler):

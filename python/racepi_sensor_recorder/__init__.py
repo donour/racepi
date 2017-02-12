@@ -14,4 +14,5 @@
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
-from sensor_log import SensorLogger
+from .sensor_log import SensorLogger
+from .sqlite_handler import DbHandler

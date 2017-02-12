@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # Copyright 2016 Donour Sizemore
 #
 # This file is part of RacePi
@@ -23,10 +23,10 @@ system resources.
 """
 
 import time
+from enum import Enum
 from collections import defaultdict
 
-from pi_sense_hat_display import RacePiStatusDisplay, SenseHat
-from sqlite_handler import DbHandler
+from .pi_sense_hat_display import RacePiStatusDisplay, SenseHat
 
 DEFAULT_DB_LOCATION = "/home/donour/test.db"
 ACTIVATE_RECORDING_M_PER_S = 2.5
@@ -72,12 +72,26 @@ class DataBuffer:
         self.data.clear()
 
 
+class LoggerState(Enum):
+    initialized = 1
+    ready = 2
+    logging = 3
+    done = 4
+
+
 class SensorLogger:
     """
     Main control logic for logging and writing to database
 
     The logger relies on GPS speed data for activating and deactivating
     sessions. Without GPS speed data, a manual trigger is required.
+
+    The logger can be in the following states:
+
+    initialized: configured sensors are ready for logging
+    ready: sensor ready and actively buffered
+    logging: actively logging data to the database
+    done: logging is no longer possible
     """
 
     def __init__(self, db_handler, sensor_handlers={}):
@@ -100,6 +114,8 @@ class SensorLogger:
         except Exception as e:
             print(e)
             self.db_handler = None
+
+        self.state = LoggerState.initialized
             
     def get_new_data(self):
         """
@@ -112,6 +128,15 @@ class SensorLogger:
             self.data.add_sample(h, new_data[h])
         return new_data
 
+    def process_new_data(self, data):
+        # TODO: finish code split of recording state machine
+        if self.state == LoggerState.ready:
+            pass
+        elif self.state == LoggerState.logging:
+            pass
+        else:
+            raise RuntimeError("Invalid logger state:" + str(self.state))
+
     def start(self):
         """
         Start handlers and begin recording. The function does not
@@ -120,6 +145,7 @@ class SensorLogger:
         for h in self.handlers.values():
             h.start()
 
+        self.state = LoggerState.ready
         recording_active = False
         update_times = defaultdict(int)
         session_id = None
