@@ -33,6 +33,10 @@ steering_angle_converter = can_data.CanFrameValueExtractor(49, 15, a=9.587e-5)
 steering_direction_converter = can_data.CanFrameValueExtractor(32, 1)
 rpm_converter = can_data.CanFrameValueExtractor(36, 12, a=2.0)
 brake_pressure_converter = can_data.CanFrameValueExtractor(24, 16, a=1e-3)
+wheelspeed1_converter = can_data.CanFrameValueExtractor(1, 15, a=1/307.0)
+wheelspeed2_converter = can_data.CanFrameValueExtractor(17, 15, a=1/307.0)
+wheelspeed3_converter = can_data.CanFrameValueExtractor(33, 15, a=1/307.0)
+wheelspeed4_converter = can_data.CanFrameValueExtractor(49, 15, a=1/307.0)
 
 RACEPI_MAP_SIZE = 600
 
@@ -82,6 +86,10 @@ class RunView:
         self.tps_source = ColumnDataSource(data=dict(timestamp=[], result=[]))
         self.bps_source = ColumnDataSource(data=dict(timestamp=[], result=[]))
         self.rpm_source = ColumnDataSource(data=dict(timestamp=[], result=[]))
+        self.wheelspeed1_source = ColumnDataSource(data=dict(timestamp=[], result=[]))
+        self.wheelspeed2_source = ColumnDataSource(data=dict(timestamp=[], result=[]))
+        self.wheelspeed3_source = ColumnDataSource(data=dict(timestamp=[], result=[]))
+        self.wheelspeed4_source = ColumnDataSource(data=dict(timestamp=[], result=[]))
 
 class RacePiAnalysis:
 
@@ -104,7 +112,11 @@ class RacePiAnalysis:
             can_channels = {
                  'tps': self.db.get_and_transform_can_data(session_id, 128, tps_converter),
                  'b_pres': self.db.get_and_transform_can_data(session_id, 531, brake_pressure_converter),
-                 'rpm': self.db.get_and_transform_can_data(session_id, 144, rpm_converter)
+                 'rpm': self.db.get_and_transform_can_data(session_id, 144, rpm_converter),
+                 'wheelspeed1': self.db.get_and_transform_can_data(session_id, 400, wheelspeed1_converter),
+                 'wheelspeed2': self.db.get_and_transform_can_data(session_id, 400, wheelspeed2_converter),
+                 'wheelspeed3': self.db.get_and_transform_can_data(session_id, 400, wheelspeed3_converter),
+                 'wheelspeed4': self.db.get_and_transform_can_data(session_id, 400, wheelspeed4_converter)
             }
         except ValueError as e:
             print("Error loading can channels: " + str(e))
@@ -128,6 +140,14 @@ class RacePiAnalysis:
             v.rpm_source.data = ColumnDataSource(can_channels['rpm']).data
         if 'b_pres' in can_channels:
             v.bps_source.data = ColumnDataSource(can_channels['b_pres']).data
+        if 'wheelspeed1' in can_channels:
+            v.wheelspeed1_source.data = ColumnDataSource(can_channels['wheelspeed1']).data
+        if 'wheelspeed2' in can_channels:
+            v.wheelspeed2_source.data = ColumnDataSource(can_channels['wheelspeed2']).data
+        if 'wheelspeed3' in can_channels:
+            v.wheelspeed3_source.data = ColumnDataSource(can_channels['wheelspeed3']).data
+        if 'wheelspeed4' in can_channels:
+            v.wheelspeed4_source.data = ColumnDataSource(can_channels['wheelspeed4']).data
 
         v.stats.text = str(gps_data.describe())
         v.details.text = "duration:%.0f\nVmax:%.0f\nsamples:%d" % session_info[2:5]
@@ -163,6 +183,16 @@ class RacePiAnalysis:
         s4.line('timestamp', 'result', source=pv.rpm_source, color=Blues4[0])
         s4.line('timestamp', 'result', source=cv.rpm_source, color=Reds4[0])
 
+        wheelspeed_fig = figure(width=900, plot_height=200, title="Wheelspeeds", tools=TOOLS, x_range=s1.x_range)
+        wheelspeed_fig.line('timestamp', 'result', source=pv.wheelspeed1_source, legend="P1", color=Blues4[0])
+        wheelspeed_fig.line('timestamp', 'result', source=cv.wheelspeed1_source, legend="C1", color=Reds4[0])
+        wheelspeed_fig.line('timestamp', 'result', source=pv.wheelspeed2_source, legend="P2", color=Blues4[1])
+        wheelspeed_fig.line('timestamp', 'result', source=cv.wheelspeed2_source, legend="C2", color=Reds4[1])
+        wheelspeed_fig.line('timestamp', 'result', source=pv.wheelspeed3_source, legend="P3", color=Blues4[1])
+        wheelspeed_fig.line('timestamp', 'result', source=cv.wheelspeed3_source, legend="C3", color=Reds4[1])
+        wheelspeed_fig.line('timestamp', 'result', source=pv.wheelspeed4_source, legend="P4", color=Blues4[1])
+        wheelspeed_fig.line('timestamp', 'result', source=cv.wheelspeed4_source, legend="C4", color=Reds4[1])
+
         # TODO scale distances to appear as more reasonable projections
         # 1.2 is a hack to work around 35 deg latitude
         map_fig = figure(width=RACEPI_MAP_SIZE, height=int(RACEPI_MAP_SIZE*1.2), title="Map", tools=TOOLS)
@@ -179,8 +209,8 @@ class RacePiAnalysis:
         g_g_fig.circle('x_accel', 'y_accel', source=cv.accel_source, color=Reds4[0], size=2)
 
 
-        tps_hist = figure(width=900, plot_height=200, title="TPS", tools=TOOLS)
-        hh1 = tps_hist.quad(bottom=0, left=[], right=[], top=[], alpha=0.5)
+        #tps_hist = figure(width=900, plot_height=200, title="TPS", tools=TOOLS)
+        #hh1 = tps_hist.quad(bottom=0, left=[], right=[], top=[], alpha=0.5)
         # TODO finish tps histogram
         #self.tps_hist = Histogram({'result':[1]}, values='result', title="TPS", width=900, height=200, tools=TOOLS)
         #self.tps_hist = Histogram(pv.tps_source.data, values='result', title="TPS", width=900, height=200, tools=TOOLS)
@@ -201,7 +231,7 @@ class RacePiAnalysis:
             y_accel_fig,
             s3,
             s4,
-            tps_hist,
+            wheelspeed_fig,
             map_fig,
             row(
                 pv.stats,
