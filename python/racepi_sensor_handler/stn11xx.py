@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # Copyright 2016 Donour Sizemore
 #
 # This file is part of RacePi
