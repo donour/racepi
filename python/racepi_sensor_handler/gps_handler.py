@@ -24,6 +24,7 @@ from .sensor_handler import SensorHandler
 GPS_REQUIRED_FIELDS = ['time', 'lat', 'lon', 'speed', 'track', 'epx', 'epy', 'epv']
 GPS_READ_TIMEOUT=2.0
 
+
 class GpsSensorHandler(SensorHandler):
 
     def __init__(self):
@@ -50,16 +51,9 @@ class GpsSensorHandler(SensorHandler):
                     self.pipe_out.send((now, sample))
 
         print("GPS reader shutdown")
-        
-        
-if __name__ == "__main__":
 
-    sh = GpsSensorHandler()
-    sh.start()
-    while True:
-        data = sh.get_all_data()
-        if data:
-            os.write(1, ("\r" + str(data[0])).encode())
+
+
 
     
 

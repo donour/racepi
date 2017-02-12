@@ -68,17 +68,3 @@ class RpiImuSensorHandler(SensorHandler):
                 self.pipe_out.send((time.time(), data))
                 time.sleep(_poll_interval * 0.5/ 10000.0)
 
-
-if __name__ == "__main__":
-
-    sh = RpiImuSensorHandler()
-    sh.start()
-    while True:
-        data = sh.get_all_data()
-        if data:
-            s = data[0][1]
-            print(\
-            "[% 1.2f,% 1.2f,% 1.2f % 1.2f] : " % s.get('fusionQPose') +
-            "[% 1.2f,% 1.2f,% 1.2f] : " % s.get('fusionPose') +
-            "[% 1.2f,% 1.2f,% 1.2f] : " % s.get('accel') +
-            "[% 1.2f,% 1.2f,% 1.2f]" % s.get('gyro'))

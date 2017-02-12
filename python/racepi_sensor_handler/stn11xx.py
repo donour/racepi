@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python2
 # Copyright 2016 Donour Sizemore
 #
 # This file is part of RacePi
@@ -164,35 +164,3 @@ class STNHandler:
             return buf
         else:
             return None
-                                                                                     
-
-if __name__ == "__main__":
-    import time, sys, os
-
-    if len(sys.argv) < 2:
-        print("Usage: %s <CAN ID> <CAN ID> ..." % sys.argv[0])
-        sys.exit(1)
-
-    sh = STNHandler(DEV_NAME, BAUD_RATE)
-    # setup monitor of specified IDs
-    last_mesg = {}
-    for can_id in sys.argv[1:]:
-        last_mesg[can_id] = None
-    sh.set_monitor_ids(last_mesg.keys())
-
-    sh.start_monitor()
-    last_update = 0
-    while True:
-        # read all the messages that are available
-        data = sh.readline()
-        if len(data) > 3:
-            can_id = data[:3]
-            if can_id in last_mesg.keys():
-                last_mesg[can_id] = data            
-
-        now = time.time()
-        if now - last_update > 0.2:
-            last_update = now
-            os.write(1, "\r")
-            for k in last_mesg.keys():
-                os.write(1, "[%s] " % last_mesg[k])
