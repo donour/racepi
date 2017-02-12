@@ -22,14 +22,12 @@ import time
 from .sensor_handler import SensorHandler
 
 GPS_REQUIRED_FIELDS = ['time', 'lat', 'lon', 'speed', 'track', 'epx', 'epy', 'epv']
-DEFAULT_WAIT_FOR_NO_DATA = 0.05
-
+GPS_READ_TIMEOUT=2.0
 
 class GpsSensorHandler(SensorHandler):
 
-    def __init__(self, gpsdev='/dev/gps0'):
+    def __init__(self):
         SensorHandler.__init__(self, self.__record_from_gps)
-        self.gpsdev = gpsdev
 
     def __record_from_gps(self):
 
@@ -42,7 +40,7 @@ class GpsSensorHandler(SensorHandler):
         gps_socket.connect()
         gps_socket.watch()
         while not self.doneEvent.is_set():
-            newdata = gps_socket.next()
+            newdata = gps_socket.next(timeout=GPS_READ_TIMEOUT)
             now = time.time()
             if newdata:
                 data_stream.unpack(newdata)
@@ -50,10 +48,6 @@ class GpsSensorHandler(SensorHandler):
                 t = sample.get('time')
                 if t is not None and set(GPS_REQUIRED_FIELDS).issubset(set(sample.keys())):
                     self.pipe_out.send((now, sample))
-                else:
-                    # relieve the CPU when getting unusable data
-                    # 20hz is above the expected GPS sample rate
-                    time.sleep(DEFAULT_WAIT_FOR_NO_DATA)
 
         print("GPS reader shutdown")
         
