@@ -119,8 +119,10 @@ class SensorLogger:
             self.db_handler.connect()
         except Exception as e:
             print(e)
+            print("No database handler available, recording disabled")
             self.db_handler = None
 
+        self.session_id = None
         self.state = LoggerState.initialized
             
     def get_new_data(self):
@@ -134,20 +136,113 @@ class SensorLogger:
             self.data.add_sample(h, new_data[h])
         return new_data
 
+    def activate_conditions(self, data):
+        """
+        Determine whether recording should be activated based on this
+        sample of data
+        :param data:
+        :return: true if activation conditions exist else false
+        """
+
+        # we cannot record without a DB destination
+        if not self.db_handler:
+            return False
+
+        if not data.get('gps'):
+            return False
+
+        # look for any sample above the speed threshold
+        return True in \
+            [safe_speed_to_float(s[1].get('speed')) > ACTIVATE_RECORDING_M_PER_S \
+             for s in data['gps']]
+
+    def deactivate_conditions(self, data):
+        """
+        Determine whether recording should be de-activated based on this
+        sample of data
+        :param data:
+        :return: true if de-activation conditions exist else false
+        """
+        if not data.get('gps'):
+            return False
+
+        return False
+
     def process_new_data(self, data):
-        # TODO: finish code split of recording state machine
+        if not data:
+            return  # no-op
+
+        # if necessary, transition state
         if self.state == LoggerState.ready:
-            pass
+            if self.activate_conditions(data):
+                # ready -> logging
+                self.session_id = self.db_handler.get_new_session()
+                print("New session: %s" % str(self.session_id))
+                self.state = LoggerState.logging
         elif self.state == LoggerState.logging:
-            pass
+            if self.deactivate_conditions(data):
+                # logging -> ready
+                self.state = LoggerState.ready
+                # populate metadata for recently ended session
+                if self.session_id:
+                    self.db_handler.populate_session_info(self.session_id)
+                    self.session_id = None
         else:
             raise RuntimeError("Invalid logger state:" + str(self.state))
+
+        # process data based on current state
+
+        if self.state == LoggerState.ready:
+            self.data.expire_old_samples(time.time() - 10.0)
+
+        elif self.state == LoggerState.logging:
+            # write all buffered data to the db
+            # TODO: change do a single insert/transaction
+            if self.db_handler:
+                try:
+                    self.db_handler.insert_gps_updates(self.data.get_sensor_data('gps'), self.session_id)
+                    self.db_handler.insert_imu_updates(self.data.get_sensor_data('imu'), self.session_id)
+                    self.db_handler.insert_can_updates(self.data.get_sensor_data('can'), self.session_id)
+                except TypeError as te:
+                    print("Failed to insert data: %s" % te)
+            self.data.clear()
 
     def start(self):
         """
         Start handlers and begin recording. The function does not
         normally terminate. New sessions are created as needed.
         """
+        for h in self.handlers.values():
+            h.start()
+
+        update_times = defaultdict(int)
+        self.state = LoggerState.ready
+
+        try:
+            while True:
+                # read new data
+                new_data = self.get_new_data()
+                # process data
+                self.process_new_data(new_data)
+
+                # update display
+                for h in self.handlers:
+                    if new_data[h]:
+                        update_times[h] = new_data[h][-1][0]
+
+                if self.display:
+                    self.display.refresh_display(time.time() if self.db_handler else 0,
+                                                 gps_time=update_times['gps'],
+                                                 imu_time=update_times['imu'],
+                                                 can_time=update_times['can'],
+                                                 recording=(self.state == LoggerState.logging))
+
+                time.sleep(0.2)  # there is no reason to ever poll faster than this
+        finally:
+            for h in self.handlers.values():
+                h.stop()
+
+    def start_old(self):
         for h in self.handlers.values():
             h.start()
 

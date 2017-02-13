@@ -16,7 +16,7 @@
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
 from unittest import TestCase
-from racepi_sensor_recorder.sensor_log import DataBuffer
+from racepi_sensor_recorder.sensor_log import DataBuffer, SensorLogger, LoggerState
 
 TEST_COUNT = 10
 
@@ -24,6 +24,7 @@ TEST_COUNT = 10
 class DataBufferTests(TestCase):
 
     def setUp(self):
+        self.sl = SensorLogger(None)
         self.b = DataBuffer()
         self.twenty_samples = DataBuffer()
         for i in range(TEST_COUNT):
@@ -68,4 +69,22 @@ class DataBufferTests(TestCase):
         self.assertEqual(0, len(self.twenty_samples.get_sensor_data('one')))
         self.assertEqual(0, len(self.twenty_samples.get_sensor_data('two')))
         self.assertRaises(ValueError, self.twenty_samples.get_sensor_data, "nosource")
+
+    def test_process_new_data_none(self):
+        # This should never through an exception
+        self.sl.process_new_data(None)
+
+    def test_process_new_data_empty_completes(self):
+        # This should never through an exception
+        self.sl.process_new_data({})
+
+    def test_process_new_data_empty_keeps_state(self):
+        # This should never through an exception
+        for s in LoggerState:
+            self.sl.state = s
+            try:
+                self.sl.process_new_data({"empty": []})
+            except RuntimeError:
+                pass  # ignore invalid states
+            self.assertEqual(self.sl.state, s, "Logger changed state")
 

@@ -19,7 +19,6 @@ import os
 from racepi_sensor_handler import GpsSensorHandler
 
 if __name__ == "__main__":
-    # TODO: move all of these out of the module directories
     sh = GpsSensorHandler()
     sh.start()
     while True:
