@@ -16,7 +16,8 @@
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
 from unittest import TestCase
-from racepi_sensor_recorder.sensor_log import DataBuffer, SensorLogger, LoggerState
+from racepi_sensor_recorder.sensor_log \
+    import DataBuffer, SensorLogger, LoggerState, safe_speed_to_float
 
 TEST_COUNT = 10
 
@@ -69,6 +70,35 @@ class DataBufferTests(TestCase):
         self.assertEqual(0, len(self.twenty_samples.get_sensor_data('one')))
         self.assertEqual(0, len(self.twenty_samples.get_sensor_data('two')))
         self.assertRaises(ValueError, self.twenty_samples.get_sensor_data, "nosource")
+
+    def test_safe_speed_to_float_none(self):
+        v = safe_speed_to_float(None)
+        self.assertLess(v, 1e-10)
+
+    def test_safe_speed_to_float_float(self):
+        v1 = 123.456
+        v2 = safe_speed_to_float(v1)
+        self.assertAlmostEqual(v1, v2, 3)
+
+    def test_safe_speed_to_float_int(self):
+        v1 = 123
+        v2 = safe_speed_to_float(v1)
+        self.assertAlmostEqual(v1, v2, 3)
+
+    def test_safe_speed_to_float_intstr(self):
+        v1 = "123"
+        v2 = safe_speed_to_float(v1)
+        self.assertAlmostEqual(123, v2, 3)
+
+    def test_safe_speed_to_float_floatstr(self):
+        v1 = "123.456"
+        v2 = safe_speed_to_float(v1)
+        self.assertAlmostEqual(123.456, v2, 3)
+
+    def test_safe_speed_to_float_badstr(self):
+        v1 = "not number"
+        v2 = safe_speed_to_float(v1)
+        self.assertLess(v2, 1e-10)
 
     def test_process_new_data_none(self):
         # This should never through an exception
