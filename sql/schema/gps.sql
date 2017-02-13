@@ -30,7 +30,7 @@ CREATE TABLE gps_data
 	epx DOUBLE,
 	epy DOUBLE,
 	epv DOUBLE,
-
+    alt DOUBLE,
 	FOREIGN KEY(session_id) REFERENCES sessions(id)
 );COMMIT;
 --============================================================================

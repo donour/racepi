@@ -21,8 +21,8 @@ import time
 
 from .sensor_handler import SensorHandler
 
-GPS_REQUIRED_FIELDS = ['time', 'lat', 'lon', 'speed', 'track', 'epx', 'epy', 'epv']
-GPS_READ_TIMEOUT=2.0
+GPS_REQUIRED_FIELDS = ['time', 'lat', 'lon', 'speed', 'track', 'epx', 'epy', 'epv', 'alt']
+GPS_READ_TIMEOUT = 2.0
 
 
 class GpsSensorHandler(SensorHandler):

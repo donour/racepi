@@ -89,7 +89,7 @@ class DbHandler:
             # extract just the fields we use
             d = map(sample[1].get, self.gps_fields)
             available_fields = sample[1].keys()          
-            # the sample is only usuable if it has velocity
+            # the sample is only usable if it has velocity
             if 'speed' in available_fields:                
                 insert_cmd = """
                   insert into gps_data
@@ -97,7 +97,7 @@ class DbHandler:
                    %s)
                   values
                   ('%s', %s,
-                   '%s', %f, %f, %f, %f, %f, %f, %f)
+                   '%s', %f, %f, %f, %f, %f, %f, %f, %f)
                 """ % (
                     (','.join(self.gps_fields),
                     session_id.hex, t) + tuple(d))
