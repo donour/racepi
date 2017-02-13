@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
-from pi_sense_hat_imu import RpiImuSensorHandler
+from racepi_sensor_handler import RpiImuSensorHandler
 
 if __name__ == "__main__":
 
