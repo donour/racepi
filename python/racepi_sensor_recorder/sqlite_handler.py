@@ -52,7 +52,7 @@ class DbHandler:
         session_id = uuid.uuid1()
         insert_cmd = """
         insert into sessions (id, description)
-        values ('%s', 'Created by RacePi (uptime: '%.0f')')
+        values ('%s', 'Created by RacePi (uptime: %.0fs)')
         """ % (session_id.hex, uptime_helper())
         self.conn.execute(insert_cmd)
         self.conn.commit()
