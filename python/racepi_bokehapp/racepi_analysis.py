@@ -25,7 +25,7 @@ from bokeh.palettes import Blues4, Reds4
 from bokeh.plotting import figure
 from scipy.signal import savgol_filter
 
-from python.racepi_can_decoder import can_data
+from racepi_can_decoder import can_data
 
 # Focus RS Mk3 CAN converters
 tps_converter = can_data.CanFrameValueExtractor(6, 10, a=0.1)
@@ -39,6 +39,7 @@ wheelspeed3_converter = can_data.CanFrameValueExtractor(33, 15, a=1/307.0)
 wheelspeed4_converter = can_data.CanFrameValueExtractor(49, 15, a=1/307.0)
 
 RACEPI_MAP_SIZE = 600
+
 
 class RacePiDBSession:
 
