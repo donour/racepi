@@ -32,8 +32,8 @@ ALLOWED_DELTA_SECONDS = 60*10
 s = gps.gps(mode=gps.WATCH_ENABLE)
 
 data = s.next()
-while data is None or not 'time' in data.keys():
-    data=s.next()
+while data is None or 'time' not in data.keys():
+    data = s.next()
 
 t = data["time"]
 st = datetime.datetime.now()   
