@@ -28,7 +28,7 @@ import gps, datetime, os
 
 #TODO port to python3
 
-ALLOWED_DELTA_SECONDS=60*10
+ALLOWED_DELTA_SECONDS = 60*10
 s = gps.gps(mode=gps.WATCH_ENABLE)
 
 data = s.next()
@@ -38,10 +38,10 @@ while data is None or not 'time' in data.keys():
 t = data["time"]
 st = datetime.datetime.now()   
 now = datetime.datetime.strptime(t, "%Y-%m-%dT%H:%M:%S.%fZ")
-if abs((st-now).seconds) > ALLOWED_DELTA_SECONDS:
+delta = abs((st-now).seconds)
+if delta > ALLOWED_DELTA_SECONDS:
     os.system("date --s=%s" % t)
-    print(abs((st-now).seconds))
-    print("Time delta to large, set time to:" + str(t))
+    print("Time delta too large (%.1fs), set time to:" % delta + str(t))
 else:
     print("Time within allowable range, exiting")
 
