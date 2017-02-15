@@ -1,5 +1,5 @@
 #!/usr/bin/env python2
-# Copyright 2016 Donour Sizemore
+# Copyright 2016-7 Donour Sizemore
 #
 # This file is part of RacePi
 #
@@ -26,6 +26,8 @@ a RTC, like the Raspberry Pi.
 """
 import gps, datetime, os
 
+#TODO port to python3
+
 ALLOWED_DELTA_SECONDS=60*10
 s = gps.gps(mode=gps.WATCH_ENABLE)
 
@@ -38,10 +40,10 @@ st = datetime.datetime.now()
 now = datetime.datetime.strptime(t, "%Y-%m-%dT%H:%M:%S.%fZ")
 if abs((st-now).seconds) > ALLOWED_DELTA_SECONDS:
     os.system("date --s=%s" % t)
-    print abs((st-now).seconds)
-    print "Time delta to large, set time to:", t
+    print(abs((st-now).seconds))
+    print("Time delta to large, set time to:" + str(t))
 else:
-    print "Time within allowable range, exiting"
+    print("Time within allowable range, exiting")
 
 
 

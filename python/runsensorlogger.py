@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright 2016 Donour Sizemore
+# Copyright 2016-7 Donour Sizemore
 #
 # This file is part of RacePi
 #
@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
-import racepi_sensor_recorder
+from racepi_sensor_recorder import DbHandler, SensorLogger
 from racepi_sensor_handler import GpsSensorHandler, RpiImuSensorHandler, STN11XXCanSensorHandler, GPS_REQUIRED_FIELDS
 
 # TODO: move the DB filename to a config file in /etc
@@ -46,6 +46,6 @@ if __name__ == "__main__":
     print("Opening Database: %s" % dbfile)
     # TODO: look at opening DB as needed
     # to avoid corruption of tables
-    db_handler = racepi_sensor_recorder.DbHandler(dbfile, GPS_REQUIRED_FIELDS)
-    sl = racepi_sensor_recorder.SensorLogger(db_handler, handlers)
+    db_handler = DbHandler(dbfile, GPS_REQUIRED_FIELDS)
+    sl = SensorLogger(db_handler, handlers)
     sl.start()

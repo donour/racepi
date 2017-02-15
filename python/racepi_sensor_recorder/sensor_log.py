@@ -29,7 +29,6 @@ from collections import defaultdict
 from .pi_sense_hat_display import RacePiStatusDisplay, SenseHat
 from .data_buffer import DataBuffer
 
-DEFAULT_DB_LOCATION = "/home/donour/test.db"
 ACTIVATE_RECORDING_M_PER_S = 3.5
 MOVEMENT_THRESHOLD_M_PER_S = 2.0
 DEFAULT_DATA_BUFFER_TIME_SECONDS = 10.0
