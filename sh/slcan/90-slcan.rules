@@ -1,0 +1,3 @@
+ACTION=="add", ENV{ID_MODEL}=="CAN_USB_ConverterBasic", ENV{SUBSYSTEM}=="tty", RUN+="/usr/bin/logger [udev] Loading CANUSB device", RUN+="/usr/local/bin/slcan_add.sh $kernel"
+ACTION=="remove", ENV{ID_MODEL}=="CAN_USB_ConverterBasic", ENV{SUBSYSTEM}=="usb", RUN+="/usr/bin/logger [udev] Unloading CANUSB device", RUN+="/usr/local/bin/slcan_remove.sh"
+
