@@ -17,7 +17,7 @@
 
 from unittest import TestCase
 
-from python.racepi_webapp.can_data import CanFrameValueExtractor, CanFrame
+from racepi_can_decoder.can_data import CanFrameValueExtractor, CanFrame
 
 
 class CanDataFrameTest(TestCase):

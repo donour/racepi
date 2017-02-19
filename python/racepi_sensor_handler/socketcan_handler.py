@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright 2016 Donour Sizemore
+# Copyright 2016-7 Donour Sizemore
 #
 # This file is part of RacePi
 #
@@ -19,12 +19,12 @@ import socket
 import time
 import struct
 
-from sensor_handler import SensorHandler
+from .sensor_handler import SensorHandler
 
 if not hasattr(socket, "PF_CAN"):
     raise RuntimeError("No SocketCAN support found: please use Python3.3+")
 
-DEFAULT_CAN_DEVICE = "vcan0"
+DEFAULT_CAN_DEVICE = "slcan0"
 
 # Basic data frame format: https://en.wikipedia.org/wiki/CAN_bus#Data_frame
 CAN_MESSAGE_FMT = "<IB3x8B"
@@ -36,7 +36,20 @@ class SocketCanSensorHandler(SensorHandler):
         SensorHandler.__init__(self, self.__record_from_can)
         self.dev_name = device_name
         self.cansocket = socket.socket(socket.PF_CAN, socket.SOCK_RAW, socket.CAN_RAW)
+        self._set_can_id_filters(can_filters)
         self.cansocket.bind((self.dev_name,))
+
+    def _set_can_id_filters(self, can_filters):
+        """
+        Set RX filters to receive only specified IDs
+
+        :param can_filters: list of arbritration IDs to receive
+        """
+        for f in can_filters:
+            self.cansocket.setsockopt(socket.SOL_CAN_RAW,
+                                      socket.CAN_RAW_FILTER,
+                                      struct.pack("II", f, 0xFFF))
+            print("setting filter: %s" % str(f))
 
     def __record_from_can(self):
 
@@ -45,26 +58,16 @@ class SocketCanSensorHandler(SensorHandler):
 
         message_size = struct.calcsize(CAN_MESSAGE_FMT)
 
-        print("Starting SIMULATED CAN reader")
+        print("Starting Socket-CAN reader")
         while not self.doneEvent.is_set():
             data = self.cansocket.recv(message_size)
             now = time.time()
             if data:
                 data = struct.unpack(CAN_MESSAGE_FMT, data)
-                # TODO, standarize the message here so multiple
+                # TODO, standardize the message here so multiple
                 # can handlers can deliver the data to the sensor
                 # logger
                 self.pipe_out.send((now, data))
-            time.sleep(0.1)
-        print("Shutting down CAN reader")
 
-if __name__ == "__main__":
-    h = SocketCanSensorHandler()
-    h.start()
-    while True:
-        data = h.get_all_data()
-        if data:
-            print(data)
-        else:
-            time.sleep(0.1)
+        print("Shutting down CAN reader")
 
