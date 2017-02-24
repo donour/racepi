@@ -39,7 +39,6 @@ class SocketCanSensorHandler(SensorHandler):
         :param can_filters: list of allowed arbitration IDs, as integer
         """
         SensorHandler.__init__(self, self.__record_from_can)
-        self.user_filters = None
         self.dev_name = device_name
         self.cansocket = socket.socket(socket.PF_CAN, socket.SOCK_RAW, socket.CAN_RAW)
         self._set_can_id_filters(can_filters)
@@ -51,22 +50,15 @@ class SocketCanSensorHandler(SensorHandler):
 
         :param can_filters: list of arbitration IDs to receive
         """
+        filter_fmt = "={}I".format(2 * len(can_filters))
+        filter_data = []
+        for f in can_filters:
+            filter_data.append(f)
+            filter_data.append(0xFFF)
+            print("setting filter: %s" % str(f))
+        self.cansocket.setsockopt(socket.SOL_CAN_RAW, socket.CAN_RAW_FILTER,
+                                  struct.pack(filter_fmt, *filter_data))
 
-        # If we are using a recent version of Linux, we can filter in the kernel
-        # otherwise we must filter the can messages in userspace
-
-        # check platform version
-        if "Linux" in platform.system() and platform.release() > "4.1":
-            # set kernel filters
-            for f in can_filters:
-                # TODO: set multiple filters
-                self.cansocket.setsockopt(socket.SOL_CAN_RAW,
-                                          socket.CAN_RAW_FILTER,
-                                          struct.pack("II", f, 0xFFF))
-                print("setting filter: %s" % str(f))
-        else:
-            print("No kernel can filtering supported, falling back to userspace filters")
-            self.user_filters = {f: True for f in can_filters}
 
     def __record_from_can(self):
 
@@ -87,9 +79,7 @@ class SocketCanSensorHandler(SensorHandler):
 
                 # check for empty data
                 if data and len(data) > 0:
-                    # check for presence of userspace filters
-                    if not self.user_filters or data[0] in self.user_filters:
-                        self.pipe_out.send((now, data))
+                    self.pipe_out.send((now, data))
 
         print("Shutting down CAN reader")
 
