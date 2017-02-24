@@ -16,10 +16,19 @@
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
 import time
+import sys
+
 from racepi_sensor_handler.socketcan_handler import SocketCanSensorHandler
 
 if __name__ == "__main__":
-    h = SocketCanSensorHandler()
+
+    if len(sys.argv) < 2:
+        print("Usage: %s <CAN ID> <CAN ID> ..." % sys.argv[0])
+        sys.exit(1)
+
+    filters = [int(f) for f in sys.argv[1:]]
+
+    h = SocketCanSensorHandler(device_name="vcan0", can_filters=filters)
     h.start()
     while True:
         data = h.get_all_data()
