@@ -59,7 +59,6 @@ class SocketCanSensorHandler(SensorHandler):
         self.cansocket.setsockopt(socket.SOL_CAN_RAW, socket.CAN_RAW_FILTER,
                                   struct.pack(filter_fmt, *filter_data))
 
-
     def __record_from_can(self):
 
         if not self.pipe_out:
@@ -72,14 +71,19 @@ class SocketCanSensorHandler(SensorHandler):
             data = self.cansocket.recv(message_size)
             now = time.time()
             if data:
+
+                # this unpacking is not strictly necessary, but is a nice
+                # convention and adopted by most socketcan handlers
                 data = struct.unpack(CAN_MESSAGE_FMT, data)
-                # TODO, standardize the message here so multiple
-                # can handlers can deliver the data to the sensor
-                # logger
 
                 # check for empty data
-                if data and len(data) > 0:
-                    self.pipe_out.send((now, data))
+                if data and len(data) > 1:
+                    # pack the message back into a string
+                    result = "%03x" % data[0] + \
+                             "".join([("%02x" % v) for v in data[2:]])
+                    print(result)
+
+                    self.pipe_out.send((now, result))
 
         print("Shutting down CAN reader")
 
