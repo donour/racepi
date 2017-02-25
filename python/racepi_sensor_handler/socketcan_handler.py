@@ -81,8 +81,6 @@ class SocketCanSensorHandler(SensorHandler):
                     # pack the message back into a string
                     result = "%03x" % data[0] + \
                              "".join([("%02x" % v) for v in data[2:]])
-                    print(result)
-
                     self.pipe_out.send((now, result))
 
         print("Shutting down CAN reader")
