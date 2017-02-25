@@ -18,7 +18,7 @@
 import socket
 import time
 import struct
-import platform
+import sys
 
 from .sensor_handler import SensorHandler
 
@@ -42,7 +42,11 @@ class SocketCanSensorHandler(SensorHandler):
         self.dev_name = device_name
         self.cansocket = socket.socket(socket.PF_CAN, socket.SOCK_RAW, socket.CAN_RAW)
         self._set_can_id_filters(can_filters)
-        self.cansocket.bind((self.dev_name,))
+        try:
+            self.cansocket.bind((self.dev_name,))
+        except OSError as e:
+            print(str(e) + ":" + self.dev_name, file=sys.stderr)
+            self.cansocket = None
 
     def _set_can_id_filters(self, can_filters):
         """
@@ -67,7 +71,7 @@ class SocketCanSensorHandler(SensorHandler):
         message_size = struct.calcsize(CAN_MESSAGE_FMT)
 
         print("Starting Socket-CAN reader")
-        while not self.doneEvent.is_set():
+        while not self.doneEvent.is_set() and self.cansocket:
             data = self.cansocket.recv(message_size)
             now = time.time()
             if data:
@@ -83,5 +87,5 @@ class SocketCanSensorHandler(SensorHandler):
                              "".join([("%02x" % v) for v in data[2:]])
                     self.pipe_out.send((now, result))
 
-        print("Shutting down CAN reader")
+        print("Shutting down SocketCAN reader")
 
