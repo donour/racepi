@@ -20,8 +20,8 @@ import os
 from bokeh.io import curdoc
 from racepi_bokehapp.racepi_analysis import RacePiAnalysis
 
-#DEFAULT_SQLITE_FILE = '/external/racepi_data/test.db'
-DEFAULT_SQLITE_FILE = '/home/donour/houston.db'
+DEFAULT_SQLITE_FILE = '/external/racepi_data/test.db'
+#DEFAULT_SQLITE_FILE = '/home/donour/houston.db'
 
 if not os.path.exists(DEFAULT_SQLITE_FILE):
     raise IOError("Missing DB file: " + DEFAULT_SQLITE_FILE)
