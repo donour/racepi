@@ -25,18 +25,7 @@ from bokeh.palettes import Blues4, Reds4
 from bokeh.plotting import figure
 from scipy.signal import savgol_filter
 
-from racepi_can_decoder import can_data
-
-# Focus RS Mk3 CAN converters
-tps_converter = can_data.CanFrameValueExtractor(6, 10, a=0.1)
-steering_angle_converter = can_data.CanFrameValueExtractor(49, 15, a=9.587e-5)
-steering_direction_converter = can_data.CanFrameValueExtractor(32, 1)
-rpm_converter = can_data.CanFrameValueExtractor(36, 12, a=2.0)
-brake_pressure_converter = can_data.CanFrameValueExtractor(24, 16, a=1e-3)
-wheelspeed1_converter = can_data.CanFrameValueExtractor(1, 15, a=1/307.0)
-wheelspeed2_converter = can_data.CanFrameValueExtractor(17, 15, a=1/307.0)
-wheelspeed3_converter = can_data.CanFrameValueExtractor(33, 15, a=1/307.0)
-wheelspeed4_converter = can_data.CanFrameValueExtractor(49, 15, a=1/307.0)
+from racepi_can_decoder import *
 
 RACEPI_MAP_SIZE = 600
 
@@ -92,6 +81,7 @@ class RunView:
         self.wheelspeed3_source = ColumnDataSource(data=dict(timestamp=[], result=[]))
         self.wheelspeed4_source = ColumnDataSource(data=dict(timestamp=[], result=[]))
 
+
 class RacePiAnalysis:
 
     @staticmethod
@@ -111,13 +101,13 @@ class RacePiAnalysis:
 
         try:
             can_channels = {
-                 'tps': self.db.get_and_transform_can_data(session_id, 128, tps_converter),
-                 'b_pres': self.db.get_and_transform_can_data(session_id, 531, brake_pressure_converter),
-                 'rpm': self.db.get_and_transform_can_data(session_id, 144, rpm_converter),
-                 'wheelspeed1': self.db.get_and_transform_can_data(session_id, 400, wheelspeed1_converter),
-                 'wheelspeed2': self.db.get_and_transform_can_data(session_id, 400, wheelspeed2_converter),
-                 'wheelspeed3': self.db.get_and_transform_can_data(session_id, 400, wheelspeed3_converter),
-                 'wheelspeed4': self.db.get_and_transform_can_data(session_id, 400, wheelspeed4_converter)
+                 'tps': self.db.get_and_transform_can_data(session_id, 128, focus_rs_tps_converter),
+                 'b_pres': self.db.get_and_transform_can_data(session_id, 531, focus_rs_brake_pressure_converter),
+                 'rpm': self.db.get_and_transform_can_data(session_id, 144, focus_rs_rpm_converter),
+                 'wheelspeed1': self.db.get_and_transform_can_data(session_id, 400, focus_rs_wheelspeed1_converter),
+                 'wheelspeed2': self.db.get_and_transform_can_data(session_id, 400, focus_rs_wheelspeed2_converter),
+                 'wheelspeed3': self.db.get_and_transform_can_data(session_id, 400, focus_rs_wheelspeed3_converter),
+                 'wheelspeed4': self.db.get_and_transform_can_data(session_id, 400, focus_rs_wheelspeed4_converter)
             }
         except ValueError as e:
             print("Error loading can channels: " + str(e))
