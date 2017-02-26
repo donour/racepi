@@ -32,8 +32,10 @@ if __name__ == "__main__":
     sm.bind = engine
     s = sm()
     print("Connected to db, collecting stats:")
-    print("Session count:     %08d" % len(s.query(Session).all()))
-    print("SessionInfo count: %08d" % len(s.query(SessionInfo).all()))
-    print("GPSData count:     %08d" % len(s.query(GPSData).all()))
-    print("IMUData count:     %08d" % len(s.query(IMUData).all()))
-    print("CANData count:     %08d" % len(s.query(CANData).all()))
+    print("Session count:......%08d" % s.query(Session).count())
+    print("SessionInfo count:..%08d" % s.query(SessionInfo).count())
+    print("GPSData count:......%08d" % s.query(GPSData).count())
+    print("IMUData count:......%08d" % s.query(IMUData).count())
+    print("CANData count:......%08d" % s.query(CANData).count())
+    print("ProcessedCAN count:.%08d" % s.query(ProcessedCANSample).filter(CANData.arbitration_id == 0x10).count())
+
