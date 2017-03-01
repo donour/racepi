@@ -40,10 +40,36 @@ class TimeToDistanceConverter:
             t_delta = t-t_last
             t_last = t
 
+            # TODO: interpolate v from multiple samples
             d_delta = t_delta * v
-            self.distance_samples.append((t, total_distance + d_delta, d_delta))
-            total_distance += d_delta
+            total_distance = total_distance + d_delta
+            self.distance_samples.append((t, total_distance, t_delta, d_delta))
 
+    def generate_distance_trace(self, time_trace):
+
+        if not self.distance_samples:
+            raise RuntimeError("No distance data available")
+
+        result = []
+
+        dist_iter = iter(self.distance_samples)
+        last_dist = next(dist_iter)
+        next_dist = next(dist_iter)
+
+        for sample in time_trace:
+            # find next distance sample if necessary
+            while next_dist and next_dist[0] < sample[0]:
+                last_dist = next_dist
+                next_dist = next(dist_iter)
+
+            # linear interpolation of last distance sample
+            # before and after the target sample
+            interpolated_distance = \
+                (sample[0]-last_dist[0])/next_dist[2] * next_dist[3] + last_dist[1]
+
+            result.append((interpolated_distance, sample[1]))
+
+        return result
 
 
 

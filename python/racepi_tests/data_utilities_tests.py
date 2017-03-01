@@ -21,22 +21,35 @@ from racepi_sensor_handler.data_utilities import TimeToDistanceConverter
 
 class TimeToDistanceConverterTest(TestCase):
 
+    linear_speed_data = [
+        (0.0, {'speed': 1.0}),
+        (1.0, {'speed': 1.0}),
+        (1.5, {'speed': 1.0}),
+        (10.0, {'speed': 1.0}),
+        (20.0, {'speed': 1.0}),
+        (100.0, {'speed': 1.0})
+    ]
+
+    def setUp(self):
+        self.c = TimeToDistanceConverter(TimeToDistanceConverterTest.linear_speed_data)
+
     def test_time_to_distance_converter_no_data(self):
         self.assertRaises(ValueError, TimeToDistanceConverter, None)
         self.assertRaises(ValueError, TimeToDistanceConverter, [])
 
     def test_time_to_distance_converter_linear_speed(self):
-        data = [
-            (0.0, {'speed': 1.0}),
-            (1.0, {'speed': 1.0}),
-            (1.5, {'speed': 1.0}),
-            (10.0, {'speed': 1.0}),
-            (100.0, {'speed': 1.0})
-        ]
-
-        c = TimeToDistanceConverter(data)
-        self.assertIsNotNone(c)
-
+        self.assertIsNotNone(self.c)
         # verify that speeds of 1.0 match time
-        for d in c.distance_samples:
+        for d in self.c.distance_samples:
             self.assertAlmostEqual(d[0], d[1])
+
+    def test_generate_distance_trace(self):
+        trace = [
+            (1.2, "foo"),
+            (30.5, "bar"),
+        ]
+        result = self.c.generate_distance_trace(trace)
+        # verify distance matches time
+        for i in range(len(trace)):
+            self.assertAlmostEqual(trace[i][0], result[i][0])
+            self.assertEqual(trace[i][1], result[i][1])
