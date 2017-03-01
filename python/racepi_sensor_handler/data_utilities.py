@@ -36,7 +36,7 @@ class TimeToDistanceConverter:
         for sample in speed_data[1:]:
 
             t = sample[0]
-            v = sample[1]['speed']
+            v = sample[1]
             t_delta = t-t_last
             t_last = t
 
@@ -51,23 +51,31 @@ class TimeToDistanceConverter:
             raise RuntimeError("No distance data available")
 
         result = []
-
         dist_iter = iter(self.distance_samples)
         last_dist = next(dist_iter)
         next_dist = next(dist_iter)
-
         for sample in time_trace:
             # find next distance sample if necessary
-            while next_dist and next_dist[0] < sample[0]:
-                last_dist = next_dist
-                next_dist = next(dist_iter)
-
+            try:
+                # this try catch is REALLY stupid, but python iterators can't
+                # detect the end
+                while next_dist[0] < sample:
+                    last_dist = next_dist
+                    next_dist = next(dist_iter)
+            except:
+                pass
             # linear interpolation of last distance sample
             # before and after the target sample
-            interpolated_distance = \
-                (sample[0]-last_dist[0])/next_dist[2] * next_dist[3] + last_dist[1]
+            if next_dist[2] > 1e-4:
+                interpolated_distance = \
+                    (sample-last_dist[0])/next_dist[2] * next_dist[3] + last_dist[1]
+            else:
+                interpolated_distance = 0.0
 
-            result.append((interpolated_distance, sample[1]))
+            result.append(interpolated_distance)
+
+        if len(time_trace) != len(result):
+            print("Warning: distance samples dropped")
 
         return result
 
