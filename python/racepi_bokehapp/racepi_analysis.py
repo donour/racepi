@@ -128,17 +128,17 @@ class RacePiAnalysis:
         for k in imu_data:
             imu_data[k] = savgol_filter(imu_data[k], 31, 3)
         if 'rpm' in can_channels:
-         v.rpm_source.data = ColumnDataSource(can_channels['rpm']).data
-         if 'b_pres' in can_channels:
-             v.bps_source.data = ColumnDataSource(can_channels['b_pres']).data
-         if 'wheelspeed1' in can_channels:
-             v.wheelspeed1_source.data = ColumnDataSource(can_channels['wheelspeed1']).data
-         if 'wheelspeed2' in can_channels:
-             v.wheelspeed2_source.data = ColumnDataSource(can_channels['wheelspeed2']).data
-         if 'wheelspeed3' in can_channels:
-             v.wheelspeed3_source.data = ColumnDataSource(can_channels['wheelspeed3']).data
-         if 'wheelspeed4' in can_channels:
-             v.wheelspeed4_source.data = ColumnDataSource(can_channels['wheelspeed4']).data
+            v.rpm_source.data = ColumnDataSource(can_channels['rpm']).data
+        if 'b_pres' in can_channels:
+            v.bps_source.data = ColumnDataSource(can_channels['b_pres']).data
+        if 'wheelspeed1' in can_channels:
+            v.wheelspeed1_source.data = ColumnDataSource(can_channels['wheelspeed1']).data
+        if 'wheelspeed2' in can_channels:
+            v.wheelspeed2_source.data = ColumnDataSource(can_channels['wheelspeed2']).data
+        if 'wheelspeed3' in can_channels:
+            v.wheelspeed3_source.data = ColumnDataSource(can_channels['wheelspeed3']).data
+        if 'wheelspeed4' in can_channels:
+            v.wheelspeed4_source.data = ColumnDataSource(can_channels['wheelspeed4']).data
         v.speed_source.data = ColumnDataSource(gps_data).data
         v.accel_source.data = ColumnDataSource(imu_data).data
         if 'tps' in can_channels:

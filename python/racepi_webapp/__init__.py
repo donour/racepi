@@ -1,4 +1,4 @@
-# Copyright 2016 Donour Sizemore
+# Copyright 2016-7 Donour Sizemore
 #
 # This file is part of RacePi
 #
@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
-from plotly_helpers import get_scatterplot
+from .plotly_helpers import get_scatterplot
 from flask import Flask, jsonify, request, Response
 from plotly import graph_objs as pgo
 from plotly import tools
@@ -199,13 +199,13 @@ def get_plots_speed():
     }
     gps_data = pd.read_sql_query("select timestamp, speed, track, lat, lon FROM %s where session_id='%s'" % ("gps_data", session_id), app.db, index_col='timestamp')
 
-    sources = []
-    sources.append((gps_data.speed, smoothing_window, "Speed (m/s)"))
+    sources = [(gps_data.speed, smoothing_window, "Speed (m/s)")]
     for c in can_channels:
         sources.append((can_channels[c].result, smoothing_window, c))
 
     fig = plotly_helpers.get_xy_combined_plot(sources, "Speed")
     return jsonify(data=fig.get('data'), layout=fig.get('layout'))
+
 
 @app.route('/export/csv')
 def get_run_csv():
@@ -276,7 +276,7 @@ def get_plots_bokeh_test(session_id):
         s = figure(width=800, plot_height=250, title=c, x_range=s1.x_range)
         s.line(can_channels[c].index, can_channels[c].result)
         subplots.append([s])
-        print "added"
+        print("added")
 
     js_resources = INLINE.render_js()
     css_resources = INLINE.render_css()
