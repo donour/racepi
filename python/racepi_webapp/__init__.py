@@ -15,11 +15,12 @@
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
 from .plotly_helpers import get_scatterplot
-from flask import Flask, jsonify, request, Response
+from flask import Flask, jsonify, request, Response, abort
 from plotly import graph_objs as pgo
 from plotly import tools
 import pandas as pd
-import can_data
+from can_data import CanFrame, CanFrameValueExtractor
+from racepi_can_decoder import *
 
 app = Flask(__name__)
 try:
@@ -29,21 +30,15 @@ try:
 except ImportError:
     print("Compress library not found")
 
-tps_converter = can_data.CanFrameValueExtractor(6, 10, a=0.1)
-steering_angle_converter = can_data.CanFrameValueExtractor(49, 15, a=9.587e-5)
-steering_direction_converter = can_data.CanFrameValueExtractor(32, 1)
-rpm_converter = can_data.CanFrameValueExtractor(36, 12, a=2.0)
-brake_pressure_converter = can_data.CanFrameValueExtractor(24, 16, a=1e-3)
-
 # TODO: sanitize all sql statements by remove ; character
 
 
 def get_and_transform_can_data(session_id, arbitration_id, value_converter):
     data = pd.read_sql_query(
-        "select timestamp, msg FROM %s where session_id='%s' and arbitration_id=%s" %
-        ("can_data", session_id, arbitration_id), app.db, index_col='timestamp')
+        "select timestamp, msg FROM %s where session_id='%s' and arbitration_id=%s order by timestamp" %
+        ("can_data", session_id, arbitration_id), app.db)
     data['result'] = \
-        [value_converter.convert_frame(can_data.CanFrame('999', x)) for x in data.msg.tolist()]
+        [value_converter.convert_frame(CanFrame('999', x)) for x in data.msg.tolist()]
     return data
 
 
@@ -55,7 +50,7 @@ def get_sql_data(table, filter):
 
 def get_data(table):
     session_id = request.args.get("session_id")
-    return get_sql_data(table, "session_id = '%s'" % session_id)
+    return get_sql_data(table, "session_id = '%s' ORDER BY timestamp" % session_id)
 
 
 @app.route('/')
@@ -76,6 +71,24 @@ def get_gps_data():
 @app.route('/data/imu')
 def get_imu_data():
     return get_data("imu_data")
+
+
+@app.route('/data/can/<channel>/<session_id>')
+def get_can_data(channel, session_id):
+    print(channel)
+    data = None
+    if channel == "tps":
+        data = get_and_transform_can_data(session_id, 128, focus_rs_tps_converter)
+    elif channel == "rpm":
+        data = get_and_transform_can_data(session_id, 144, focus_rs_rpm_converter)
+    elif channel == "brake":
+        data = get_and_transform_can_data(session_id, 531, focus_rs_brake_pressure_converter)
+
+    if data is not None:
+        data.drop('msg', axis=1, inplace=True)
+        return data.to_json()
+    else:
+        abort(404)
 
 
 @app.route('/data/stats/<session_id>')
@@ -162,17 +175,17 @@ def get_singlerun_timeseries():
         smoothing_window = 10
 
     can_channels = {
-        'TPS (%)': get_and_transform_can_data(session_id, 128, tps_converter),
-        'Brake Pressure (kPa)': get_and_transform_can_data(session_id, 531, brake_pressure_converter),
-        'RPM': get_and_transform_can_data(session_id, 144, rpm_converter)
+        'TPS (%)': get_and_transform_can_data(session_id, 128, focus_rs_tps_converter),
+        'Brake Pressure (kPa)': get_and_transform_can_data(session_id, 531, focus_rs_brake_pressure_converter),
+        'RPM': get_and_transform_can_data(session_id, 144, focus_rs_rpm_converter)
     }
     gps_data = pd.read_sql_query("select timestamp, speed, track, lat, lon FROM %s where session_id='%s'" % ("gps_data", session_id), app.db, index_col='timestamp')
     imu_data = pd.read_sql_query("select timestamp, x_accel, y_accel, z_accel FROM %s where session_id='%s'" % ("imu_data", session_id), app.db, index_col='timestamp')
     can_samples = pd.read_sql_query("select timestamp, msg FROM %s where session_id='%s' and arbitration_id=16" % ("can_data", session_id), app.db, index_col='timestamp')
 
     can_samples['Steering'] = [
-        (steering_angle_converter.convert_frame(can_data.CanFrame('010', x)) * 3000 *
-         ((-1)**steering_direction_converter.convert_frame(can_data.CanFrame('010', x))))
+        (focus_rs_steering_angle_converter.convert_frame(CanFrame('010', x)) * 3000 *
+         ((-1)* focus_rs_steering_angle_converter.convert_frame(CanFrame('010', x))))
         for x in can_samples.msg.tolist()]
 
     fig = tools.make_subplots(rows=6, cols=1)
@@ -194,8 +207,8 @@ def get_plots_speed():
     smoothing_window = 10
 
     can_channels = {
-        'TPS (%)': get_and_transform_can_data(session_id, 128, tps_converter),
-        'Brake Pressure (kPa)': get_and_transform_can_data(session_id, 531, brake_pressure_converter),
+        'TPS (%)': get_and_transform_can_data(session_id, 128, focus_rs_rpm_converter),
+        'Brake Pressure (kPa)': get_and_transform_can_data(session_id, 531, focus_rs_brake_pressure_converter),
     }
     gps_data = pd.read_sql_query("select timestamp, speed, track, lat, lon FROM %s where session_id='%s'" % ("gps_data", session_id), app.db, index_col='timestamp')
 
@@ -246,6 +259,7 @@ where session_id = '%s'
 
         result = '\n'.join(results)
         return Response(result, mimetype='text/csv')
+
 
 @app.route('/plot/bokeh_test/<session_id>')
 def get_plots_bokeh_test(session_id):
