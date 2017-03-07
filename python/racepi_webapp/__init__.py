@@ -50,7 +50,7 @@ def get_and_transform_can_data(session_id, arbitration_id, value_converter):
 def get_sql_data(table, filter):
     with app.db.connect() as c:
         q = c.execute("select * FROM %s where %s " % (table, filter))
-        return jsonify(result=q.cursor.fetchall())
+        return jsonify(result=q.cursor.fetchall(), columns=q.keys())
 
 
 def get_data(table):
@@ -68,9 +68,9 @@ def get_sessions():
     return get_sql_data("session_info", "1=1")
 
 
-@app.route('/data/gps')
+@app.route('/data/gps/')
 def get_gps_data():
-    return get_data("gps_data")
+    return get_data('gps_data')
 
 
 @app.route('/data/imu')
