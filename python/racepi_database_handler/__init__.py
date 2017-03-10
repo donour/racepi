@@ -14,4 +14,4 @@
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 from .objects import *
-
+from .processed_data_objects import *

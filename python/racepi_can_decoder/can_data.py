@@ -1,5 +1,4 @@
-#!/usr/bin/env python2
-# Copyright 2016 Donour Sizemore
+# Copyright 2016-7 Donour Sizemore
 #
 # This file is part of RacePi
 #

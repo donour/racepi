@@ -25,18 +25,8 @@ from bokeh.palettes import Blues4, Reds4
 from bokeh.plotting import figure
 from scipy.signal import savgol_filter
 
-from racepi_can_decoder import can_data
-
-# Focus RS Mk3 CAN converters
-tps_converter = can_data.CanFrameValueExtractor(6, 10, a=0.1)
-steering_angle_converter = can_data.CanFrameValueExtractor(49, 15, a=9.587e-5)
-steering_direction_converter = can_data.CanFrameValueExtractor(32, 1)
-rpm_converter = can_data.CanFrameValueExtractor(36, 12, a=2.0)
-brake_pressure_converter = can_data.CanFrameValueExtractor(24, 16, a=1e-3)
-wheelspeed1_converter = can_data.CanFrameValueExtractor(1, 15, a=1/307.0)
-wheelspeed2_converter = can_data.CanFrameValueExtractor(17, 15, a=1/307.0)
-wheelspeed3_converter = can_data.CanFrameValueExtractor(33, 15, a=1/307.0)
-wheelspeed4_converter = can_data.CanFrameValueExtractor(49, 15, a=1/307.0)
+from racepi_can_decoder import *
+from racepi_sensor_handler.data_utilities import TimeToDistanceConverter
 
 RACEPI_MAP_SIZE = 600
 
@@ -67,12 +57,13 @@ class RacePiDBSession:
             "select timestamp, x_accel, y_accel, z_accel FROM %s where session_id='%s'" %
             ("imu_data", session_id), self.db, index_col='timestamp')
 
-    def get_and_transform_can_data(self, session_id, arbitration_id, value_converter):
-        data = pd.read_sql_query(
-            "select timestamp, msg FROM %s where session_id='%s' and arbitration_id=%s" %
-            ("can_data", session_id, arbitration_id), self.db, index_col='timestamp')
-        data['result'] = \
-            [value_converter.convert_frame(can_data.CanFrame('999', x)) for x in data.msg.tolist()]
+    def get_and_transform_can_data(self, session_id, arbitration_id, value_converter, time_distance_converter):
+        query = "select timestamp, msg FROM %s where session_id='%s' and arbitration_id=%s" % \
+            ("can_data", session_id, arbitration_id)
+        data = pd.read_sql_query(query, self.db, index_col='timestamp')
+
+        data['result'] = [value_converter.convert_frame(CanFrame('999', x)) for x in data.msg.tolist()]
+        data['distance'] = time_distance_converter.generate_distance_trace(data.index)
         return data
 
 
@@ -82,15 +73,16 @@ class RunView:
         self.session_selector = None
         self.stats = PreText(text='Run Stats', width=500, height=150)
         self.details = PreText(text='Run Details', width=300, height=100)
-        self.speed_source = ColumnDataSource(data=dict(timestamp=[], speed=[], lat=[], lon=[]))
-        self.accel_source = ColumnDataSource(data=dict(timestamp=[], x_accel=[], y_accel=[]))
-        self.tps_source = ColumnDataSource(data=dict(timestamp=[], result=[]))
-        self.bps_source = ColumnDataSource(data=dict(timestamp=[], result=[]))
-        self.rpm_source = ColumnDataSource(data=dict(timestamp=[], result=[]))
-        self.wheelspeed1_source = ColumnDataSource(data=dict(timestamp=[], result=[]))
-        self.wheelspeed2_source = ColumnDataSource(data=dict(timestamp=[], result=[]))
-        self.wheelspeed3_source = ColumnDataSource(data=dict(timestamp=[], result=[]))
-        self.wheelspeed4_source = ColumnDataSource(data=dict(timestamp=[], result=[]))
+        self.speed_source = ColumnDataSource(data=dict(timestamp=[], distance=[], speed=[], lat=[], lon=[]))
+        self.accel_source = ColumnDataSource(data=dict(timestamp=[], distance=[], x_accel=[], y_accel=[]))
+        self.tps_source = ColumnDataSource(data=dict(timestamp=[], distance=[], result=[]))
+        self.bps_source = ColumnDataSource(data=dict(timestamp=[], distance=[], result=[]))
+        self.rpm_source = ColumnDataSource(data=dict(timestamp=[], distance=[], result=[]))
+        self.wheelspeed1_source = ColumnDataSource(data=dict(timestamp=[], distance=[], result=[]))
+        self.wheelspeed2_source = ColumnDataSource(data=dict(timestamp=[], distance=[], result=[]))
+        self.wheelspeed3_source = ColumnDataSource(data=dict(timestamp=[], distance=[], result=[]))
+        self.wheelspeed4_source = ColumnDataSource(data=dict(timestamp=[], distance=[], result=[]))
+
 
 class RacePiAnalysis:
 
@@ -108,16 +100,19 @@ class RacePiAnalysis:
         session_id = session_info[0]
         gps_data = self.db.get_gps_data(session_id)
         imu_data = self.db.get_imu_data(session_id)
+        tdc = TimeToDistanceConverter(list(zip(gps_data.index, gps_data['speed'])))
+        gps_data['distance'] = tdc.generate_distance_trace(gps_data.index)
+        imu_data['distance'] = tdc.generate_distance_trace(imu_data.index)
 
         try:
             can_channels = {
-                 'tps': self.db.get_and_transform_can_data(session_id, 128, tps_converter),
-                 'b_pres': self.db.get_and_transform_can_data(session_id, 531, brake_pressure_converter),
-                 'rpm': self.db.get_and_transform_can_data(session_id, 144, rpm_converter),
-                 'wheelspeed1': self.db.get_and_transform_can_data(session_id, 400, wheelspeed1_converter),
-                 'wheelspeed2': self.db.get_and_transform_can_data(session_id, 400, wheelspeed2_converter),
-                 'wheelspeed3': self.db.get_and_transform_can_data(session_id, 400, wheelspeed3_converter),
-                 'wheelspeed4': self.db.get_and_transform_can_data(session_id, 400, wheelspeed4_converter)
+                 'tps': self.db.get_and_transform_can_data(session_id, 128, focus_rs_tps_converter, tdc),
+                  'b_pres': self.db.get_and_transform_can_data(session_id, 531, focus_rs_brake_pressure_converter, tdc),
+                  'rpm': self.db.get_and_transform_can_data(session_id, 144, focus_rs_rpm_converter, tdc),
+                  'wheelspeed1': self.db.get_and_transform_can_data(session_id, 400, focus_rs_wheelspeed1_converter, tdc),
+                  'wheelspeed2': self.db.get_and_transform_can_data(session_id, 400, focus_rs_wheelspeed2_converter, tdc),
+                  'wheelspeed3': self.db.get_and_transform_can_data(session_id, 400, focus_rs_wheelspeed3_converter, tdc),
+                  'wheelspeed4': self.db.get_and_transform_can_data(session_id, 400, focus_rs_wheelspeed4_converter, tdc)
             }
         except ValueError as e:
             print("Error loading can channels: " + str(e))
@@ -132,11 +127,6 @@ class RacePiAnalysis:
 
         for k in imu_data:
             imu_data[k] = savgol_filter(imu_data[k], 31, 3)
-
-        v.speed_source.data = ColumnDataSource(gps_data).data
-        v.accel_source.data = ColumnDataSource(imu_data).data
-        if 'tps' in can_channels:
-            v.tps_source.data = ColumnDataSource(can_channels['tps']).data
         if 'rpm' in can_channels:
             v.rpm_source.data = ColumnDataSource(can_channels['rpm']).data
         if 'b_pres' in can_channels:
@@ -149,6 +139,10 @@ class RacePiAnalysis:
             v.wheelspeed3_source.data = ColumnDataSource(can_channels['wheelspeed3']).data
         if 'wheelspeed4' in can_channels:
             v.wheelspeed4_source.data = ColumnDataSource(can_channels['wheelspeed4']).data
+        v.speed_source.data = ColumnDataSource(gps_data).data
+        v.accel_source.data = ColumnDataSource(imu_data).data
+        if 'tps' in can_channels:
+            v.tps_source.data = ColumnDataSource(can_channels['tps']).data
 
         v.stats.text = str(gps_data.describe())
         v.details.text = "duration:%.0f\nVmax:%.0f\nsamples:%d" % session_info[2:5]
@@ -165,34 +159,34 @@ class RacePiAnalysis:
 
         TOOLS=['pan, box_zoom, reset']
         s1 = figure(width=900, plot_height=200, title="Speed (m/s)", tools=TOOLS)
-        s1.line('timestamp', 'speed', source=pv.speed_source, color=Blues4[0])
-        s1.line('timestamp', 'speed', source=cv.speed_source, color=Reds4[0])
+        s1.line('distance', 'speed', source=pv.speed_source, color=Blues4[0])
+        s1.line('distance', 'speed', source=cv.speed_source, color=Reds4[0])
         x_accel_fig = figure(width=900, plot_height=200, title="X Accel (g)", tools=TOOLS, x_range=s1.x_range, y_range=[-2, 2])
-        x_accel_fig.line('timestamp', 'x_accel', source=pv.accel_source, color=Blues4[0])
-        x_accel_fig.line('timestamp', 'x_accel', source=cv.accel_source, color=Reds4[0])
+        x_accel_fig.line('distance', 'x_accel', source=pv.accel_source, color=Blues4[0])
+        x_accel_fig.line('distance', 'x_accel', source=cv.accel_source, color=Reds4[0])
         y_accel_fig = figure(width=900, plot_height=200, title="Y Accel (g)", tools=TOOLS, x_range=s1.x_range, y_range=[-1.25, 1.25])
-        y_accel_fig.line('timestamp', 'y_accel', source=pv.accel_source, color=Blues4[0])
-        y_accel_fig.line('timestamp', 'y_accel', source=cv.accel_source, color=Reds4[0])
+        y_accel_fig.line('distance', 'y_accel', source=pv.accel_source, color=Blues4[0])
+        y_accel_fig.line('distance', 'y_accel', source=cv.accel_source, color=Reds4[0])
         s3 = figure(width=900, plot_height=200, title="Input", tools=TOOLS, x_range=s1.x_range)
-        s3.line('timestamp', 'result', source=pv.bps_source, legend="PBrake", color=Blues4[0])
-        s3.line('timestamp', 'result', source=cv.bps_source, legend="CBrake", color=Reds4[0])
+        s3.line('distance', 'result', source=pv.bps_source, legend="PBrake", color=Blues4[0])
+        s3.line('distance', 'result', source=cv.bps_source, legend="CBrake", color=Reds4[0])
         s3.extra_y_ranges = {"TPS": Range1d(start=0, end=100)}
         s3.add_layout(LinearAxis(y_range_name="TPS"), 'right')
-        s3.line('timestamp', 'result', source=pv.tps_source, y_range_name="TPS", legend="PTPS", color=Blues4[1])
-        s3.line('timestamp', 'result', source=cv.tps_source, y_range_name="TPS", legend="CTPS", color=Reds4[1])
+        s3.line('distance', 'result', source=pv.tps_source, y_range_name="TPS", legend="PTPS", color=Blues4[1])
+        s3.line('distance', 'result', source=cv.tps_source, y_range_name="TPS", legend="CTPS", color=Reds4[1])
         s4 = figure(width=900, plot_height=200, title="RPM", tools=TOOLS, x_range=s1.x_range)
-        s4.line('timestamp', 'result', source=pv.rpm_source, color=Blues4[0])
-        s4.line('timestamp', 'result', source=cv.rpm_source, color=Reds4[0])
+        s4.line('distance', 'result', source=pv.rpm_source, color=Blues4[0])
+        s4.line('distance', 'result', source=cv.rpm_source, color=Reds4[0])
 
         wheelspeed_fig = figure(width=900, plot_height=200, title="Wheelspeeds", tools=TOOLS, x_range=s1.x_range)
-        wheelspeed_fig.line('timestamp', 'result', source=pv.wheelspeed1_source, legend="P1", color=Blues4[0])
-        wheelspeed_fig.line('timestamp', 'result', source=cv.wheelspeed1_source, legend="C1", color=Reds4[0])
-        wheelspeed_fig.line('timestamp', 'result', source=pv.wheelspeed2_source, legend="P2", color=Blues4[1])
-        wheelspeed_fig.line('timestamp', 'result', source=cv.wheelspeed2_source, legend="C2", color=Reds4[1])
-        wheelspeed_fig.line('timestamp', 'result', source=pv.wheelspeed3_source, legend="P3", color=Blues4[1])
-        wheelspeed_fig.line('timestamp', 'result', source=cv.wheelspeed3_source, legend="C3", color=Reds4[1])
-        wheelspeed_fig.line('timestamp', 'result', source=pv.wheelspeed4_source, legend="P4", color=Blues4[1])
-        wheelspeed_fig.line('timestamp', 'result', source=cv.wheelspeed4_source, legend="C4", color=Reds4[1])
+        wheelspeed_fig.line('distance', 'result', source=pv.wheelspeed1_source, legend="P1", color=Blues4[0])
+        wheelspeed_fig.line('distance', 'result', source=cv.wheelspeed1_source, legend="C1", color=Reds4[0])
+        wheelspeed_fig.line('distance', 'result', source=pv.wheelspeed2_source, legend="P2", color=Blues4[1])
+        wheelspeed_fig.line('distance', 'result', source=cv.wheelspeed2_source, legend="C2", color=Reds4[1])
+        wheelspeed_fig.line('distance', 'result', source=pv.wheelspeed3_source, legend="P3", color=Blues4[1])
+        wheelspeed_fig.line('distance', 'result', source=cv.wheelspeed3_source, legend="C3", color=Reds4[1])
+        wheelspeed_fig.line('distance', 'result', source=pv.wheelspeed4_source, legend="P4", color=Blues4[1])
+        wheelspeed_fig.line('distance', 'result', source=cv.wheelspeed4_source, legend="C4", color=Reds4[1])
 
         # TODO scale distances to appear as more reasonable projections
         # 1.2 is a hack to work around 35 deg latitude

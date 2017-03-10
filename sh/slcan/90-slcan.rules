@@ -15,9 +15,9 @@
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
 # Rules for Can Devices UCCB
-ACTION=="add", ENV{ID_MODEL}=="CAN_USB_ConverterBasic", ENV{SUBSYSTEM}=="tty", RUN+="/usr/bin/logger [udev] Loading CANUSB device (UCCB)", RUN+="/usr/local/bin/slcan_load.sh $kernel"
-ACTION=="remove", ENV{ID_MODEL}=="CAN_USB_ConverterBasic", ENV{SUBSYSTEM}=="usb", RUN+="/usr/bin/logger [udev] Unloading CANUSB device (UCCB)", RUN+="/usr/local/bin/slcan_unload.sh"
+ACTION=="add", ENV{ID_MODEL}=="CAN_USB_ConverterBasic", ENV{SUBSYSTEM}=="tty", RUN+="/usr/bin/logger [udev] Loading CANUSB device (UCCB: $kernel)", TAG+="systemd", ENV{SYSTEMD_WANTS}="slcand@$kernel"
+ACTION=="remove", ENV{ID_MODEL}=="CAN_USB_ConverterBasic",ENV{SUBSYSTEM}=="usb", RUN+="/usr/bin/logger [udev] Unloading CANUSB device (UCCB: $kernel)", RUN+="/bin/systemctl stop slcand@$kernel"
 
 # CANable adapter
-ACTION=="add", ENV{ID_MODEL}=="CANtact_dev", ENV{SUBSYSTEM}=="tty", RUN+="/usr/bin/logger [udev] Loading CANUSB device (CANtact)", RUN+="/usr/local/bin/slcan_load.sh $kernel"
-ACTION=="remove", ENV{ID_MODEL}=="CANtact_dev", ENV{SUBSYSTEM}=="usb", RUN+="/usr/bin/logger [udev] Unloading CANUSB device (CANtact)", RUN+="/usr/local/bin/slcan_unload.sh"
+ACTION=="add", ENV{ID_MODEL}=="CANtact_dev", ENV{SUBSYSTEM}=="tty", RUN+="/usr/bin/logger [udev] Loading CANUSB device (CANtact: $kernel)", TAG+="systemd", ENV{SYSTEMD_WANTS}="slcand@$kernel" RUN+="/sbin/ifconfig slcan0 up"
+ACTION=="remove", ENV{ID_MODEL}=="CANtact_dev", ENV{SUBSYSTEM}=="usb", RUN+="/usr/bin/logger [udev] Unloading CANUSB device (CANtact: $kernel)", RUN+="/bin/systemctl stop slcand@$kernel"

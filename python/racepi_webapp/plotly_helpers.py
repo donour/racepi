@@ -1,4 +1,4 @@
-# Copyright 2016 Donour Sizemore
+# Copyright 2016-7 Donour Sizemore
 #
 # This file is part of RacePi
 #
@@ -15,12 +15,11 @@
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
 from plotly import graph_objs as pgo
-from plotly import tools
 
 import pandas as pd
 
 
-def sfl(float_list, ndigits = 3):
+def sfl(float_list, ndigits=3):
     """
     Shorten a list of float by rounding to a small number of
     decimals. This significantly speeds up loading large datasets

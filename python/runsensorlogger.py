@@ -17,12 +17,13 @@
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
 from racepi_sensor_recorder import DbHandler, SensorLogger
-from racepi_sensor_handler import GpsSensorHandler, RpiImuSensorHandler, STN11XXCanSensorHandler, GPS_REQUIRED_FIELDS
+from racepi_sensor_handler import GpsSensorHandler, RpiImuSensorHandler, GPS_REQUIRED_FIELDS, \
+    STN11XXCanSensorHandler, SocketCanSensorHandler
 
 # TODO: move the DB filename to a config file in /etc
 DEFAULT_SQLITE_FILE = '/external/racepi_data/test.db'
 # TODO: make recorded can ids configurable
-FORD_FOCUS_RS_CAN_IDS = ["010", "070", "080", "090", "190", "213", "420"]
+FORD_FOCUS_RS_CAN_IDS = [0x010, 0x070, 0x080, 0x090, 0x190, 0x213, 0x420]
 ENDCOLOR  = '\033[0m'
 UNDERLINE = '\033[4m'
 
@@ -40,7 +41,8 @@ if __name__ == "__main__":
     handlers = {
         'gps': GpsSensorHandler(),
         'imu': RpiImuSensorHandler(),
-        'can': STN11XXCanSensorHandler(FORD_FOCUS_RS_CAN_IDS)
+        'can': SocketCanSensorHandler(can_filters=FORD_FOCUS_RS_CAN_IDS)
+        # 'can': STN11XXCanSensorHandler(FORD_FOCUS_RS_CAN_IDS)
     }
 
     print("Opening Database: %s" % dbfile)

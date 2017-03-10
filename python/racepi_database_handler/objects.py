@@ -75,5 +75,5 @@ class CANData(Base):
     timestamp = Column(REAL, primary_key=True, nullable=False)
     arbitration_id = Column(Integer, nullable=False)  # base (11bit) or extended (29bit)
     rtr = Column(Integer, nullable=False)  # 0 for data frames, 1 for data requests
-    msg = Column(TEXT, nullable = False)  # data payload, string of 8 hexidecimal bytes
+    msg = Column(TEXT, nullable=False)  # data payload, string of 8 hexidecimal bytes
 

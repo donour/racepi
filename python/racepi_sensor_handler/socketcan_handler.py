@@ -18,6 +18,7 @@
 import socket
 import time
 import struct
+import sys
 
 from .sensor_handler import SensorHandler
 
@@ -33,23 +34,34 @@ CAN_MESSAGE_FMT = "<IB3x8B"
 class SocketCanSensorHandler(SensorHandler):
 
     def __init__(self, device_name=DEFAULT_CAN_DEVICE, can_filters=[]):
+        """
+        :param device_name: name of socketcan device (e.g. slcan0)
+        :param can_filters: list of allowed arbitration IDs, as integer
+        """
         SensorHandler.__init__(self, self.__record_from_can)
         self.dev_name = device_name
         self.cansocket = socket.socket(socket.PF_CAN, socket.SOCK_RAW, socket.CAN_RAW)
         self._set_can_id_filters(can_filters)
-        self.cansocket.bind((self.dev_name,))
+        try:
+            self.cansocket.bind((self.dev_name,))
+        except OSError as e:
+            print(str(e) + ":" + self.dev_name, file=sys.stderr)
+            self.cansocket = None
 
     def _set_can_id_filters(self, can_filters):
         """
         Set RX filters to receive only specified IDs
 
-        :param can_filters: list of arbritration IDs to receive
+        :param can_filters: list of arbitration IDs to receive
         """
+        filter_fmt = "={}I".format(2 * len(can_filters))
+        filter_data = []
         for f in can_filters:
-            self.cansocket.setsockopt(socket.SOL_CAN_RAW,
-                                      socket.CAN_RAW_FILTER,
-                                      struct.pack("II", f, 0xFFF))
+            filter_data.append(f)
+            filter_data.append(0xFFF)
             print("setting filter: %s" % str(f))
+        self.cansocket.setsockopt(socket.SOL_CAN_RAW, socket.CAN_RAW_FILTER,
+                                  struct.pack(filter_fmt, *filter_data))
 
     def __record_from_can(self):
 
@@ -59,15 +71,21 @@ class SocketCanSensorHandler(SensorHandler):
         message_size = struct.calcsize(CAN_MESSAGE_FMT)
 
         print("Starting Socket-CAN reader")
-        while not self.doneEvent.is_set():
+        while not self.doneEvent.is_set() and self.cansocket:
             data = self.cansocket.recv(message_size)
             now = time.time()
             if data:
-                data = struct.unpack(CAN_MESSAGE_FMT, data)
-                # TODO, standardize the message here so multiple
-                # can handlers can deliver the data to the sensor
-                # logger
-                self.pipe_out.send((now, data))
 
-        print("Shutting down CAN reader")
+                # this unpacking is not strictly necessary, but is a nice
+                # convention and adopted by most socketcan handlers
+                data = struct.unpack(CAN_MESSAGE_FMT, data)
+
+                # check for empty data
+                if data and len(data) > 1:
+                    # pack the message back into a string
+                    result = "%03x" % data[0] + \
+                             "".join([("%02x" % v) for v in data[2:]])
+                    self.pipe_out.send((now, result))
+
+        print("Shutting down SocketCAN reader")
 

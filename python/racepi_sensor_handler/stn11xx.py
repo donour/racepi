@@ -80,6 +80,10 @@ class STNHandler:
         Reset CAN monitors to only allow data from the list
         of CAN IDs specified in ids
         """
+
+        # TODO: these can_ids will need to be converted to strings
+        # to work; passing in ints will fail
+
         self.__run_config_cmd("stfcp")
         self.__run_config_cmd("stfcb")
         self.__run_config_cmd("stfab FFF,FFF")
