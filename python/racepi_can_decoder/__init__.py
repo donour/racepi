@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
-from can_data import CanFrameValueExtractor, CanFrame
+from .can_data import CanFrameValueExtractor, CanFrame
 
 # Focus RS Mk3 CAN converters
 focus_rs_steering_angle_converter     = CanFrameValueExtractor(49, 15, a=9.587e-5)

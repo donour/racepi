@@ -19,8 +19,9 @@ from flask import Flask, jsonify, request, Response, abort
 from plotly import graph_objs as pgo
 from plotly import tools
 import pandas as pd
-from can_data import CanFrame, CanFrameValueExtractor
 from racepi_can_decoder import *
+from racepi_database_handler import *
+from sqlalchemy.orm import sessionmaker
 
 app = Flask(__name__)
 try:
@@ -33,18 +34,27 @@ except ImportError:
 # TODO: sanitize all sql statements by remove ; character
 
 
+def get_orm_session():
+    Base.metadata.bind = app.db
+    sm = sessionmaker()
+    sm.bind = app.db
+    return sm()
+
+
 def get_and_transform_can_data(session_id, arbitration_id, value_converter):
-    data = pd.read_sql_query(
-        "select timestamp, msg FROM %s where session_id='%s' and arbitration_id=%s order by timestamp" %
-        ("can_data", session_id, arbitration_id), app.db)
-    data['result'] = \
-        [value_converter.convert_frame(CanFrame('999', x)) for x in data.msg.tolist()]
+    s = get_orm_session()
+
+    data = [{'timestamp': x.timestamp,
+            'value': value_converter.convert_frame(CanFrame("999", x.msg))}
+            for x in
+            s.query(CANData).filter(CANData.session_id == session_id).filter(CANData.arbitration_id == arbitration_id)
+            ]
     return data
 
 
-def get_sql_data(table, filter):
+def get_sql_data(table, query_filter):
     with app.db.connect() as c:
-        q = c.execute("select * FROM %s where %s " % (table, filter))
+        q = c.execute("select * FROM %s where %s " % (table, query_filter))
         return jsonify(result=q.cursor.fetchall(), columns=q.keys())
 
 
@@ -75,7 +85,7 @@ def get_imu_data():
 
 @app.route('/data/can/<channel>/<session_id>')
 def get_can_data(channel, session_id):
-    print(channel)
+
     data = None
     if channel == "tps":
         data = get_and_transform_can_data(session_id, 128, focus_rs_tps_converter)
@@ -85,8 +95,9 @@ def get_can_data(channel, session_id):
         data = get_and_transform_can_data(session_id, 531, focus_rs_brake_pressure_converter)
 
     if data is not None:
-        data.drop('msg', axis=1, inplace=True)
-        return data.to_json()
+        return jsonify(data=data, channel=channel, session_id=session_id)
+        #data.drop('msg', axis=1, inplace=True)
+        #return data.to_json()
     else:
         abort(404)
 
