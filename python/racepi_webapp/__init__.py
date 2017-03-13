@@ -13,6 +13,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
+from functools import lru_cache
 
 from .plotly_helpers import get_scatterplot
 from flask import Flask, jsonify, request, Response, abort
@@ -52,6 +53,62 @@ def get_and_transform_can_data(session_id, arbitration_id, value_converter):
     return data
 
 
+@app.route('/data/sessions')
+def get_sessions():
+    return get_sql_data("session_info", "1=1")
+
+
+@app.route('/data/gps/<session_id>')
+@lru_cache(maxsize=32)
+def get_gps_data(session_id):
+    s = get_orm_session()
+    results = [{
+                'timestamp': x.timestamp,
+                'speed': x.speed,
+                'lat': x.lat,
+                'lon': x.lon,
+                }
+                for x in
+                s.query(GPSData).filter(GPSData.session_id == session_id).all()]
+    return jsonify(data=results, session_id=session_id)
+
+
+@app.route('/data/imu/<session_id>')
+@lru_cache(maxsize=32)
+def get_imu_data(session_id):
+    s = get_orm_session()
+    results = [{
+                'timestamp': x.timestamp,
+                'x_accel': x.x_accel,
+                'y_accel': x.y_accel,
+                'z_accel': x.z_accel
+                }
+                for x in
+                s.query(IMUData).filter(IMUData.session_id == session_id).all()]
+    return jsonify(data=results, session_id=session_id)
+
+
+@app.route('/data/can/<channel>/<session_id>')
+@lru_cache(maxsize=32)
+def get_can_data(channel, session_id):
+
+    data = None
+    if channel == "tps":
+        data = get_and_transform_can_data(session_id, 128, focus_rs_tps_converter)
+    elif channel == "rpm":
+        data = get_and_transform_can_data(session_id, 144, focus_rs_rpm_converter)
+    elif channel == "brake":
+        data = get_and_transform_can_data(session_id, 531, focus_rs_brake_pressure_converter)
+    elif channel == "steering":
+        data = get_and_transform_can_data(session_id, 16, focus_rs_steering_angle_converter)
+    if data is not None:
+        return jsonify(data=data, channel=channel, session_id=session_id)
+    else:
+        abort(404)
+
+
+###################################
+
 def get_sql_data(table, query_filter):
     with app.db.connect() as c:
         q = c.execute("select * FROM %s where %s " % (table, query_filter))
@@ -66,40 +123,6 @@ def get_data(table):
 @app.route('/')
 def hello_world():
     return app.send_static_file('index.html')
-
-
-@app.route('/data/sessions')
-def get_sessions():
-    return get_sql_data("session_info", "1=1")
-
-
-@app.route('/data/gps/')
-def get_gps_data():
-    return get_data('gps_data')
-
-
-@app.route('/data/imu')
-def get_imu_data():
-    return get_data("imu_data")
-
-
-@app.route('/data/can/<channel>/<session_id>')
-def get_can_data(channel, session_id):
-
-    data = None
-    if channel == "tps":
-        data = get_and_transform_can_data(session_id, 128, focus_rs_tps_converter)
-    elif channel == "rpm":
-        data = get_and_transform_can_data(session_id, 144, focus_rs_rpm_converter)
-    elif channel == "brake":
-        data = get_and_transform_can_data(session_id, 531, focus_rs_brake_pressure_converter)
-
-    if data is not None:
-        return jsonify(data=data, channel=channel, session_id=session_id)
-        #data.drop('msg', axis=1, inplace=True)
-        #return data.to_json()
-    else:
-        abort(404)
 
 
 @app.route('/data/stats/<session_id>')
