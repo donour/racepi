@@ -18,8 +18,6 @@
 
 from sqlalchemy import Column, ForeignKey, Integer, String, Binary, BLOB, TEXT, DATETIME, REAL, VARCHAR
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
-from uuid import UUID
 
 Base = declarative_base()
 

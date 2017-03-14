@@ -32,11 +32,12 @@ ALLOWED_DELTA_SECONDS = 60*10
 s = gps.gps(mode=gps.WATCH_ENABLE)
 
 data = s.next()
+
 while data is None or 'time' not in data.keys():
     data = s.next()
 
 t = data["time"]
-st = datetime.datetime.now()   
+st = datetime.datetime.now()
 now = datetime.datetime.strptime(t, "%Y-%m-%dT%H:%M:%S.%fZ")
 delta = abs((st-now).seconds)
 if delta > ALLOWED_DELTA_SECONDS:
