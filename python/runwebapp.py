@@ -20,6 +20,7 @@ from sqlalchemy import create_engine
 from racepi_webapp import app
 
 DEFAULT_SQLITE_FILE = '/external/racepi_data/test.db'
+#DEFAULT_SQLITE_FILE = '/home/donour/houston.db'
 
 if __name__ == "__main__":   
     import sys, logo  # display logo

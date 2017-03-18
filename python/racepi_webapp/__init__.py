@@ -13,6 +13,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
+
 from functools import lru_cache
 
 from .plotly_helpers import get_scatterplot
@@ -131,6 +132,7 @@ def get_stats_session(session_id):
 
 
 @app.route('/plot/accel')
+@lru_cache(maxsize=32)
 def get_plot_timeseries():
     session_id = request.args.get("session_id")
     # TODO fail on bad session_id
@@ -162,6 +164,7 @@ def get_plot_timeseries():
 
 
 @app.route('/plot/gps')
+@lru_cache(maxsize=32)
 def get_gpsplot_timeseries():
     session_id = request.args.get("session_id")
     # TODO fail on bad session_id
@@ -201,6 +204,7 @@ def get_gpsplot_timeseries():
 
 
 @app.route('/plot/run')
+@lru_cache(maxsize=32)
 def get_singlerun_timeseries():
     session_id = request.args.get("session_id")
     if 'smooth' in request.args:
@@ -236,6 +240,7 @@ def get_singlerun_timeseries():
 
 
 @app.route('/plot/speed')
+@lru_cache(maxsize=32)
 def get_plots_speed():
     session_id = request.args.get("session_id")
     smoothing_window = 10
@@ -260,7 +265,7 @@ def get_run_csv():
     get_csv_cmd="""
 select * from
 (select
-    session_id,timestamp,'GPS' as type,time,speed,track,lat,lon,epx,epy,epv,
+    session_id,timestamp,'GPS' as type,time,speed,track,lat,lon,epx,epy,epv
     NULL as arbitration_id,NULL as msg,
     NULL AS r,NULL AS p,NULL AS y,NULL AS x_accel,NULL AS y_accel,NULL AS z_accel,NULL AS x_gyro,NULL AS y_gyro,NULL AS z_gyro
     from gps_data
