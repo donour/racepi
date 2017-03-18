@@ -26,6 +26,7 @@ import time
 from enum import Enum
 from collections import defaultdict
 
+from racepi_racecapture_writer.writers import RaceCaptureFeedWriter
 from .pi_sense_hat_display import RacePiStatusDisplay, SenseHat
 from .data_buffer import DataBuffer
 
@@ -79,6 +80,7 @@ class SensorLogger:
             self.db_handler = None
 
         self.session_id = None
+        self.rc_writer = RaceCaptureFeedWriter(None)
         self.state = LoggerState.initialized
 
     @staticmethod
@@ -142,6 +144,11 @@ class SensorLogger:
             [SensorLogger.safe_speed_to_float(s[1].get('speed')) > MOVEMENT_THRESHOLD_M_PER_S
              for s in data['gps']]
 
+    def write_data_rc_feed(self, data):
+        if 'gps' in data:
+            for s in data.get('gps'):
+                self.rc_writer.send_gps_speed(SensorLogger.safe_speed_to_float(s.get('speed')))
+
     def process_new_data(self, data):
         """
         Process dictionary of new data, change recording state if necessary
@@ -151,6 +158,9 @@ class SensorLogger:
         """
         if not data:
             return  # no-op
+
+        # send all data to RaceCapture recorder if available
+        self.write_data_rc_feed(data)
 
         # if necessary, transition state
         if self.state == LoggerState.ready:
