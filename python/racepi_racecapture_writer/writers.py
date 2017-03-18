@@ -31,13 +31,13 @@ class RaceCaptureFeedWriter:
 
     def send_timestamp(self, timestamp_seconds):
         time_delta = timestamp_seconds - self.__earliest_time_seen
-        msg = get_timestamp_message_bytes(time_delta)
+        msg = get_timestamp_message_bytes(time_delta * 1000.0)
         self.__send_mesg(msg)
 
     def send_gps_speed(self, speed):
-        msg = get_gps_speed_message_bytes(speed*100)
+        msg = get_gps_speed_message_bytes(speed*100.0)
         self.__send_mesg(msg)
 
     def send_gps_pos(self, lat, lon):
-        msg = get_gps_pos_message_bytes(lat * 1e7, lon * 1e7)
+        msg = get_gps_pos_message_bytes(lat * float(1e7), lon * float(1e7))
         self.__send_mesg(msg)
