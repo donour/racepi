@@ -21,7 +21,7 @@ TIMESTAMP_MESSAGE_ID = 9
 GPS_POS_MESSAGE_ID = 10
 GPS_SPEED_MESSAGE_ID = 11
 
-TIMESTAMP_FMT = ">BI"    # header, time
+TIMESTAMP_FMT = ">4B"    # header, time
 GPS_POS_FMT = "!BiiI"   # header, latitude, longitude, accuracy
 GPS_SPEED_FMT = "!BII"  # header, speed, accuracy
 
@@ -39,7 +39,11 @@ def get_timestamp_message_bytes(time_millis):
     :return:
     """
     # careful here, python3 ints are 64 bits wide when they need to be
-    return struct.pack(TIMESTAMP_FMT, TIMESTAMP_MESSAGE_ID, int(time_millis))
+    t = int(time_millis)
+    t1 = (t>>16) & 0xFF
+    t2 = (t>> 8) & 0xFF
+    t3 = (t    ) & 0xFF
+    return struct.pack(TIMESTAMP_FMT, TIMESTAMP_MESSAGE_ID, t1, t2, t3)
 
 
 def get_gps_pos_message_bytes(gps_lat_xe7, gps_long_xe7):
