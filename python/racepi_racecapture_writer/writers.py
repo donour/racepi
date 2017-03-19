@@ -16,12 +16,20 @@
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
 import time
+import serial
 from .messages import *
+
+RC_BAUD_RATE = 230400
 
 
 class RaceCaptureFeedWriter:
 
     def __init__(self, output):
+        dev = "/dev/rfcomm1"
+        self.port = serial.Serial(dev, RC_BAUD_RATE)
+        if dev != self.port.getPort():
+            raise IOError("Could not open" + dev)
+
         self.output = output
         self.__test_file = open("/external/testfile", "wb")
         print("Writing RC testfile: /external/testfile")
@@ -30,12 +38,10 @@ class RaceCaptureFeedWriter:
     def __send_mesg(self, msg):
         # send message content
         self.__test_file.write(msg)
-        print(msg)
-        #self.output.write(msg)
+        self.port.write(msg)
         # send checksum
         self.__test_file.write(get_message_checksum(msg))
-        #print(get_message_checksum(msg))
-        #output.write(get_message_checksum(msg))
+        self.port.write(get_message_checksum(msg))
 
     def send_timestamp(self, timestamp_seconds):
         if not timestamp_seconds:
