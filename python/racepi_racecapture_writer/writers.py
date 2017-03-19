@@ -16,32 +16,54 @@
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
 import time
-import serial
-from .messages import *
+import socket
+from threading import Event, Thread
 
-RC_BAUD_RATE = 230400
+from .messages import *
 
 
 class RaceCaptureFeedWriter:
 
     def __init__(self, output):
-        dev = "/dev/rfcomm1"
-        self.port = serial.Serial(dev, RC_BAUD_RATE)
-        if dev != self.port.getPort():
-            raise IOError("Could not open" + dev)
+        self.__socket_listener_done = Event()
+        self.__active_connections = []
+
+        # open and bind RFCOMM listener
+        self.__socket_listener_thread = \
+            Thread(target=RaceCaptureFeedWriter.__bind_rfcomm_socket,
+                   args=(self.__socket_listener_done, self.__active_connections))
+        self.__socket_listener_thread.start();
 
         self.output = output
         self.__test_file = open("/external/testfile", "wb")
         print("Writing RC testfile: /external/testfile")
         self.__earliest_time_seen = time.time()
 
+    @staticmethod
+    def __bind_rfcomm_socket(done_event, clients):
+
+        mac = '0:0:0:0:0:0'
+        port = 1
+        backlog = 1
+        s = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
+        s.bind((mac, port))
+        s.listen(backlog)
+        while not done_event.is_set():
+            client, addr = s.accept()
+            print("Registering: %s" % str(addr))
+            clients.append(client)
+
+        for c in clients:
+            c.close()
+        s.close()
+
     def __send_mesg(self, msg):
+
+        # write to all open RFCOMM connections
         # send message content
         self.__test_file.write(msg)
-        self.port.write(msg)
         # send checksum
         self.__test_file.write(get_message_checksum(msg))
-        self.port.write(get_message_checksum(msg))
 
     def send_timestamp(self, timestamp_seconds):
         if not timestamp_seconds:
