@@ -43,7 +43,7 @@ class RaceCaptureMessageTests(TestCase):
 
     def test_gps_speed_message_length(self):
         msg = get_gps_speed_message_bytes(0)
-        self.assertEqual(len(msg), 10)
+        self.assertEqual(len(msg), 9)
 
     def test_gps_speed_message_contents(self):
         value = 0xDEADBEEF
@@ -56,7 +56,6 @@ class RaceCaptureMessageTests(TestCase):
         self.assertEqual(0, msg[6])
         self.assertEqual(0, msg[7])
         self.assertEqual(0, msg[8])
-        self.assertEqual(0, msg[9])
 
     def test_gps_pos_message_header(self):
         msg = get_gps_pos_message_bytes(0, 0)
@@ -64,7 +63,18 @@ class RaceCaptureMessageTests(TestCase):
 
     def test_gps_pos_message_length(self):
         msg = get_gps_pos_message_bytes(0, 0)
-        self.assertEqual(len(msg), 14)
+        self.assertEqual(len(msg), 13)
+
+    def test_get_message_checksum_zero(self):
+        self.assertEqual(0, get_message_checksum(b'\x00'))
+        self.assertEqual(0, get_message_checksum(b'\x00\x00'))
+        self.assertEqual(0, get_message_checksum(b''))
+
+    def test_get_message_checksum_single_byte(self):
+        self.assertEqual(0xab, get_message_checksum(b'\xab'))
+
+    def test_get_message_checksum_single_overflow(self):
+        self.assertEqual(0, get_message_checksum(b'\xff\x01'))
 
 
 if __name__ == "__main__":

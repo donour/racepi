@@ -22,8 +22,15 @@ GPS_POS_MESSAGE_ID = 0x10
 GPS_SPEED_MESSAGE_ID = 0x11
 
 TIMESTAMP_FMT = "!BI"    # header, time
-GPS_POS_FMT = "!BIIIB"   # header, latitude, longitude, accuracy, filler byte
-GPS_SPEED_FMT = "!BIIB"  # header, speed, accuracy, filler byte
+GPS_POS_FMT = "!BIII"   # header, latitude, longitude, accuracy
+GPS_SPEED_FMT = "!BII"  # header, speed, accuracy
+
+
+def get_message_checksum(msg):
+    cs = 0
+    for d in msg:
+        cs += d & 0xFF
+    return cs & 0xFF
 
 
 def get_timestamp_message_bytes(time_millis):
@@ -37,7 +44,7 @@ def get_gps_pos_message_bytes(gps_lat_xe7, gps_long_xe7):
     :param gps_long_xe7: longitude value, scale by 1e7
     :return:
     """
-    return struct.pack(GPS_POS_FMT, GPS_POS_MESSAGE_ID, int(gps_lat_xe7), int(gps_long_xe7), 0, 0)
+    return struct.pack(GPS_POS_FMT, GPS_POS_MESSAGE_ID, int(gps_lat_xe7), int(gps_long_xe7), 0)
 
 
 def get_gps_speed_message_bytes(gps_speed_x100):
@@ -45,4 +52,4 @@ def get_gps_speed_message_bytes(gps_speed_x100):
     :param gps_speed_x100: speed (m/s), scaled by 100
     :return:
     """
-    return struct.pack(GPS_SPEED_FMT, GPS_SPEED_MESSAGE_ID, int(gps_speed_x100), 0, 0)
+    return struct.pack(GPS_SPEED_FMT, GPS_SPEED_MESSAGE_ID, int(gps_speed_x100), 0)

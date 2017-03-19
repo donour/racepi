@@ -149,6 +149,7 @@ class SensorLogger:
             for s in data.get('gps'):
                 self.rc_writer.send_timestamp(s[0])
                 self.rc_writer.send_gps_speed(SensorLogger.safe_speed_to_float(s[1].get('speed')))
+                self.rc_writer.send_gps_pos(s[1].get('lat'), s[1].get('lon'))
 
     def process_new_data(self, data):
         """

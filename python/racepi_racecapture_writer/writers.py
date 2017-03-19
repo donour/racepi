@@ -26,18 +26,30 @@ class RaceCaptureFeedWriter:
         self.__earliest_time_seen = time.time()
 
     def __send_mesg(self, msg):
+        # send message content
         print(msg)
+        # send checksum
+        print(get_message_checksum(msg))
         #self.output.write(msg)
 
     def send_timestamp(self, timestamp_seconds):
+        if not timestamp_seconds:
+            return
+
         time_delta = timestamp_seconds - self.__earliest_time_seen
         msg = get_timestamp_message_bytes(time_delta * 1000.0)
         self.__send_mesg(msg)
 
     def send_gps_speed(self, speed):
+        if not speed:
+            return
+
         msg = get_gps_speed_message_bytes(speed*100.0)
         self.__send_mesg(msg)
 
     def send_gps_pos(self, lat, lon):
-        msg = get_gps_pos_message_bytes(lat * float(1e7), lon * float(1e7))
+        if not lat or not lon:
+            return
+
+        msg = get_gps_pos_message_bytes(float(lat) * float(1e7), float(lon) * float(1e7))
         self.__send_mesg(msg)
