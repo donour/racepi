@@ -65,6 +65,14 @@ class RaceCaptureMessageTests(TestCase):
         msg = get_gps_pos_message_bytes(0, 0)
         self.assertEqual(len(msg), 13)
 
+    def test_gps_pos_message_positive(self):
+        msg = get_gps_pos_message_bytes(89.9999, 179.999)
+        self.assertEqual(len(msg), 13)
+
+    def test_gps_pos_message_negative(self):
+        msg = get_gps_pos_message_bytes(-89.9999, -179.999)
+        self.assertEqual(len(msg), 13)
+
     def test_get_message_checksum_zero(self):
         self.assertEqual(0, get_message_checksum(b'\x00'))
         self.assertEqual(0, get_message_checksum(b'\x00\x00'))
