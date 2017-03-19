@@ -22,7 +22,7 @@ GPS_POS_MESSAGE_ID = 0x10
 GPS_SPEED_MESSAGE_ID = 0x11
 
 TIMESTAMP_FMT = "!BI"    # header, time
-GPS_POS_FMT = "!BIII"   # header, latitude, longitude, accuracy
+GPS_POS_FMT = "!BiiI"   # header, latitude, longitude, accuracy
 GPS_SPEED_FMT = "!BII"  # header, speed, accuracy
 
 

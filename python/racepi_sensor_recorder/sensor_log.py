@@ -147,11 +147,11 @@ class SensorLogger:
     def write_data_rc_feed(self, data):
         if 'gps' in data:
             for s in data.get('gps'):
-                self.rc_writer.send_timestamp(s[0])
-                self.rc_writer.send_gps_speed(SensorLogger.safe_speed_to_float(s[1].get('speed')))
+                #self.rc_writer.send_timestamp(s[0])
+                #self.rc_writer.send_gps_speed(SensorLogger.safe_speed_to_float(s[1].get('speed')))
                 lat = s[1].get('lat')
                 lon = s[1].get('lon')
-                if 'n/a' not in lat:
+                if type(lat) is float:
                     self.rc_writer.send_gps_pos(lat, lon)
 
     def process_new_data(self, data):
@@ -165,7 +165,7 @@ class SensorLogger:
             return  # no-op
 
         # send all data to RaceCapture recorder if available
-        #self.write_data_rc_feed(data)
+        self.write_data_rc_feed(data)
 
         # if necessary, transition state
         if self.state == LoggerState.ready:
