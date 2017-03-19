@@ -23,14 +23,17 @@ class RaceCaptureFeedWriter:
 
     def __init__(self, output):
         self.output = output
+        self.__test_file = open("/external/testfile", "wb")
+        print("Writing RC testfile: /external/testfile")
         self.__earliest_time_seen = time.time()
 
     def __send_mesg(self, msg):
         # send message content
-        print(msg)
-        # send checksum
-        print(get_message_checksum(msg))
+        self.__test_file.write(msg)
         #self.output.write(msg)
+        # send checksum
+        self.__test_file.write(get_message_checksum(msg))
+        #output.write(get_message_checksum(msg))
 
     def send_timestamp(self, timestamp_seconds):
         if not timestamp_seconds:

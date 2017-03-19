@@ -34,6 +34,10 @@ def get_message_checksum(msg):
 
 
 def get_timestamp_message_bytes(time_millis):
+    """
+    :param time_millis: time since service start, in milliseconds
+    :return:
+    """
     # careful here, python3 ints are 64 bits wide when they need to be
     return struct.pack(TIMESTAMP_FMT, TIMESTAMP_MESSAGE_ID, int(time_millis))
 
