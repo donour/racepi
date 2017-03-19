@@ -30,9 +30,11 @@ class RaceCaptureFeedWriter:
     def __send_mesg(self, msg):
         # send message content
         self.__test_file.write(msg)
+        print(msg)
         #self.output.write(msg)
         # send checksum
         self.__test_file.write(get_message_checksum(msg))
+        #print(get_message_checksum(msg))
         #output.write(get_message_checksum(msg))
 
     def send_timestamp(self, timestamp_seconds):

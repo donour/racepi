@@ -17,11 +17,11 @@
 
 import struct
 
-TIMESTAMP_MESSAGE_ID = 0x9
-GPS_POS_MESSAGE_ID = 0x10
-GPS_SPEED_MESSAGE_ID = 0x11
+TIMESTAMP_MESSAGE_ID = 9
+GPS_POS_MESSAGE_ID = 10
+GPS_SPEED_MESSAGE_ID = 11
 
-TIMESTAMP_FMT = "!BI"    # header, time
+TIMESTAMP_FMT = ">BI"    # header, time
 GPS_POS_FMT = "!BiiI"   # header, latitude, longitude, accuracy
 GPS_SPEED_FMT = "!BII"  # header, speed, accuracy
 
@@ -30,7 +30,7 @@ def get_message_checksum(msg):
     cs = 0
     for d in msg:
         cs += d & 0xFF
-    return cs & 0xFF
+    return bytes([cs & 0xFF])
 
 
 def get_timestamp_message_bytes(time_millis):
