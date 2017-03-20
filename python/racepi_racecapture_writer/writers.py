@@ -60,10 +60,19 @@ class RaceCaptureFeedWriter:
     def __send_mesg(self, msg):
 
         # write to all open RFCOMM connections
-        # send message content
-        self.__test_file.write(msg)
-        # send checksum
-        self.__test_file.write(get_message_checksum(msg))
+        for client in self.__active_connections:
+            try:
+                # send message content
+                client.send(msg)
+                self.__test_file.write(msg)
+                # send checksum
+                client.send(get_message_checksum(msg))
+                self.__test_file.write(get_message_checksum(msg))
+            except ConnectionResetError:
+                # connection terminated
+                self.__active_connections.remove(client)
+                client.close()
+
 
     def send_timestamp(self, timestamp_seconds):
         if not timestamp_seconds:
