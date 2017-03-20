@@ -32,12 +32,16 @@ class RaceCaptureFeedWriter:
         self.__socket_listener_thread = \
             Thread(target=RaceCaptureFeedWriter.__bind_rfcomm_socket,
                    args=(self.__socket_listener_done, self.__active_connections))
-        self.__socket_listener_thread.start();
+        self.__socket_listener_thread.setDaemon(True)
+        self.__socket_listener_thread.start()
 
         self.output = output
-        self.__test_file = open("/external/testfile", "wb")
-        print("Writing RC testfile: /external/testfile")
+        #self.__test_file = open("/external/testfile", "wb")
+        #print("Writing RC testfile: /external/testfile")
         self.__earliest_time_seen = time.time()
+
+    def close(self):
+        self.__socket_listener_done.set()
 
     @staticmethod
     def __bind_rfcomm_socket(done_event, clients):
@@ -64,15 +68,14 @@ class RaceCaptureFeedWriter:
             try:
                 # send message content
                 client.send(msg)
-                self.__test_file.write(msg)
+                #self.__test_file.write(msg)
                 # send checksum
                 client.send(get_message_checksum(msg))
-                self.__test_file.write(get_message_checksum(msg))
+                #self.__test_file.write(get_message_checksum(msg))
             except ConnectionResetError:
                 # connection terminated
                 self.__active_connections.remove(client)
                 client.close()
-
 
     def send_timestamp(self, timestamp_seconds):
         if not timestamp_seconds:

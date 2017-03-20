@@ -234,6 +234,7 @@ class SensorLogger:
 
                 time.sleep(0.2)  # there is no reason to ever poll faster than this
         finally:
+            self.rc_writer.close()
             for h in self.handlers.values():
                 h.stop()
 
