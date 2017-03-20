@@ -98,3 +98,9 @@ class RaceCaptureFeedWriter:
 
         msg = get_gps_pos_message_bytes(float(lat) * float(1e7), float(lon) * float(1e7))
         self.__send_mesg(msg)
+
+    def send_xyz_accel(self, x_accel, y_accel, z_accel):
+
+        msg = get_xy_accel_message_bytes(x_accel, y_accel)
+        self.__send_mesg(msg)
+        # TODO, implement z accel

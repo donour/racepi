@@ -144,15 +144,29 @@ class SensorLogger:
             [SensorLogger.safe_speed_to_float(s[1].get('speed')) > MOVEMENT_THRESHOLD_M_PER_S
              for s in data['gps']]
 
+    def __write_gps_sample(self, sample):
+        self.rc_writer.send_timestamp(sample[0])
+        self.rc_writer.send_gps_speed(SensorLogger.safe_speed_to_float(sample[1].get('speed')))
+        lat = sample[1].get('lat')
+        lon = sample[1].get('lon')
+        if type(lat) is float:
+            self.rc_writer.send_gps_pos(lat, lon)
+
+    def __write_imu_sample(self, sample):
+        accel = sample[1]['accel']
+        if not accel:
+            return
+
+        self.rc_writer.send_timestamp(sample[0])
+        self.rc_writer.send_xyz_accel(accel[0], accel[1], accel[2])
+
     def write_data_rc_feed(self, data):
         if 'gps' in data:
             for s in data.get('gps'):
-                self.rc_writer.send_timestamp(s[0])
-                self.rc_writer.send_gps_speed(SensorLogger.safe_speed_to_float(s[1].get('speed')))
-                lat = s[1].get('lat')
-                lon = s[1].get('lon')
-                if type(lat) is float:
-                    self.rc_writer.send_gps_pos(lat, lon)
+                self.__write_gps_sample(s)
+        if 'imu' in data:
+            for s in data.get('imu'):
+                self.__write_imu_sample(s)
 
     def process_new_data(self, data):
         """
