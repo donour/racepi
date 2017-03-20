@@ -153,7 +153,7 @@ class SensorLogger:
             self.rc_writer.send_gps_pos(lat, lon)
 
     def __write_imu_sample(self, sample):
-        accel = sample[1]['accel']
+        accel = sample[1].get('accel')
         if not accel:
             return
 
@@ -161,12 +161,39 @@ class SensorLogger:
         self.rc_writer.send_xyz_accel(accel[0], accel[1], accel[2])
 
     def write_data_rc_feed(self, data):
+        """
+        This function merge multiple data sources in time order
+        """
+        imu_data = []
+        gps_data = []
         if 'gps' in data:
-            for s in data.get('gps'):
-                self.__write_gps_sample(s)
+            gps_data = data.get('gps')        
         if 'imu' in data:
-            for s in data.get('imu'):
-                self.__write_imu_sample(s)
+            imu_data = data.get('imu')
+
+        imu_i = iter(imu_data)
+        gps_i = iter(gps_data)
+
+        sample_imu = next(imu_i, None)
+        sample_gps = next(gps_i, None)    
+        while sample_imu is not None and sample_gps is not None:
+
+            if sample_imu is None and sample_gps is not None:
+                self.__write_gps_sample(sample_gps)
+                sample_gps = next(gps_i, None)    
+            elif sample_gps is None:
+                self.__write_imu_sample(sample_imu)
+                sample_imu = next(imu_i, None)
+            else:
+                # neither is none
+                if sample_gps[0] < sample_imu[0]:
+                    self.__write_gps_sample(sample_gps)
+                    sample_gps = next(gps_i, None)    
+                else:
+                    self.__write_imu_sample(sample_imu)
+                    sample_imu = next(imu_i, None)
+                    
+            
 
     def process_new_data(self, data):
         """
@@ -246,7 +273,7 @@ class SensorLogger:
                                                  can_time=update_times['can'],
                                                  recording=(self.state == LoggerState.logging))
 
-                time.sleep(0.2)  # there is no reason to ever poll faster than this
+                time.sleep(0.25)  # there is no reason to ever poll faster than this
         finally:
             self.rc_writer.close()
             for h in self.handlers.values():
