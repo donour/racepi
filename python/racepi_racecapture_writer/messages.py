@@ -40,9 +40,9 @@ def get_timestamp_message_bytes(time_millis):
     """
     # careful here, python3 ints are 64 bits wide when they need to be
     t = int(time_millis)
-    t1 = (t>>16) & 0xFF
-    t2 = (t>> 8) & 0xFF
-    t3 = (t    ) & 0xFF
+    t1 = (t >> 16) & 0xFF
+    t2 = (t >> 8) & 0xFF
+    t3 = t & 0xFF
     return struct.pack(TIMESTAMP_FMT, TIMESTAMP_MESSAGE_ID, t1, t2, t3)
 
 
