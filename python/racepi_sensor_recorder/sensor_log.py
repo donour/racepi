@@ -26,7 +26,7 @@ import time
 from enum import Enum
 from collections import defaultdict
 
-from racepi_racecapture_writer.writers import RaceCaptureFeedWriter
+from racepi_racetechnology_writer.writers import RaceCaptureFeedWriter
 from .pi_sense_hat_display import RacePiStatusDisplay, SenseHat
 from .data_buffer import DataBuffer
 

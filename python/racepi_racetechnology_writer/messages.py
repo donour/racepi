@@ -17,10 +17,12 @@
 
 import struct
 
+XYACCEL_MESSAGE_ID = 8
 TIMESTAMP_MESSAGE_ID = 9
 GPS_POS_MESSAGE_ID = 10
 GPS_SPEED_MESSAGE_ID = 11
 
+XYACCEL_FMT = ">5B"
 TIMESTAMP_FMT = ">4B"    # header, time
 GPS_POS_FMT = "!BiiI"   # header, latitude, longitude, accuracy
 GPS_SPEED_FMT = "!BII"  # header, speed, accuracy
@@ -44,6 +46,31 @@ def get_timestamp_message_bytes(time_millis):
     t2 = (t >> 8) & 0xFF
     t3 = t & 0xFF
     return struct.pack(TIMESTAMP_FMT, TIMESTAMP_MESSAGE_ID, t1, t2, t3)
+
+
+def __get_accel_bytes(accel_value):
+    """
+    Encode a single accel value
+    :param accel_value: accelerometer value, in G
+    :return: two bytes of race-tech encoded accel data
+    """
+    b1 = 0
+
+    tmp_accel = accel_value / 10.0
+
+    if accel_value > 0.0:
+        b1 |= 0x80
+    else:
+        tmp_accel *= -1
+    b1 |= (int(tmp_accel) & 0x7F)
+    b2 = (int((tmp_accel - float(b1)) * 0x100) & 0xFF)
+    return b1, b2
+
+
+def get_xy_accel_message_bytes(x_accel, y_accel):
+    x1, x2 = __get_accel_bytes(x_accel)
+    y1, y2 = __get_accel_bytes(y_accel)
+    return struct.pack(XYACCEL_FMT, XYACCEL_MESSAGE_ID, x1, x2, y1, y2)
 
 
 def get_gps_pos_message_bytes(gps_lat_xe7, gps_long_xe7):

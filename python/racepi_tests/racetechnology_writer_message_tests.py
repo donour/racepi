@@ -16,7 +16,7 @@
 
 from unittest import TestCase, main
 
-from racepi_racecapture_writer.messages import *
+from racepi_racetechnology_writer.messages import *
 
 
 class RaceCaptureMessageTests(TestCase):
@@ -71,6 +71,31 @@ class RaceCaptureMessageTests(TestCase):
     def test_gps_pos_message_negative(self):
         msg = get_gps_pos_message_bytes(-89.9999, -179.999)
         self.assertEqual(len(msg), 13)
+
+    def test_get_xy_accel_message_len(self):
+        msg = get_xy_accel_message_bytes(0.0, 0.0)
+        self.assertEqual(len(msg), 5)
+
+    def test_get_xy_accel_message_header(self):
+        msg = get_xy_accel_message_bytes(0.0, 0.0)
+        self.assertEqual(XYACCEL_MESSAGE_ID, msg[0])
+
+    def test_get_xy_accel_message_zero(self):
+        msg = get_xy_accel_message_bytes(0.0, 0.0)
+        self.assertEqual(0, msg[1])
+        self.assertEqual(0, msg[2])
+        self.assertEqual(0, msg[3])
+        self.assertEqual(0, msg[4])
+
+    def test_get_xy_accel_message_sign_positive(self):
+        msg = get_xy_accel_message_bytes(0.1, 0.1)
+        self.assertEqual(0x80, msg[1])
+        self.assertEqual(0x80, msg[3])
+
+    def test_get_xy_accel_message_sign_negative(self):
+        msg = get_xy_accel_message_bytes(-0.1, -0.1)
+        self.assertEqual(0, msg[1])
+        self.assertEqual(0, msg[3])
 
     def test_get_message_checksum_zero(self):
         self.assertEqual(b'\x00', get_message_checksum(b'\x00'))
