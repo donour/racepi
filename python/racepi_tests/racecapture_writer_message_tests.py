@@ -27,15 +27,14 @@ class RaceCaptureMessageTests(TestCase):
 
     def test_timestamp_message_length(self):
         msg = get_timestamp_message_bytes(0)
-        self.assertEqual(len(msg), 5)
+        self.assertEqual(len(msg), 4)
 
     def test_timestamp_message_contents(self):
         value = 0xDEADBEEF
         msg = get_timestamp_message_bytes(value)
-        self.assertEqual(0xde, msg[1])
-        self.assertEqual(0xad, msg[2])
-        self.assertEqual(0xbe, msg[3])
-        self.assertEqual(0xef, msg[4])
+        self.assertEqual(0xad, msg[1])
+        self.assertEqual(0xbe, msg[2])
+        self.assertEqual(0xef, msg[3])
 
     def test_gps_speed_message_header(self):
         msg = get_gps_speed_message_bytes(0)
@@ -74,15 +73,15 @@ class RaceCaptureMessageTests(TestCase):
         self.assertEqual(len(msg), 13)
 
     def test_get_message_checksum_zero(self):
-        self.assertEqual(0, get_message_checksum(b'\x00'))
-        self.assertEqual(0, get_message_checksum(b'\x00\x00'))
-        self.assertEqual(0, get_message_checksum(b''))
+        self.assertEqual(b'\x00', get_message_checksum(b'\x00'))
+        self.assertEqual(b'\x00', get_message_checksum(b'\x00\x00'))
+        self.assertEqual(b'\x00', get_message_checksum(b''))
 
     def test_get_message_checksum_single_byte(self):
-        self.assertEqual(0xab, get_message_checksum(b'\xab'))
+        self.assertEqual(b'\xab', get_message_checksum(b'\xab'))
 
     def test_get_message_checksum_single_overflow(self):
-        self.assertEqual(0, get_message_checksum(b'\xff\x01'))
+        self.assertEqual(b'\x00', get_message_checksum(b'\xff\x01'))
 
 
 if __name__ == "__main__":
