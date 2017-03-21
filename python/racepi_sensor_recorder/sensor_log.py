@@ -194,7 +194,7 @@ class SensorLogger:
                     sample_imu = next(imu_i, None)
 
         self.rc_writer.flush_queued_messages()
-        print("Wrote messages: ", sum([len(x) for x in data.values()]))
+        #print("Wrote messages: ", sum([len(x) for x in data.values()]))
 
     def process_new_data(self, data):
         """

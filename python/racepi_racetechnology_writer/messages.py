@@ -56,7 +56,7 @@ def __get_accel_bytes(accel_value):
     """
     b1 = 0
 
-    tmp_accel = accel_value / 10.0
+    tmp_accel = accel_value
 
     if accel_value > 0.0:
         b1 |= 0x80
