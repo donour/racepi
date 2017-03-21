@@ -145,8 +145,8 @@ class SensorLogger:
              for s in data['gps']]
 
     def __write_gps_sample(self, sample):
-        self.rc_writer.send_timestamp(sample[0])
-        self.rc_writer.send_gps_speed(SensorLogger.safe_speed_to_float(sample[1].get('speed')))
+        self.rc_writer.send_timestamp(sample[0])        
+        self.rc_writer.send_gps_speed(SensorLogger.safe_speed_to_float(sample[1].get('speed')))        
         lat = sample[1].get('lat')
         lon = sample[1].get('lon')
         if type(lat) is float:
@@ -194,7 +194,7 @@ class SensorLogger:
                     sample_imu = next(imu_i, None)
 
         self.rc_writer.flush_queued_messages()
-        print("Wrote messages: %d", sum([len(x) for x in data.values()]))
+        print("Wrote messages: ", sum([len(x) for x in data.values()]))
 
     def process_new_data(self, data):
         """
@@ -274,7 +274,7 @@ class SensorLogger:
                                                  can_time=update_times['can'],
                                                  recording=(self.state == LoggerState.logging))
 
-                time.sleep(0.25)  # there is no reason to ever poll faster than this
+                time.sleep(0.1)  # there is no reason to ever poll faster than this
         finally:
             self.rc_writer.close()
             for h in self.handlers.values():

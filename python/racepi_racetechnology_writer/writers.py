@@ -66,17 +66,20 @@ class RaceCaptureFeedWriter:
         self.pending_messages.append(msg)
 
     def flush_queued_messages(self):
-        msg = ''.join(self.pending_messages)
+        if not self.pending_messages:
+            return
+
+        # join each message with its checksum, then
+        # join all data together into a bulk message
+        msg = b"".join(
+            [b"".join([x, get_message_checksum(x)]) for x in self.pending_messages])
+        
         self.pending_messages = []
+
         # write to all open RFCOMM connections
         for client in self.__active_connections:
             try:
-                # send message content
                 client.send(msg)
-                #self.__test_file.write(msg)
-                # send checksum
-                client.send(get_message_checksum(msg))
-                #self.__test_file.write(get_message_checksum(msg))
             except ConnectionResetError:
                 # connection terminated
                 self.__active_connections.remove(client)
