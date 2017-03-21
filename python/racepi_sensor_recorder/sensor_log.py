@@ -192,8 +192,9 @@ class SensorLogger:
                 else:
                     self.__write_imu_sample(sample_imu)
                     sample_imu = next(imu_i, None)
-                    
-            
+
+        self.rc_writer.flush_queued_messages()
+        print("Wrote messages: %d", sum([len(x) for x in data.values()]))
 
     def process_new_data(self, data):
         """
@@ -206,7 +207,7 @@ class SensorLogger:
             return  # no-op
 
         # send all data to RaceCapture recorder if available
-        #self.write_data_rc_feed(data)
+        self.write_data_rc_feed(data)
 
         # if necessary, transition state
         if self.state == LoggerState.ready:

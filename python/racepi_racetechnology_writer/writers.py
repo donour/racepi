@@ -27,6 +27,7 @@ class RaceCaptureFeedWriter:
     def __init__(self, output):
         self.__socket_listener_done = Event()
         self.__active_connections = []
+        self.pending_messages = []
 
         # open and bind RFCOMM listener
         self.__socket_listener_thread = \
@@ -61,8 +62,12 @@ class RaceCaptureFeedWriter:
             c.close()
         s.close()
 
-    def __send_mesg(self, msg):
+    def __queue_mesg(self, msg):
+        self.pending_messages.append(msg)
 
+    def flush_queued_messages(self):
+        msg = ''.join(self.pending_messages)
+        self.pending_messages = []
         # write to all open RFCOMM connections
         for client in self.__active_connections:
             try:
@@ -83,24 +88,24 @@ class RaceCaptureFeedWriter:
 
         time_delta = timestamp_seconds - self.__earliest_time_seen
         msg = get_timestamp_message_bytes(time_delta * 1000.0)
-        self.__send_mesg(msg)
+        self.__queue_mesg(msg)
 
     def send_gps_speed(self, speed):
         if not speed:
             return
 
         msg = get_gps_speed_message_bytes(speed*100.0)
-        self.__send_mesg(msg)
+        self.__queue_mesg(msg)
 
     def send_gps_pos(self, lat, lon):
         if not lat or not lon:
             return
 
         msg = get_gps_pos_message_bytes(float(lat) * float(1e7), float(lon) * float(1e7))
-        self.__send_mesg(msg)
+        self.__queue_mesg(msg)
 
     def send_xyz_accel(self, x_accel, y_accel, z_accel):
 
         msg = get_xy_accel_message_bytes(x_accel, y_accel)
-        self.__send_mesg(msg)
+        self.__queue_mesg(msg)
         # TODO, implement z accel
