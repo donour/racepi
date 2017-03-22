@@ -108,6 +108,26 @@ class RaceCaptureMessageTests(TestCase):
     def test_get_message_checksum_single_overflow(self):
         self.assertEqual(b'\x00', get_message_checksum(b'\xff\x01'))
 
+    def test_get_rpm_message_header(self):
+        msg = get_rpm_message_bytes(0)
+        self.assertEqual(RPM_MESSAGE_ID, msg[0])
+
+    def test_get_rpm_message_len(self):
+        msg = get_rpm_message_bytes(0)
+        self.assertEqual(len(msg), 4)
+
+    def test_get_rpm_message_zero(self):
+        msg = get_rpm_message_bytes(0)
+        self.assertEqual(0, msg[1])
+        self.assertEqual(0, msg[2])
+        self.assertEqual(0, msg[3])
+
+    def test_get_rpm_message_1000(self):
+        msg = get_rpm_message_bytes(1000)
+        self.assertEqual(5, msg[1])
+        self.assertEqual(126, msg[2])
+        self.assertEqual(64, msg[3])
+
 
 if __name__ == "__main__":
     main()
