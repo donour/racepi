@@ -22,12 +22,16 @@ TIMESTAMP_MESSAGE_ID = 9
 GPS_POS_MESSAGE_ID = 10
 GPS_SPEED_MESSAGE_ID = 11
 RPM_MESSAGE_ID = 18
+TPS_MESSAGE_ID = 20  # Analog 1
+BRAKE_PRESSURE_MESSAGE_ID = 20  # Analog 2
+
 
 XYACCEL_FMT = ">5B"
 TIMESTAMP_FMT = ">4B"    # header, time
 GPS_POS_FMT = "!BiiI"   # header, latitude, longitude, accuracy
 GPS_SPEED_FMT = "!BII"  # header, speed, accuracy
 RPM_FMT = ">4B"  # header, engine speed as frequency
+ANALOG_FMT = ">3B"  # header, value as voltage (5v)
 
 DL1_PERIOD_CONSTANT = 6e6
 
@@ -108,3 +112,18 @@ def get_rpm_message_bytes(rpm):
     b2 = (val >> 8) & 0xFF
     b3 = val & 0xFF
     return struct.pack(RPM_FMT, RPM_MESSAGE_ID, b1, b2, b3)
+
+
+def get_analog_message_bytes(voltage, message_id):
+    val = int(voltage * 1000.0)
+    b1 = (val >> 8) & 0xFF
+    b2 = val & 0xFF
+    return struct.pack(ANALOG_FMT, message_id, b1, b2)
+
+
+def get_tps_message_bytes(voltage):
+    return get_analog_message_bytes(voltage, TPS_MESSAGE_ID)
+
+
+def get_brake_pressure_message_bytes(voltage):
+    return get_analog_message_bytes(voltage, BRAKE_PRESSURE_MESSAGE_ID)

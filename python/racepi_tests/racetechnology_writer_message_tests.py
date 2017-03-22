@@ -128,6 +128,23 @@ class RaceCaptureMessageTests(TestCase):
         self.assertEqual(126, msg[2])
         self.assertEqual(64, msg[3])
 
+    def test_get_tps_message_header(self):
+        msg = get_tps_message_bytes(0)
+        self.assertEqual(TPS_MESSAGE_ID, msg[0])
+
+    def test_get_tps_message_length(self):
+        msg = get_tps_message_bytes(0)
+        self.assertEqual(3, len(msg))
+
+    def test_get_tps_message_zero(self):
+        msg = get_tps_message_bytes(0)
+        self.assertEqual(0, msg[1])
+        self.assertEqual(0, msg[2])
+
+    def test_get_tps_message_5v(self):
+        msg = get_tps_message_bytes(5.0)
+        self.assertEqual(19, msg[1])
+        self.assertEqual(136, msg[2])
 
 if __name__ == "__main__":
     main()
