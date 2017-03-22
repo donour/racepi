@@ -28,8 +28,9 @@ ENDCOLOR  = '\033[0m'
 UNDERLINE = '\033[4m'
 
 if __name__ == "__main__":   
-    import sys, logo  # display logo
+    import sys, time, logo  # display logo
 
+    time.sleep(15)
     if len(sys.argv) < 2:
         dbfile = DEFAULT_SQLITE_FILE
     else:

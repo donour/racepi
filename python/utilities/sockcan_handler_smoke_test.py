@@ -28,7 +28,7 @@ if __name__ == "__main__":
 
     filters = [int(f) for f in sys.argv[1:]]
 
-    h = SocketCanSensorHandler(device_name="vcan0", can_filters=filters)
+    h = SocketCanSensorHandler(device_name="slcan0", can_filters=filters)
     h.start()
     while True:
         data = h.get_all_data()
