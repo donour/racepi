@@ -38,6 +38,10 @@ class SocketCanSensorHandler(SensorHandler):
         :param device_name: name of socketcan device (e.g. slcan0)
         :param can_filters: list of allowed arbitration IDs, as integer
         """
+
+        # TODO this should retry in the case that the device comes online
+        # while running
+
         SensorHandler.__init__(self, self.__record_from_can)
         self.dev_name = device_name
         self.cansocket = socket.socket(socket.PF_CAN, socket.SOCK_RAW, socket.CAN_RAW)

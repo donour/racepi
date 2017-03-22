@@ -13,10 +13,10 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
+from collections import defaultdict
+from unittest import TestCase, main
 
-from unittest import TestCase
-
-from racepi_sensor_handler.data_utilities import TimeToDistanceConverter
+from racepi_sensor_handler.data_utilities import TimeToDistanceConverter, merge_and_generate_ordered_log
 
 
 class TimeToDistanceConverterTest(TestCase):
@@ -52,3 +52,40 @@ class TimeToDistanceConverterTest(TestCase):
         # verify distance matches time
         for i in range(len(trace)):
             self.assertAlmostEqual(trace[i], result[i])
+
+
+class OtherTests(TestCase):
+
+    def test_merge_and_generate_ordered_log_empty(self):
+        result = merge_and_generate_ordered_log(defaultdict(list))
+        self.assertIsNotNone(result)
+        self.assertEqual(len(result), 0)
+
+    def test_merge_and_generate_ordered_log_single_entry(self):
+        values = ["foo", "bar", None]
+        times = [2, 1, 3]
+        data = {"k": [(t, values) for t in times]}
+        res = merge_and_generate_ordered_log(data)
+        self.assertEqual(len(res), 3)
+        self.assertEqual(res[0][1], 1)
+        self.assertEqual(res[1][1], 2)
+        self.assertEqual(res[2][1], 3)
+
+    def test_merge_and_generate_ordered_log_interleaved(self):
+        values1 = ["foo", "bar", None]
+        values2 = ["stuff", "morestuff"]
+        times1 = [2, 10, 30]
+        times2 = [3, 9, 20]
+        data = {"k": [(t, values1) for t in times1], "k2": [(t, values2) for t in times2]}
+        res = merge_and_generate_ordered_log(data)
+        self.assertEqual(len(res), 6)
+        self.assertEqual(res[0][1], 2)
+        self.assertEqual(res[1][1], 3)
+        self.assertEqual(res[2][1], 9)
+        self.assertEqual(res[3][1], 10)
+        self.assertEqual(res[4][1], 20)
+        self.assertEqual(res[5][1], 30)
+
+
+if __name__ == "__main__":
+    main()

@@ -13,6 +13,23 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
+import itertools
+
+
+def merge_and_generate_ordered_log(data):
+    """
+    This utility function takes a data object of the type
+    { source: [ (timestamp, (values,...)), ... ], ... } and returns
+    a new list of (source, timestamp, (values,...)) for outputting
+    as a multi-source stream.
+
+    :param data:
+    :return:
+    """
+    vals_with_keys = [[(key,) + val for val in data[key]] for key in data.keys()]
+    flat_data = list(itertools.chain.from_iterable(vals_with_keys))
+    flat_data.sort(key=lambda x: x[1])  # sort by time
+    return flat_data
 
 
 class TimeToDistanceConverter:

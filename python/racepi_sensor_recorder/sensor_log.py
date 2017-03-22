@@ -26,6 +26,7 @@ import time
 from enum import Enum
 from collections import defaultdict
 
+from data_utilities import merge_and_generate_ordered_log
 from racepi_racetechnology_writer.writers import RaceTechnologyDL1FeedWriter
 from .pi_sense_hat_display import RacePiStatusDisplay, SenseHat
 from .data_buffer import DataBuffer
@@ -144,57 +145,61 @@ class SensorLogger:
             [SensorLogger.safe_speed_to_float(s[1].get('speed')) > MOVEMENT_THRESHOLD_M_PER_S
              for s in data['gps']]
 
-    def __write_gps_sample(self, sample):
-        self.rc_writer.send_timestamp(sample[0])        
-        self.rc_writer.send_gps_speed(SensorLogger.safe_speed_to_float(sample[1].get('speed')))        
-        lat = sample[1].get('lat')
-        lon = sample[1].get('lon')
+    def __write_gps_sample(self, timestamp, data):
+        self.rc_writer.send_timestamp(timestamp)
+        self.rc_writer.send_gps_speed(SensorLogger.safe_speed_to_float(data.get('speed')))
+        lat = data.get('lat')
+        lon = data.get('lon')
         if type(lat) is float:
             self.rc_writer.send_gps_pos(lat, lon)
 
-    def __write_imu_sample(self, sample):
-        accel = sample[1].get('accel')
+    def __write_imu_sample(self, timestamp, data):
+        accel = data.get('accel')
         if not accel:
             return
 
-        self.rc_writer.send_timestamp(sample[0])
+        self.rc_writer.send_timestamp(timestamp)
         self.rc_writer.send_xyz_accel(accel[0], accel[1], accel[2])
 
     def write_data_rc_feed(self, data):
         """
-        This function merge multiple data sources in time order
+        This function merges multiple data sources in time order
         """
-        imu_data = []
-        gps_data = []
-        if 'gps' in data:
-            gps_data = data.get('gps')        
-        if 'imu' in data:
-            imu_data = data.get('imu')
+        flat_data = merge_and_generate_ordered_log(data)
+        for val in flat_data:
+            if val:
+                if val[0] == 'gps':
+                    self.__write_gps_sample(val[1], val[2])
+                elif val[0] == 'imu':
+                    self.__write_imu_sample(val[1], val[2])
 
-        imu_i = iter(imu_data)
-        gps_i = iter(gps_data)
-
-        sample_imu = next(imu_i, None)
-        sample_gps = next(gps_i, None)    
-        while sample_imu is not None and sample_gps is not None:
-
-            if sample_imu is None and sample_gps is not None:
-                self.__write_gps_sample(sample_gps)
-                sample_gps = next(gps_i, None)    
-            elif sample_gps is None:
-                self.__write_imu_sample(sample_imu)
-                sample_imu = next(imu_i, None)
-            else:
-                # neither is none
-                if sample_gps[0] < sample_imu[0]:
-                    self.__write_gps_sample(sample_gps)
-                    sample_gps = next(gps_i, None)    
-                else:
-                    self.__write_imu_sample(sample_imu)
-                    sample_imu = next(imu_i, None)
+        # imu_i = iter(data.get('imu'))
+        # gps_i = iter(data.get('gps'))
+        # can_i = iter(data.get('can'))
+        # # TODO implement can channel TX
+        #
+        # sample_imu = next(imu_i, None)
+        # sample_gps = next(gps_i, None)
+        # while sample_imu is not None and sample_gps is not None:
+        #
+        #     if sample_imu is None and sample_gps is not None:
+        #         self.__write_gps_sample(sample_gps)
+        #         sample_gps = next(gps_i, None)
+        #     elif sample_gps is None:
+        #         self.__write_imu_sample(sample_imu)
+        #         sample_imu = next(imu_i, None)
+        #     else:
+        #         # neither is none
+        #         if sample_gps[0] < sample_imu[0]:
+        #             self.__write_gps_sample(sample_gps)
+        #             sample_gps = next(gps_i, None)
+        #         else:
+        #             self.__write_imu_sample(sample_imu)
+        #             sample_imu = next(imu_i, None)
 
         self.rc_writer.flush_queued_messages()
-        #print("Wrote messages: ", sum([len(x) for x in data.values()]))
+        # ensure that all data was written
+        assert(len(self.rc_writer.pending_messages) == sum([len(x) for x in data.values()]))
 
     def process_new_data(self, data):
         """
