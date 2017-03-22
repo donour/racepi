@@ -26,7 +26,7 @@ import time
 from enum import Enum
 from collections import defaultdict
 
-from data_utilities import merge_and_generate_ordered_log
+from racepi_sensor_handler.data_utilities import merge_and_generate_ordered_log
 from racepi_racetechnology_writer.writers import RaceTechnologyDL1FeedWriter
 from .pi_sense_hat_display import RacePiStatusDisplay, SenseHat
 from .data_buffer import DataBuffer
@@ -81,7 +81,7 @@ class SensorLogger:
             self.db_handler = None
 
         self.session_id = None
-        self.rc_writer = RaceTechnologyDL1FeedWriter()
+        self.racetech_feed_writer = RaceTechnologyDL1FeedWriter()
         self.state = LoggerState.initialized
 
     @staticmethod
@@ -146,20 +146,20 @@ class SensorLogger:
              for s in data['gps']]
 
     def __write_gps_sample(self, timestamp, data):
-        self.rc_writer.send_timestamp(timestamp)
-        self.rc_writer.send_gps_speed(SensorLogger.safe_speed_to_float(data.get('speed')))
+        self.racetech_feed_writer.send_timestamp(timestamp)
+        self.racetech_feed_writer.send_gps_speed(SensorLogger.safe_speed_to_float(data.get('speed')))
         lat = data.get('lat')
         lon = data.get('lon')
         if type(lat) is float:
-            self.rc_writer.send_gps_pos(lat, lon)
+            self.racetech_feed_writer.send_gps_pos(lat, lon)
 
     def __write_imu_sample(self, timestamp, data):
         accel = data.get('accel')
         if not accel:
             return
 
-        self.rc_writer.send_timestamp(timestamp)
-        self.rc_writer.send_xyz_accel(accel[0], accel[1], accel[2])
+        self.racetech_feed_writer.send_timestamp(timestamp)
+        self.racetech_feed_writer.send_xyz_accel(accel[0], accel[1], accel[2])
 
     def write_data_rc_feed(self, data):
         """
@@ -197,9 +197,9 @@ class SensorLogger:
         #             self.__write_imu_sample(sample_imu)
         #             sample_imu = next(imu_i, None)
 
-        self.rc_writer.flush_queued_messages()
+        self.racetech_feed_writer.flush_queued_messages()
         # ensure that all data was written
-        assert(len(self.rc_writer.pending_messages) == sum([len(x) for x in data.values()]))
+        assert(len(self.racetech_feed_writer.pending_messages) == sum([len(x) for x in data.values()]))
 
     def process_new_data(self, data):
         """
@@ -281,7 +281,7 @@ class SensorLogger:
 
                 time.sleep(0.1)  # there is no reason to ever poll faster than this
         finally:
-            self.rc_writer.close()
+            self.racetech_feed_writer.close()
             for h in self.handlers.values():
                 h.stop()
 
