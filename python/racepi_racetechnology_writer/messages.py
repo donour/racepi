@@ -21,11 +21,15 @@ XYACCEL_MESSAGE_ID = 8
 TIMESTAMP_MESSAGE_ID = 9
 GPS_POS_MESSAGE_ID = 10
 GPS_SPEED_MESSAGE_ID = 11
+RPM_MESSAGE_ID = 18
 
 XYACCEL_FMT = ">5B"
 TIMESTAMP_FMT = ">4B"    # header, time
 GPS_POS_FMT = "!BiiI"   # header, latitude, longitude, accuracy
 GPS_SPEED_FMT = "!BII"  # header, speed, accuracy
+RPM_FMT = ">4B"  # header, engine speed as frequency
+
+DL1_PERIOD_CONSTANT = 6e6
 
 
 def get_message_checksum(msg):
@@ -88,3 +92,19 @@ def get_gps_speed_message_bytes(gps_speed_x100):
     :return:
     """
     return struct.pack(GPS_SPEED_FMT, GPS_SPEED_MESSAGE_ID, int(gps_speed_x100), 0)
+
+
+def get_rpm_message_bytes(rpm):
+    """
+    :param rpm:
+    :return:
+    """
+    rpm /= 60  # convert to frequency
+    if rpm > 0.0:
+        rpm = 1/rpm
+    rpm *= DL1_PERIOD_CONSTANT
+    val = int(rpm)
+    b1 = (val >> 16) & 0xFF
+    b2 = (val >> 8) & 0xFF
+    b3 = val & 0xFF
+    return struct.pack(RPM_FMT, RPM_MESSAGE_ID, b1, b2, b3)

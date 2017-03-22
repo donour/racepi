@@ -22,7 +22,7 @@ from threading import Event, Thread
 from .messages import *
 
 
-class RaceCaptureFeedWriter:
+class RaceTechnologyDL1FeedWriter:
 
     def __init__(self, output):
         self.__socket_listener_done = Event()
@@ -31,7 +31,7 @@ class RaceCaptureFeedWriter:
 
         # open and bind RFCOMM listener
         self.__socket_listener_thread = \
-            Thread(target=RaceCaptureFeedWriter.__bind_rfcomm_socket,
+            Thread(target=RaceTechnologyDL1FeedWriter.__bind_rfcomm_socket,
                    args=(self.__socket_listener_done, self.__active_connections))
         self.__socket_listener_thread.setDaemon(True)
         self.__socket_listener_thread.start()
@@ -112,3 +112,7 @@ class RaceCaptureFeedWriter:
         msg = get_xy_accel_message_bytes(x_accel, y_accel)
         self.__queue_mesg(msg)
         # TODO, implement z accel
+
+    def send_rpm(self, rpm):
+        msg = get_rpm_message_bytes(rpm)
+        self.__queue_mesg(msg)
