@@ -66,6 +66,7 @@ class SensorLogger:
         :param db_handler: output handler for writing sensor data to a database
         :param sensor_handlers: input data handlers, these should be racepi sensor_handlers
         """
+        # TODO: is this still used!?
         self.data = DataBuffer()
         self.display = None
         if SenseHat:
@@ -161,6 +162,18 @@ class SensorLogger:
         self.racetech_feed_writer.send_timestamp(timestamp)
         self.racetech_feed_writer.send_xyz_accel(accel[0], accel[1], accel[2])
 
+    def __write_can_sample(self, timestamp, data):
+
+        #self.racetech_feed_writer.send_timestamp(timestamp)
+        # TODO parse and update RPM, TPS, BRAKE, STEERING WHEELSPEED
+        pass
+        # parse message to get: arbID
+        # pass message appropriate parser
+        # call writer if needed
+        #self.racetech_feed_writer.send_tps(tps)
+        #self.racetech_feed_writer.send_rpm(rpm)
+        #self.racetech_feed_writer.send_brake_pressure(brake_pressure)
+
     def write_data_rc_feed(self, data):
         """
         This function merges multiple data sources in time order
@@ -172,30 +185,8 @@ class SensorLogger:
                     self.__write_gps_sample(val[1], val[2])
                 elif val[0] == 'imu':
                     self.__write_imu_sample(val[1], val[2])
-
-        # imu_i = iter(data.get('imu'))
-        # gps_i = iter(data.get('gps'))
-        # can_i = iter(data.get('can'))
-        # # TODO implement can channel TX
-        #
-        # sample_imu = next(imu_i, None)
-        # sample_gps = next(gps_i, None)
-        # while sample_imu is not None and sample_gps is not None:
-        #
-        #     if sample_imu is None and sample_gps is not None:
-        #         self.__write_gps_sample(sample_gps)
-        #         sample_gps = next(gps_i, None)
-        #     elif sample_gps is None:
-        #         self.__write_imu_sample(sample_imu)
-        #         sample_imu = next(imu_i, None)
-        #     else:
-        #         # neither is none
-        #         if sample_gps[0] < sample_imu[0]:
-        #             self.__write_gps_sample(sample_gps)
-        #             sample_gps = next(gps_i, None)
-        #         else:
-        #             self.__write_imu_sample(sample_imu)
-        #             sample_imu = next(imu_i, None)
+                elif val[0] == 'can':
+                    self.__write_can_sample(val[1], val[2])
 
         self.racetech_feed_writer.flush_queued_messages()
 
