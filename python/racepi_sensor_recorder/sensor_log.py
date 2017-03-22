@@ -26,7 +26,7 @@ import time
 from enum import Enum
 from collections import defaultdict
 
-from racepi_racetechnology_writer.writers import RaceCaptureFeedWriter
+from racepi_racetechnology_writer.writers import RaceTechnologyDL1FeedWriter
 from .pi_sense_hat_display import RacePiStatusDisplay, SenseHat
 from .data_buffer import DataBuffer
 
@@ -80,7 +80,7 @@ class SensorLogger:
             self.db_handler = None
 
         self.session_id = None
-        self.rc_writer = RaceCaptureFeedWriter(None)
+        self.rc_writer = RaceTechnologyDL1FeedWriter()
         self.state = LoggerState.initialized
 
     @staticmethod

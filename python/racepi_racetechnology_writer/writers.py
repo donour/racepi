@@ -21,10 +21,13 @@ from threading import Event, Thread
 
 from .messages import *
 
+DL1_ANALOG_MAX_VOLTAGE = 5.0
+MAX_BRAKE_PRESSURE = float(1e-6)  # TODO determine proper unit
+
 
 class RaceTechnologyDL1FeedWriter:
 
-    def __init__(self, output):
+    def __init__(self):
         self.__socket_listener_done = Event()
         self.__active_connections = []
         self.pending_messages = []
@@ -36,9 +39,6 @@ class RaceTechnologyDL1FeedWriter:
         self.__socket_listener_thread.setDaemon(True)
         self.__socket_listener_thread.start()
 
-        self.output = output
-        #self.__test_file = open("/external/testfile", "wb")
-        #print("Writing RC testfile: /external/testfile")
         self.__earliest_time_seen = time.time()
 
     def close(self):
@@ -115,4 +115,14 @@ class RaceTechnologyDL1FeedWriter:
 
     def send_rpm(self, rpm):
         msg = get_rpm_message_bytes(rpm)
+        self.__queue_mesg(msg)
+
+    def send_tps(self, tps_percentage):
+        msg = get_tps_message_bytes(tps_percentage/100.0*DL1_ANALOG_MAX_VOLTAGE)
+        self.__queue_mesg(msg)
+
+    def send_brake_pressure(self, brake_pressure):
+        val = brake_pressure / MAX_BRAKE_PRESSURE
+        val *= DL1_ANALOG_MAX_VOLTAGE
+        msg = get_brake_pressure_message_bytes(val)
         self.__queue_mesg(msg)
