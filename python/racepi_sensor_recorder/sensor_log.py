@@ -198,8 +198,6 @@ class SensorLogger:
         #             sample_imu = next(imu_i, None)
 
         self.racetech_feed_writer.flush_queued_messages()
-        # ensure that all data was written
-        assert(len(self.racetech_feed_writer.pending_messages) == sum([len(x) for x in data.values()]))
 
     def process_new_data(self, data):
         """
