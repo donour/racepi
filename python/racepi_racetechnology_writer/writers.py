@@ -90,7 +90,8 @@ class RaceTechnologyDL1FeedWriter:
             return
 
         time_delta = timestamp_seconds - self.__earliest_time_seen
-        msg = get_timestamp_message_bytes(time_delta * 1000.0)
+        # supposed to be millis, isn't really
+        msg = get_timestamp_message_bytes(time_delta * 100.0)
         self.__queue_mesg(msg)
 
     def send_gps_speed(self, speed):
