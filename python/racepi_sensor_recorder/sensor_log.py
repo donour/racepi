@@ -26,8 +26,10 @@ import time
 from enum import Enum
 from collections import defaultdict
 
+from racepi_can_decoder import CanFrame
 from racepi_sensor_handler.data_utilities import merge_and_generate_ordered_log
 from racepi_racetechnology_writer.writers import RaceTechnologyDL1FeedWriter
+from racepi_can_decoder import focus_rs_rpm_converter, focus_rs_tps_converter
 from .pi_sense_hat_display import RacePiStatusDisplay, SenseHat
 from .data_buffer import DataBuffer
 
@@ -164,15 +166,28 @@ class SensorLogger:
 
     def __write_can_sample(self, timestamp, data):
 
-        #self.racetech_feed_writer.send_timestamp(timestamp)
-        # TODO parse and update RPM, TPS, BRAKE, STEERING WHEELSPEED
-        pass
-        # parse message to get: arbID
-        # pass message appropriate parser
-        # call writer if needed
-        #self.racetech_feed_writer.send_tps(tps)
-        #self.racetech_feed_writer.send_rpm(rpm)
-        #self.racetech_feed_writer.send_brake_pressure(brake_pressure)
+        if len(data) < 5:
+            return  # skip
+
+        arbId = data[:3]
+        payload = data[3:]
+        frame = CanFrame(arbId, payload)
+        # TODO: finish converters
+        if data[:3] == "010":
+            #self.racetech_feed_writer.send_timestamp(timestamp)
+            pass  # steering angle
+        if data[:3] == "080":
+            # self.racetech_feed_writer.send_timestamp(timestamp)
+            # self.racetech_feed_writer.send_tps(tps)
+            pass
+        if data[:3] == "090":
+            self.racetech_feed_writer.send_timestamp(timestamp)
+            rpm = focus_rs_rpm_converter.convert_frame(frame)
+            self.racetech_feed_writer.send_rpm(rpm)
+        if data[:3] == "213":
+            #self.racetech_feed_writer.send_timestamp(timestamp)
+            #self.racetech_feed_writer.send_brake_pressure(brake_pressure)
+            pass
 
     def write_data_rc_feed(self, data):
         """
