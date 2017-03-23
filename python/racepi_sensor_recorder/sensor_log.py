@@ -169,16 +169,17 @@ class SensorLogger:
         if len(data) < 5:
             return  # skip
 
-        arbId = data[:3]
+        arb_id = data[:3]
         payload = data[3:]
-        frame = CanFrame(arbId, payload)
+        frame = CanFrame(arb_id, payload)
         # TODO: finish converters
         if data[:3] == "010":
             #self.racetech_feed_writer.send_timestamp(timestamp)
             pass  # steering angle
         if data[:3] == "080":
-            # self.racetech_feed_writer.send_timestamp(timestamp)
-            # self.racetech_feed_writer.send_tps(tps)
+            self.racetech_feed_writer.send_timestamp(timestamp)
+            tps = focus_rs_tps_converter.convert_frame(frame)
+            self.racetech_feed_writer.send_tps(tps)
             pass
         if data[:3] == "090":
             self.racetech_feed_writer.send_timestamp(timestamp)
