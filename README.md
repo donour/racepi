@@ -9,7 +9,7 @@ Software Components
 2. **Sensor Recorder:** Multiprocessing, multithreaded data logging program
 3. **Web-based Analysis Tool:** On-device webserver for performing immediate analysis and plotting
 4. **Device Controls:** Misc software tools for managing the device
-
+5. **RachTech DL1 Writer:** Write live DL1-type logs for third-party software such as SoloStorm
 
 Supported Sensor Sources
 ---------------------
