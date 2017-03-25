@@ -28,12 +28,13 @@ BRAKE_PRESSURE_MESSAGE_ID = 28  # Analog 2
 
 XYACCEL_FMT = ">5B"
 TIMESTAMP_FMT = ">4B"    # header, time
-GPS_POS_FMT = "!BiiI"   # header, latitude, longitude, accuracy
+GPS_POS_FMT = "!BiiI"   # header, longitude, latitude, accuracy
 GPS_SPEED_FMT = "!BII"  # header, speed, accuracy
 RPM_FMT = ">4B"  # header, engine speed as frequency
 ANALOG_FMT = ">3B"  # header, value as voltage (5v)
 
 DL1_PERIOD_CONSTANT = 6e6
+GPS_POS_FIXED_ACCURACY = 0x10  # millimeters
 
 
 def get_message_checksum(msg):
@@ -87,7 +88,7 @@ def get_gps_pos_message_bytes(gps_lat_xe7, gps_long_xe7):
     :param gps_long_xe7: longitude value, scale by 1e7
     :return:
     """
-    return struct.pack(GPS_POS_FMT, GPS_POS_MESSAGE_ID, int(gps_lat_xe7), int(gps_long_xe7), 0)
+    return struct.pack(GPS_POS_FMT, GPS_POS_MESSAGE_ID,  int(gps_long_xe7), int(gps_lat_xe7), GPS_POS_FIXED_ACCURACY)
 
 
 def get_gps_speed_message_bytes(gps_speed_x100):
