@@ -23,7 +23,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from racepi_racetechnology_writer.writers import RaceTechnologyDL1FeedWriter
-from racepi_database_handler import Base, SessionInfo, GPSData, IMUData
+from racepi_database_handler import Base, SessionInfo, GPSData, IMUData, CANData
 from racepi_sensor_handler.data_utilities import merge_and_generate_ordered_log
 
 
@@ -38,21 +38,23 @@ def replay(dbfile):
     writer = RaceTechnologyDL1FeedWriter()
 
     print("Waiting for active clients")
-    while writer.number_of_clients() <= 0:
-        time.sleep(0.1)
+    #while writer.number_of_clients() <= 0:
+    #    time.sleep(0.1)
 
     for si in s.query(SessionInfo).all():
         data = {}
         # load all data for session
         gps_data = s.query(GPSData).filter(GPSData.session_id == si.session_id).all()
         imu_data = s.query(IMUData).filter(IMUData.session_id == si.session_id).all()
+        can_data = s.query(CANData).filter(CANData.session_id == si.session_id).all()
 
         # construct replay messages
-
         data['gps'] = [(x.timestamp, {'speed': x.speed, 'lat': x.lat, 'lon': x.lon, 'alt': x.alt})
                        for x in gps_data]
         data['imu'] = [(x.timestamp, {'accel': (x.x_accel, x.y_accel, x.z_accel)})
                        for x in imu_data]
+        data['can'] = [(x.timestamp, "%03x%s" % (x.arbitration_id, x.msg))
+                       for x in can_data]
 
         flat_data = merge_and_generate_ordered_log(data)
 

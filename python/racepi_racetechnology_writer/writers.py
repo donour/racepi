@@ -183,7 +183,6 @@ class RaceTechnologyDL1FeedWriter:
             self.send_timestamp(timestamp)
             tps = focus_rs_tps_converter.convert_frame(frame)
             self.send_tps(tps)
-            pass
         if data[:3] == "090":
             self.send_timestamp(timestamp)
             rpm = focus_rs_rpm_converter.convert_frame(frame)
