@@ -32,6 +32,20 @@ def merge_and_generate_ordered_log(data):
     return flat_data
 
 
+def safe_speed_to_float(v):
+    """
+    convert speed value to float in typesafe way
+    :param v:
+    :return: float value of v, 0.0 if conversion fails
+    """
+    if not v:
+        return 0.0
+    try:
+        return float(v)
+    except ValueError:
+        return 0.0
+
+
 class TimeToDistanceConverter:
     """
     This is a utility class for converting samples timestamps to distance deltas

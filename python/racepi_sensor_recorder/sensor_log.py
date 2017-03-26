@@ -27,7 +27,7 @@ from enum import Enum
 from collections import defaultdict
 
 from racepi_can_decoder import CanFrame
-from racepi_sensor_handler.data_utilities import merge_and_generate_ordered_log
+from racepi_sensor_handler.data_utilities import merge_and_generate_ordered_log, safe_speed_to_float
 from racepi_racetechnology_writer.writers import RaceTechnologyDL1FeedWriter
 from racepi_can_decoder import focus_rs_rpm_converter, focus_rs_tps_converter
 from .pi_sense_hat_display import RacePiStatusDisplay, SenseHat
@@ -86,21 +86,7 @@ class SensorLogger:
         self.session_id = None
         self.racetech_feed_writer = RaceTechnologyDL1FeedWriter()
         self.state = LoggerState.initialized
-
-    @staticmethod
-    def safe_speed_to_float(v):
-        """
-        convert speed value to float in typesafe way
-        :param v:
-        :return: float value of v, 0.0 if conversion fails
-        """
-        if not v:
-            return 0.0
-        try:
-            return float(v)
-        except ValueError:
-            return 0.0
-
+-
     def get_new_data(self):
         """
         Get dictionary of new data from all handlers and
@@ -130,7 +116,7 @@ class SensorLogger:
 
         # look for any sample above the speed threshold
         return True in \
-            [SensorLogger.safe_speed_to_float(s[1].get('speed')) > ACTIVATE_RECORDING_M_PER_S
+            [safe_speed_to_float(s[1].get('speed')) > ACTIVATE_RECORDING_M_PER_S
              for s in data['gps']]
 
     def deactivate_conditions(self, data):
@@ -145,12 +131,12 @@ class SensorLogger:
 
         # loop for any sample above threshold, true only if there are none
         return True not in \
-            [SensorLogger.safe_speed_to_float(s[1].get('speed')) > MOVEMENT_THRESHOLD_M_PER_S
+            [safe_speed_to_float(s[1].get('speed')) > MOVEMENT_THRESHOLD_M_PER_S
              for s in data['gps']]
 
     def __write_gps_sample(self, timestamp, data):
         self.racetech_feed_writer.send_timestamp(timestamp)
-        self.racetech_feed_writer.send_gps_speed(SensorLogger.safe_speed_to_float(data.get('speed')))
+        self.racetech_feed_writer.send_gps_speed(safe_speed_to_float(data.get('speed')))
         lat = data.get('lat')
         lon = data.get('lon')
         if type(lat) is float:
@@ -358,4 +344,3 @@ class SensorLogger:
     #     finally:
     #         for h in self.handlers.values():
     #             h.stop()
-
