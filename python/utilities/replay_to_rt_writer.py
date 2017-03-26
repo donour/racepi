@@ -58,17 +58,17 @@ def replay(dbfile):
 
         for val in flat_data:
             if val:
-                print(val)
                 if val[0] == 'gps':
                     writer.write_gps_sample(val[1], val[2])
                 elif val[0] == 'imu':
                     writer.write_imu_sample(val[1], val[2])
                 elif val[0] == 'can':
                     writer.write_can_sample(val[1], val[2])
-            writer.flush_queued_messages()
+        writer.flush_queued_messages()
 
         # sleep between replays
-        time.sleep(6)
+        print("Finished", si.session_id)
+        time.sleep(4)
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
