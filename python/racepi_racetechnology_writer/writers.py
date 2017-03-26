@@ -46,6 +46,9 @@ class RaceTechnologyDL1FeedWriter:
     def close(self):
         self.__socket_listener_done.set()
 
+    def number_of_clients(self):
+        return len(self.__active_connections)
+
     @staticmethod
     def __bind_rfcomm_socket(done_event, clients):
 
