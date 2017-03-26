@@ -38,8 +38,8 @@ def replay(dbfile):
     writer = RaceTechnologyDL1FeedWriter()
 
     print("Waiting for active clients")
-    #while writer.number_of_clients() <= 0:
-    #    time.sleep(0.1)
+    while writer.number_of_clients() <= 0:
+        time.sleep(0.1)
 
     for si in s.query(SessionInfo).all():
         data = {}
@@ -66,8 +66,9 @@ def replay(dbfile):
                     writer.write_imu_sample(val[1], val[2])
                 elif val[0] == 'can':
                     writer.write_can_sample(val[1], val[2])
-        writer.flush_queued_messages()
+                    writer.flush_queued_messages()  # can messages are delivered very quickly, flush often
 
+        writer.flush_queued_messages()
         # sleep between replays
         print("Finished", si.session_id)
         time.sleep(4)
