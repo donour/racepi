@@ -26,10 +26,8 @@ import time
 from enum import Enum
 from collections import defaultdict
 
-from racepi_can_decoder import CanFrame
 from racepi_sensor_handler.data_utilities import merge_and_generate_ordered_log, safe_speed_to_float
 from racepi_racetechnology_writer.writers import RaceTechnologyDL1FeedWriter
-from racepi_can_decoder import focus_rs_rpm_converter, focus_rs_tps_converter
 from .pi_sense_hat_display import RacePiStatusDisplay, SenseHat
 from .data_buffer import DataBuffer
 
@@ -134,48 +132,6 @@ class SensorLogger:
             [safe_speed_to_float(s[1].get('speed')) > MOVEMENT_THRESHOLD_M_PER_S
              for s in data['gps']]
 
-    def __write_gps_sample(self, timestamp, data):
-        self.racetech_feed_writer.send_timestamp(timestamp)
-        self.racetech_feed_writer.send_gps_speed(safe_speed_to_float(data.get('speed')))
-        lat = data.get('lat')
-        lon = data.get('lon')
-        if type(lat) is float:
-            self.racetech_feed_writer.send_gps_pos(lat, lon)
-
-    def __write_imu_sample(self, timestamp, data):
-        accel = data.get('accel')
-        if not accel:
-            return
-
-        self.racetech_feed_writer.send_timestamp(timestamp)
-        self.racetech_feed_writer.send_xyz_accel(accel[0], accel[1], accel[2])
-
-    def __write_can_sample(self, timestamp, data):
-
-        if len(data) < 5:
-            return  # skip
-
-        arb_id = data[:3]
-        payload = data[3:]
-        frame = CanFrame(arb_id, payload)
-        # TODO: finish converters
-        if data[:3] == "010":
-            #self.racetech_feed_writer.send_timestamp(timestamp)
-            pass  # steering angle
-        if data[:3] == "080":
-            self.racetech_feed_writer.send_timestamp(timestamp)
-            tps = focus_rs_tps_converter.convert_frame(frame)
-            self.racetech_feed_writer.send_tps(tps)
-            pass
-        if data[:3] == "090":
-            self.racetech_feed_writer.send_timestamp(timestamp)
-            rpm = focus_rs_rpm_converter.convert_frame(frame)
-            self.racetech_feed_writer.send_rpm(rpm)
-        if data[:3] == "213":
-            #self.racetech_feed_writer.send_timestamp(timestamp)
-            #self.racetech_feed_writer.send_brake_pressure(brake_pressure)
-            pass
-
     def write_data_rc_feed(self, data):
         """
         This function merges multiple data sources in time order
@@ -184,11 +140,11 @@ class SensorLogger:
         for val in flat_data:
             if val:
                 if val[0] == 'gps':
-                    self.__write_gps_sample(val[1], val[2])
+                    self.racetech_feed_writer.write_gps_sample(val[1], val[2])
                 elif val[0] == 'imu':
-                    self.__write_imu_sample(val[1], val[2])
+                    self.racetech_feed_writer.write_imu_sample(val[1], val[2])
                 elif val[0] == 'can':
-                    self.__write_can_sample(val[1], val[2])
+                    self.racetech_feed_writer.write_can_sample(val[1], val[2])
 
         self.racetech_feed_writer.flush_queued_messages()
 

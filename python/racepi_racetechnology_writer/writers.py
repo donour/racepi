@@ -19,6 +19,8 @@ import time
 import socket
 from threading import Event, Thread
 
+from racepi_can_decoder import CanFrame, focus_rs_tps_converter, focus_rs_rpm_converter
+from racepi_sensor_handler.data_utilities import safe_speed_to_float
 from .messages import *
 
 DL1_ANALOG_MAX_VOLTAGE = 5.0
@@ -127,3 +129,63 @@ class RaceTechnologyDL1FeedWriter:
         val *= DL1_ANALOG_MAX_VOLTAGE
         msg = get_brake_pressure_message_bytes(val)
         self.__queue_mesg(msg)
+
+    def write_gps_sample(self, timestamp, data):
+        """
+        
+        :param timestamp: 
+        :param data: 
+        :return: 
+        """
+        self.send_timestamp(timestamp)
+        self.send_gps_speed(safe_speed_to_float(data.get('speed')))
+        lat = data.get('lat')
+        lon = data.get('lon')
+        if type(lat) is float:
+            self.send_gps_pos(lat, lon)
+
+    def write_imu_sample(self, timestamp, data):
+        """
+        
+        :param timestamp: 
+        :param data: 
+        :return: 
+        """
+        accel = data.get('accel')
+        if not accel:
+            return
+
+        self.send_timestamp(timestamp)
+        self.send_xyz_accel(accel[0], accel[1], accel[2])
+
+    def write_can_sample(self, timestamp, data):
+        """
+        
+        :param timestamp: 
+        :param data: 
+        :return: 
+        """
+
+        if len(data) < 5:
+            return  # skip
+
+        arb_id = data[:3]
+        payload = data[3:]
+        frame = CanFrame(arb_id, payload)
+        # TODO: finish converters
+        if data[:3] == "010":
+            #self.racetech_feed_writer.send_timestamp(timestamp)
+            pass  # steering angle
+        if data[:3] == "080":
+            self.send_timestamp(timestamp)
+            tps = focus_rs_tps_converter.convert_frame(frame)
+            self.send_tps(tps)
+            pass
+        if data[:3] == "090":
+            self.send_timestamp(timestamp)
+            rpm = focus_rs_rpm_converter.convert_frame(frame)
+            self.send_rpm(rpm)
+        if data[:3] == "213":
+            #self.racetech_feed_writer.send_timestamp(timestamp)
+            #self.racetech_feed_writer.send_brake_pressure(brake_pressure)
+            pass
