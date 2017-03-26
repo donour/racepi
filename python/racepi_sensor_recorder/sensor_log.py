@@ -86,7 +86,7 @@ class SensorLogger:
         self.session_id = None
         self.racetech_feed_writer = RaceTechnologyDL1FeedWriter()
         self.state = LoggerState.initialized
--
+
     def get_new_data(self):
         """
         Get dictionary of new data from all handlers and
