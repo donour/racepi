@@ -146,5 +146,46 @@ class RaceCaptureMessageTests(TestCase):
         self.assertEqual(19, msg[1])
         self.assertEqual(136, msg[2])
 
+    def test_get_steering_angle_message_header(self):
+        msg = get_steering_angle_message_bytes(0)
+        self.assertEqual(STEERING_ANGLE_ID, msg[0])
+        self.assertEqual(0x3, msg[1])
+
+    def test_get_steering_angle_message_length(self):
+        msg = get_steering_angle_message_bytes(0)
+        self.assertEqual(4, len(msg))
+
+    def test_get_steering_angle_message_zero(self):
+        msg = get_steering_angle_message_bytes(0)
+        self.assertEqual(0, msg[2])
+        self.assertEqual(0, msg[3])
+
+    def test_get_steering_angle_message_90(self):
+        msg = get_steering_angle_message_bytes(90)
+        angle = (msg[2] + (msg[3] << 8)) / 10
+        self.assertEqual(90, angle)
+
+    def test_get_steering_angle_message_200(self):
+        msg = get_steering_angle_message_bytes(200)
+        angle = (msg[2] + (msg[3] << 8)) / 10
+        self.assertEqual(200, angle)
+
+    def test_get_steering_angle_message_720(self):
+        msg = get_steering_angle_message_bytes(720)
+        angle = (msg[2] + (msg[3] << 8)) / 10
+        self.assertEqual(720, angle)
+
+    def test_get_steering_angle_message_90_negative(self):
+        msg = get_steering_angle_message_bytes(-90)
+        angle = - (65536 - (msg[2] + (msg[3] << 8))) / 10
+        self.assertEqual(-90, angle)
+
+    def test_get_steering_angle_message_720_negative(self):
+        msg = get_steering_angle_message_bytes(-720)
+        angle = - (65536 - (msg[2] + (msg[3] << 8))) / 10
+        self.assertEqual(-720, angle)
+
+
+
 if __name__ == "__main__":
     main()

@@ -23,8 +23,12 @@ GPS_POS_MESSAGE_ID = 10
 GPS_SPEED_MESSAGE_ID = 11
 RPM_MESSAGE_ID = 18
 TPS_MESSAGE_ID = 27  # Analog 1
-BRAKE_PRESSURE_MESSAGE_ID = 28  # Analog 2
-
+STEERING_ANGLE_ID = 93
+BRAKE_PRESSURE_MESSAGE_ID = 94
+WHEEL_SPEED_LF_ID = 58
+WHEEL_SPEED_RF_ID = 59
+WHEEL_SPEED_LR_ID = 60
+WHEEL_SPEED_RR_ID = 61
 
 XYACCEL_FMT = ">5B"
 TIMESTAMP_FMT = ">4B"    # header, time
@@ -32,7 +36,7 @@ GPS_POS_FMT = "!BiiI"   # header, longitude, latitude, accuracy
 GPS_SPEED_FMT = "!BII"  # header, speed, accuracy
 RPM_FMT = ">4B"  # header, engine speed as frequency
 ANALOG_FMT = ">3B"  # header, value as voltage (5v)
-
+STEERING_ANGLE_FMT = ">4B"  # header, type of data byte, 2 bytes value
 DL1_PERIOD_CONSTANT = 6e6
 GPS_POS_FIXED_ACCURACY = 0x10  # millimeters
 
@@ -126,5 +130,19 @@ def get_tps_message_bytes(voltage):
     return get_analog_message_bytes(voltage, TPS_MESSAGE_ID)
 
 
+def get_steering_angle_message_bytes(angle):
+    if angle < 0:
+        val = (angle*10) + 65536
+        b2 = val & 0xFF
+        b3 = (val >> 8) & 0xFF
+        b3 |= 0x80
+    else:
+        val = int(angle*10)
+        b2 = val & 0xFF
+        b3 = (val >> 8) & 0xFF
+    return struct.pack(STEERING_ANGLE_FMT, STEERING_ANGLE_ID, 0x3, b2, b3)
+
+
 def get_brake_pressure_message_bytes(voltage):
     return get_analog_message_bytes(voltage, BRAKE_PRESSURE_MESSAGE_ID)
+
