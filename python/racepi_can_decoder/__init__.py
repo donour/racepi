@@ -15,9 +15,10 @@
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
 from .can_data import CanFrameValueExtractor, CanFrame
+from math import pi
 
 # Focus RS Mk3 CAN converters
-focus_rs_steering_angle_converter     = CanFrameValueExtractor(49, 15, a=9.587e-5)
+focus_rs_steering_angle_converter     = CanFrameValueExtractor(49, 15, a=(pi/0x1000))
 focus_rs_steering_direction_converter = CanFrameValueExtractor(32, 1)
 focus_rs_tps_converter                = CanFrameValueExtractor(6, 10, a=0.1)
 focus_rs_rpm_converter                = CanFrameValueExtractor(36, 12, a=2.0)
