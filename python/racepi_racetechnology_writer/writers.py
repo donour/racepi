@@ -17,9 +17,12 @@
 
 import time
 import socket
+from math import pi
 from threading import Event, Thread
 
-from racepi_can_decoder import CanFrame, focus_rs_tps_converter, focus_rs_rpm_converter
+from racepi_can_decoder import CanFrame, \
+    focus_rs_tps_converter, focus_rs_rpm_converter, \
+    focus_rs_steering_angle_converter, focus_rs_steering_direction_converter
 from racepi_sensor_handler.data_utilities import safe_speed_to_float
 from .messages import *
 
@@ -133,6 +136,10 @@ class RaceTechnologyDL1FeedWriter:
         msg = get_brake_pressure_message_bytes(val)
         self.__queue_mesg(msg)
 
+    def send_steering_angle(self, angle):
+        msg = get_steering_angle_message_bytes(angle)
+        self.__queue_mesg(msg)
+
     def write_gps_sample(self, timestamp, data):
         """
         
@@ -177,8 +184,13 @@ class RaceTechnologyDL1FeedWriter:
         frame = CanFrame(arb_id, payload)
         # TODO: finish converters
         if data[:3] == "010":
-            #self.racetech_feed_writer.send_timestamp(timestamp)
-            pass  # steering angle
+            self.racetech_feed_writer.send_timestamp(timestamp)
+            direction = focus_rs_steering_direction_converter.convert_frame(frame)
+            angle = focus_rs_steering_angle_converter.convert_frame(frame)
+            if not direction > 0:
+                angle = -angle
+            angle *= 180.0 / pi  # radians -> degrees
+            self.send_steering_angle(angle)
         if data[:3] == "080":
             self.send_timestamp(timestamp)
             tps = focus_rs_tps_converter.convert_frame(frame)
