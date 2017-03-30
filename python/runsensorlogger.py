@@ -31,7 +31,7 @@ if __name__ == "__main__":
     import sys, time, logo  # display logo
 
     # delay startup while devices initialize
-    while uptime_helper() < 15.0:
+    while float(uptime_helper()) < 30.0:
         time.sleep(1)
 
     if len(sys.argv) < 2:
