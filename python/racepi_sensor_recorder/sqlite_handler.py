@@ -17,7 +17,7 @@
 import sqlite3
 import uuid
 
-from data_utilities import uptime_helper
+from racepi_sensor_handler.data_utilities import uptime_helper
 
 
 class DbHandler:

@@ -15,7 +15,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
-from data_utilities import uptime_helper
+from racepi_sensor_handler.data_utilities import uptime_helper
 from racepi_sensor_recorder import DbHandler, SensorLogger
 from racepi_sensor_handler import GpsSensorHandler, RpiImuSensorHandler, GPS_REQUIRED_FIELDS, \
     STN11XXCanSensorHandler, SocketCanSensorHandler
