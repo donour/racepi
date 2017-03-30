@@ -184,10 +184,10 @@ class RaceTechnologyDL1FeedWriter:
         frame = CanFrame(arb_id, payload)
         # TODO: finish converters
         if data[:3] == "010":
-            self.racetech_feed_writer.send_timestamp(timestamp)
+            self.send_timestamp(timestamp)
             direction = focus_rs_steering_direction_converter.convert_frame(frame)
             angle = focus_rs_steering_angle_converter.convert_frame(frame)
-            if not direction > 0:
+            if direction > 0:
                 angle = -angle
             angle *= 180.0 / pi  # radians -> degrees
             self.send_steering_angle(angle)
