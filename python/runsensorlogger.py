@@ -15,7 +15,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
-
+from data_utilities import uptime_helper
 from racepi_sensor_recorder import DbHandler, SensorLogger
 from racepi_sensor_handler import GpsSensorHandler, RpiImuSensorHandler, GPS_REQUIRED_FIELDS, \
     STN11XXCanSensorHandler, SocketCanSensorHandler
@@ -30,7 +30,10 @@ UNDERLINE = '\033[4m'
 if __name__ == "__main__":   
     import sys, time, logo  # display logo
 
-    time.sleep(15)
+    # delay startup while devices initialize
+    while uptime_helper() < 15.0:
+        time.sleep(1)
+
     if len(sys.argv) < 2:
         dbfile = DEFAULT_SQLITE_FILE
     else:
