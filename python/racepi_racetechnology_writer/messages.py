@@ -132,7 +132,7 @@ def get_tps_message_bytes(voltage):
 
 def get_steering_angle_message_bytes(angle):
     if angle < 0:
-        val = (angle*10) + 65536
+        val = int(angle*10) + 65536
         b2 = val & 0xFF
         b3 = (val >> 8) & 0xFF
         b3 |= 0x80
