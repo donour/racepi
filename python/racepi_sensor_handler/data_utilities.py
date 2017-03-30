@@ -16,6 +16,14 @@
 import itertools
 
 
+def uptime_helper():
+    """Simple helper function to get the current system uptime in seconds on Linux"""
+    with open('/proc/uptime', 'r') as f:
+        uptime_seconds = float(f.readline().split()[0])
+        return uptime_seconds
+    return -1.0
+
+
 def merge_and_generate_ordered_log(data):
     """
     This utility function takes a data object of the type

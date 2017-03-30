@@ -17,13 +17,7 @@
 import sqlite3
 import uuid
 
-
-def uptime_helper():
-    """Simple helper function to get the current system uptime in seconds on Linux"""
-    with open('/proc/uptime', 'r') as f:
-        uptime_seconds = float(f.readline().split()[0])
-        return uptime_seconds
-    return -1.0
+from data_utilities import uptime_helper
 
 
 class DbHandler:
