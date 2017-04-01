@@ -22,7 +22,8 @@ from threading import Event, Thread
 
 from racepi_can_decoder import CanFrame, \
     focus_rs_tps_converter, focus_rs_rpm_converter, \
-    focus_rs_steering_angle_converter, focus_rs_steering_direction_converter
+    focus_rs_steering_angle_converter, focus_rs_steering_direction_converter, \
+    focus_rs_brake_pressure_converter
 from racepi_sensor_handler.data_utilities import safe_speed_to_float
 from .messages import *
 
@@ -131,9 +132,7 @@ class RaceTechnologyDL1FeedWriter:
         self.__queue_mesg(msg)
 
     def send_brake_pressure(self, brake_pressure):
-        val = brake_pressure / MAX_BRAKE_PRESSURE
-        val *= DL1_ANALOG_MAX_VOLTAGE
-        msg = get_brake_pressure_message_bytes(val)
+        msg = get_brake_pressure_message_bytes(brake_pressure)
         self.__queue_mesg(msg)
 
     def send_steering_angle(self, angle):
@@ -182,7 +181,7 @@ class RaceTechnologyDL1FeedWriter:
         arb_id = data[:3]
         payload = data[3:]
         frame = CanFrame(arb_id, payload)
-        # TODO: finish converters
+
         if data[:3] == "010":
             self.send_timestamp(timestamp)
             direction = focus_rs_steering_direction_converter.convert_frame(frame)
@@ -200,6 +199,6 @@ class RaceTechnologyDL1FeedWriter:
             rpm = focus_rs_rpm_converter.convert_frame(frame)
             self.send_rpm(rpm)
         if data[:3] == "213":
-            #self.racetech_feed_writer.send_timestamp(timestamp)
-            #self.racetech_feed_writer.send_brake_pressure(brake_pressure)
-            pass
+            self.send_timestamp(timestamp)
+            pressure = focus_rs_brake_pressure_converter.convert_frame(frame)
+            self.send_brake_pressure(pressure)
