@@ -16,6 +16,7 @@
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
 import struct
+import math
 
 XYACCEL_MESSAGE_ID = 8
 TIMESTAMP_MESSAGE_ID = 9
@@ -37,6 +38,8 @@ GPS_SPEED_FMT = "!BII"  # header, speed, accuracy
 RPM_FMT = ">4B"  # header, engine speed as frequency
 ANALOG_FMT = ">3B"  # header, value as voltage (5v)
 STEERING_ANGLE_FMT = ">4B"  # header, type of data byte, 2 bytes value
+BRAKE_PRESSURE_FMT = ">BBbBB"  # header, location, scale_factor(signed), 2 bytes value
+
 DL1_PERIOD_CONSTANT = 6e6
 GPS_POS_FIXED_ACCURACY = 0x10  # millimeters
 
@@ -143,6 +146,16 @@ def get_steering_angle_message_bytes(angle):
     return struct.pack(STEERING_ANGLE_FMT, STEERING_ANGLE_ID, 0x3, b2, b3)
 
 
-def get_brake_pressure_message_bytes(voltage):
-    return get_analog_message_bytes(voltage, BRAKE_PRESSURE_MESSAGE_ID)
+def get_brake_pressure_message_bytes(pressure):
+    if pressure < 1e-20:
+        b2 = b3 = b4 = 0
+    else:
+        scale_factor = int(math.log10(pressure) - 4)
+        val = int(pressure / math.pow(10, scale_factor))
+        b2 = scale_factor
+        b3 = val & 0xFF
+        b4 = (val >> 8) & 0xFF
+
+    return struct.pack(BRAKE_PRESSURE_FMT, BRAKE_PRESSURE_MESSAGE_ID, 0x1, b2, b3, b4)
+
 

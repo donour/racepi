@@ -185,6 +185,46 @@ class RaceCaptureMessageTests(TestCase):
         angle = - (65536 - (msg[2] + (msg[3] << 8))) / 10
         self.assertEqual(-720, angle)
 
+    def test_get_brake_pressure_message_header(self):
+        msg = get_brake_pressure_message_bytes(0.0)
+        self.assertEqual(BRAKE_PRESSURE_MESSAGE_ID, msg[0])
+        self.assertEqual(1, msg[1])
+
+    def test_get_brake_pressure_message_negative(self):
+        msg = get_brake_pressure_message_bytes(-1.23)
+        self.assertEqual(0, msg[2])
+        self.assertEqual(0, msg[3])
+        self.assertEqual(0, msg[4])
+
+    def test_get_brake_pressure_message_zero(self):
+        msg = get_brake_pressure_message_bytes(0.0)
+        self.assertEqual(0, msg[2])
+        self.assertEqual(0, msg[3])
+        self.assertEqual(0, msg[4])
+
+    def test_get_brake_pressure_message_small_pressure(self):
+        msg = get_brake_pressure_message_bytes(1.0e-5)
+        self.assertEqual(247, msg[2])
+        self.assertEqual(16, msg[3])
+        self.assertEqual(39, msg[4])
+
+    def test_get_brake_pressure_message_unit_pressure(self):
+        msg = get_brake_pressure_message_bytes(1.0)
+        self.assertEqual(252, msg[2])
+        self.assertEqual(16, msg[3])
+        self.assertEqual(39, msg[4])
+
+    def test_get_brake_pressure_message_moderate_pressure(self):
+        msg = get_brake_pressure_message_bytes(12345)
+        self.assertEqual(0, msg[2])
+        self.assertEqual(57, msg[3])
+        self.assertEqual(48, msg[4])
+
+    def test_get_brake_pressure_message_big_pressure(self):
+        msg = get_brake_pressure_message_bytes(12.34e46)
+        self.assertEqual(43, msg[2])
+        self.assertEqual(52, msg[3])
+        self.assertEqual(48, msg[4])
 
 
 if __name__ == "__main__":
