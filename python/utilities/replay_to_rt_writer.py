@@ -27,9 +27,9 @@ from racepi_database_handler import Base, SessionInfo, GPSData, IMUData, CANData
 from racepi_sensor_handler.data_utilities import merge_and_generate_ordered_log
 
 
-def replay(dbfile):
-    print("Opening %s" % dbfile)
-    engine = create_engine('sqlite:///' + dbfile)
+def replay(db_file, session_id):
+    print("Opening %s" % db_file)
+    engine = create_engine('sqlite:///' + db_file)
     Base.metadata.bind = engine
     sm = sessionmaker()
     sm.bind = engine
@@ -41,7 +41,10 @@ def replay(dbfile):
     while writer.number_of_clients() <= 0:
         time.sleep(0.1)
 
-    for si in s.query(SessionInfo).all():
+    for si in s.query(SessionInfo).filter(SessionInfo.max_speed > 10).all():
+        if session_id and si.session_id != session_id:
+            continue  # skip if different session_id specified
+
         data = {}
         # load all data for session
         gps_data = s.query(GPSData).filter(GPSData.session_id == si.session_id).all()
@@ -75,7 +78,11 @@ def replay(dbfile):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: %s <sqlite db filename> ..." % sys.argv[0])
+        print("Usage: %s <sqlite db filename> [session_id]" % sys.argv[0])
         sys.exit(1)
-    dbfile = sys.argv[1]
-    replay(dbfile)
+    db_file = sys.argv[1]
+    if len(sys.argv) > 2:
+        session_id = sys.argv[2]
+    else:
+        session_id = None
+    replay(db_file, session_id)
