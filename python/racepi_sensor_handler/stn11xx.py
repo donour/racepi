@@ -42,6 +42,7 @@ class STNHandler:
     def __init__(self, dev=DEV_NAME, baud=BAUD_RATE):
 
         # TODO autodetect and set baudrate
+        # TODO auto retry and reinit on hotplug
         print("Initializing STN11xx device on port %s" % dev)
         self.port = serial.Serial(dev, baud)
         if dev != self.port.getPort():
@@ -120,7 +121,7 @@ class STNHandler:
         Send a single ELM AT command and return the one line result
         """
         self.__send_command(cmd)
-        time.sleep(0.2) # *sigh* i hate hardware, but i hate python hardware libraries more
+        time.sleep(0.2)  # *sigh* i hate hardware, but i hate python hardware libraries more
         return self.__get_result()
         
     def __send_command(self, cmd):
