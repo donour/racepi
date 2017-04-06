@@ -16,7 +16,8 @@
 from collections import defaultdict
 from unittest import TestCase, main
 
-from racepi_sensor_handler.data_utilities import TimeToDistanceConverter, merge_and_generate_ordered_log
+from racepi_sensor_handler.data_utilities import TimeToDistanceConverter, \
+    merge_and_generate_ordered_log, oversteer_coefficient
 
 
 class TimeToDistanceConverterTest(TestCase):
@@ -86,6 +87,10 @@ class OtherTests(TestCase):
         self.assertEqual(res[4][1], 20)
         self.assertEqual(res[5][1], 30)
 
+    def test_oversteer_coefficient_zero_velocity(self):
+        self.assertAlmostEqual(-1.0, oversteer_coefficient(1, 1, 0.0, 1), 6)
+        self.assertAlmostEqual(-2.0, oversteer_coefficient(2, 2, 0.0, 2), 6)
+        self.assertAlmostEqual(0.0, oversteer_coefficient(0, 0, 0.0, 0), 6)
 
 if __name__ == "__main__":
     main()
