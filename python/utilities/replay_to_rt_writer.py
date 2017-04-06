@@ -15,6 +15,10 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
+"""
+This is a tool to replay recorded sessions via the DL1 broadcast
+library.
+"""
 
 import sys
 
@@ -25,6 +29,9 @@ from sqlalchemy.orm import sessionmaker
 from racepi_racetechnology_writer.writers import RaceTechnologyDL1FeedWriter
 from racepi_database_handler import Base, SessionInfo, GPSData, IMUData, CANData
 from racepi_sensor_handler.data_utilities import merge_and_generate_ordered_log
+
+
+BLUETOOTH_CLIENT_WAIT_SECONDS = 0.1
 
 
 def replay(db_file, session_id):
@@ -39,7 +46,7 @@ def replay(db_file, session_id):
 
     print("Waiting for active clients")
     while writer.number_of_clients() <= 0:
-        time.sleep(0.1)
+        time.sleep(BLUETOOTH_CLIENT_WAIT_SECONDS)
 
     for si in s.query(SessionInfo).filter(SessionInfo.max_speed > 10).all():
         if session_id and si.session_id != session_id:
@@ -72,8 +79,8 @@ def replay(db_file, session_id):
                     writer.flush_queued_messages()  # can messages are delivered very quickly, flush often
 
         writer.flush_queued_messages()
-        # sleep between replays
         print("Finished", si.session_id)
+        # sleep between replays
         time.sleep(4)
 
 if __name__ == "__main__":
