@@ -19,6 +19,7 @@ import uuid
 
 from racepi_sensor_handler.data_utilities import uptime_helper
 
+#TODO rewrite to use DB bindings
 
 class DbHandler:
     """
