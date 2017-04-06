@@ -18,9 +18,10 @@ import sqlite3
 import uuid
 
 from racepi_sensor_handler.data_utilities import uptime_helper
+from racepi_database_handler import *
+
 
 #TODO rewrite to use DB bindings
-
 class DbHandler:
     """
     Class for handling RacePi access to sqlite
@@ -28,6 +29,7 @@ class DbHandler:
     def __init__(self, db_location, gps_fields=[]):
         self.db_location = db_location
         self.gps_fields = gps_fields
+        self.conn = None
         
     def connect(self):
 
