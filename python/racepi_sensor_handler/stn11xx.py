@@ -63,10 +63,10 @@ class STNHandler:
         self.dev_description = self.get_sample('at@1')
 
         # ensure device is ELM compatible
-        if not 'ELM327' in self.elm_version:
+        if 'ELM327' not in self.elm_version:
             raise IOError("Failed to find ELM device")
         # ensure device is STN11xx compatible
-        if not 'stn11' in self.stn_version.lower():
+        if 'stn11' not in self.stn_version.lower():
             raise IOError("Failed to find STN11xx device: " + self.stn_version )
 
         print("Found device: %s" % self.stn_version)
