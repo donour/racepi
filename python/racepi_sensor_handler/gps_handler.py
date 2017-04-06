@@ -31,6 +31,7 @@ class GpsSensorHandler(SensorHandler):
         SensorHandler.__init__(self, self.__record_from_gps)
 
     def __record_from_gps(self):
+        # TODO auto retry and reinit on hotplug
 
         if not self.pipe_out:
             raise ValueError("Illegal argument, no queue specified")
