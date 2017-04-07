@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 import itertools
-from math import tan
+from math import cos, pi, fabs
 
 
 def uptime_helper():
@@ -67,15 +67,15 @@ def oversteer_coefficient(steering_angle, wheelbase, velocity, yaw_rate):
     :return: ratio
     """
 
-    # TODO, this has not been thoroughly tested
+    # TODO, this has not been thoroughly tested, does not account for slip
 
-    if steering_angle > 1e-5:
-        requested_turn_radius = wheelbase / tan(steering_angle)
-        requested_yaw_rate = velocity / requested_turn_radius
+    if fabs(steering_angle) > 1e-15:
+        requested_turn_radius = wheelbase / cos((pi / 2) - steering_angle)
+        requested_yaw = velocity / requested_turn_radius
     else:
-        requested_yaw_rate = 0.0
+        requested_yaw = 0.0
 
-    return requested_yaw_rate - yaw_rate
+    return requested_yaw - yaw_rate
 
 
 class TimeToDistanceConverter:
