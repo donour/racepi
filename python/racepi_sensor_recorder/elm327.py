@@ -119,8 +119,8 @@ def record_from_elm327(q, done):
         while not elm:
             try:
                 elm = ElmHandler(DEV_NAME, BAUD_RATE)
-                print "ELM device detected: %s (%s)" % (elm.elm_version, elm.dev_description)
-                print "ELM connected to vehicle:", str(elm.get_is_plugged_in())
+                print("ELM device detected: %s (%s)" % (elm.elm_version, elm.dev_description))
+                print("ELM connected to vehicle:", str(elm.get_is_plugged_in()))
 
             except serial.SerialException:
                 time.sleep(10)
@@ -139,7 +139,7 @@ if __name__ == "__main__":
     p = Process(target=record_from_elm327, args=(q,done))
     p.start()
     while True:
-        print time.time(), q.get()
+        print(time.time(), q.get())
 
 
     
