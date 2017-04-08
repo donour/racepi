@@ -97,6 +97,27 @@ class RaceCaptureMessageTests(TestCase):
         self.assertEqual(0, msg[1])
         self.assertEqual(0, msg[3])
 
+    def test_get_z_accel_message_len(self):
+        msg = get_z_accel_message_bytes(0)
+        self.assertEqual(len(msg), 3)
+
+    def test_get_z_accel_message_header(self):
+        msg = get_z_accel_message_bytes(0)
+        self.assertEqual(Z_ACCEL_MESSAGE_ID, msg[0])
+
+    def test_get_z_accel_message_zero(self):
+        msg = get_z_accel_message_bytes(0)
+        self.assertEqual(0, msg[1])
+        self.assertEqual(0, msg[2])
+
+    def test_get_z_accel_message_positive(self):
+        msg = get_z_accel_message_bytes(0.1)
+        self.assertEqual(0x80, msg[1])
+
+    def test_get_z_accel_message_negative(self):
+        msg = get_z_accel_message_bytes(-0.1)
+        self.assertEqual(0, msg[1])
+
     def test_get_message_checksum_zero(self):
         self.assertEqual(b'\x00', get_message_checksum(b'\x00'))
         self.assertEqual(b'\x00', get_message_checksum(b'\x00\x00'))

@@ -30,6 +30,7 @@ WHEEL_SPEED_LF_ID = 58
 WHEEL_SPEED_RF_ID = 59
 WHEEL_SPEED_LR_ID = 60
 WHEEL_SPEED_RR_ID = 61
+Z_ACCEL_MESSAGE_ID = 92
 
 XYACCEL_FMT = ">5B"
 TIMESTAMP_FMT = ">4B"    # header, time
@@ -39,6 +40,7 @@ RPM_FMT = ">4B"  # header, engine speed as frequency
 ANALOG_FMT = ">3B"  # header, value as voltage (5v)
 STEERING_ANGLE_FMT = ">4B"  # header, type of data byte, 2 bytes value
 BRAKE_PRESSURE_FMT = ">BBbBB"  # header, location, scale_factor(signed), 2 bytes value
+Z_ACCEL_FMT = ">3B"  # header, data
 
 DL1_PERIOD_CONSTANT = 6e6
 GPS_POS_FIXED_ACCURACY = 0x10  # millimeters
@@ -89,6 +91,11 @@ def get_xy_accel_message_bytes(x_accel, y_accel):
     return struct.pack(XYACCEL_FMT, XYACCEL_MESSAGE_ID, x1, x2, y1, y2)
 
 
+def get_z_accel_message_bytes(z_accel):
+    b1, b2 = __get_accel_bytes(z_accel)
+    return struct.pack(Z_ACCEL_FMT, Z_ACCEL_MESSAGE_ID, b1, b2)
+
+
 def get_gps_pos_message_bytes(gps_lat_xe7, gps_long_xe7):
     """
     :param gps_lat_xe7: latitude value, scaled by 1e7
@@ -134,6 +141,10 @@ def get_tps_message_bytes(voltage):
 
 
 def get_steering_angle_message_bytes(angle):
+    """    
+    :param angle: in degrees
+    :return: 
+    """
     if angle < 0:
         val = int(angle*10) + 65536
         b2 = val & 0xFF

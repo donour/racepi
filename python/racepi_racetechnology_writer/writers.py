@@ -118,10 +118,10 @@ class RaceTechnologyDL1FeedWriter:
         self.__queue_mesg(msg)
 
     def send_xyz_accel(self, x_accel, y_accel, z_accel):
-
         msg = get_xy_accel_message_bytes(x_accel, y_accel)
         self.__queue_mesg(msg)
-        # TODO, implement z accel
+        msg = get_z_accel_message_bytes(z_accel)
+        self.__queue_mesg(msg)
 
     def send_rpm(self, rpm):
         msg = get_rpm_message_bytes(rpm)
@@ -166,6 +166,7 @@ class RaceTechnologyDL1FeedWriter:
 
         self.send_timestamp(timestamp)
         self.send_xyz_accel(accel[0], accel[1], accel[2])
+        #TODO write gyro data
 
     def write_can_sample(self, timestamp, data):
         """
