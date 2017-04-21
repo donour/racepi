@@ -22,7 +22,6 @@ def uptime_helper():
     with open('/proc/uptime', 'r') as f:
         uptime_seconds = float(f.readline().split()[0])
         return uptime_seconds
-    return -1.0
 
 
 def merge_and_generate_ordered_log(data):
