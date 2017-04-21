@@ -38,4 +38,3 @@ if __name__ == "__main__":
     print("IMUData count:......%08d" % s.query(IMUData).count())
     print("CANData count:......%08d" % s.query(CANData).count())
     print("ProcessedCAN count:.%08d" % s.query(ProcessedCANSample).filter(CANData.arbitration_id == 0x10).count())
-
