@@ -107,12 +107,12 @@ class RacePiAnalysis:
         try:
             can_channels = {
                  'tps': self.db.get_and_transform_can_data(session_id, 128, focus_rs_tps_converter, tdc),
-                  'b_pres': self.db.get_and_transform_can_data(session_id, 531, focus_rs_brake_pressure_converter, tdc),
-                  'rpm': self.db.get_and_transform_can_data(session_id, 144, focus_rs_rpm_converter, tdc),
-                  'wheelspeed1': self.db.get_and_transform_can_data(session_id, 400, focus_rs_wheelspeed1_converter, tdc),
-                  'wheelspeed2': self.db.get_and_transform_can_data(session_id, 400, focus_rs_wheelspeed2_converter, tdc),
-                  'wheelspeed3': self.db.get_and_transform_can_data(session_id, 400, focus_rs_wheelspeed3_converter, tdc),
-                  'wheelspeed4': self.db.get_and_transform_can_data(session_id, 400, focus_rs_wheelspeed4_converter, tdc)
+                 'b_pres': self.db.get_and_transform_can_data(session_id, 531, focus_rs_brake_pressure_converter, tdc),
+                 'rpm': self.db.get_and_transform_can_data(session_id, 144, focus_rs_rpm_converter, tdc),
+                 'wheelspeed1': self.db.get_and_transform_can_data(session_id, 400, focus_rs_wheelspeed1_converter, tdc),
+                 'wheelspeed2': self.db.get_and_transform_can_data(session_id, 400, focus_rs_wheelspeed2_converter, tdc),
+                 'wheelspeed3': self.db.get_and_transform_can_data(session_id, 400, focus_rs_wheelspeed3_converter, tdc),
+                 'wheelspeed4': self.db.get_and_transform_can_data(session_id, 400, focus_rs_wheelspeed4_converter, tdc)
             }
         except ValueError as e:
             print("Error loading can channels: " + str(e))
