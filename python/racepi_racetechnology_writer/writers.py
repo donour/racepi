@@ -30,6 +30,8 @@ from .messages import *
 DL1_ANALOG_MAX_VOLTAGE = 5.0
 MAX_BRAKE_PRESSURE = float(1e-6)  # TODO determine proper unit
 
+CLIP_STEERING_ANGLE = 720.0  # degrees
+
 
 class RaceTechnologyDL1FeedWriter:
 
@@ -136,8 +138,10 @@ class RaceTechnologyDL1FeedWriter:
         self.__queue_mesg(msg)
 
     def send_steering_angle(self, angle):
-        msg = get_steering_angle_message_bytes(angle)
-        self.__queue_mesg(msg)
+        # send value only if it is within the allowable range
+        if -CLIP_STEERING_ANGLE < angle < CLIP_STEERING_ANGLE:
+            msg = get_steering_angle_message_bytes(angle)
+            self.__queue_mesg(msg)
 
     def write_gps_sample(self, timestamp, data):
         """
@@ -184,22 +188,23 @@ class RaceTechnologyDL1FeedWriter:
         frame = CanFrame(arb_id, payload)
 
         if data[:3] == "010":
-            self.send_timestamp(timestamp)
             direction = focus_rs_steering_direction_converter.convert_frame(frame)
             angle = focus_rs_steering_angle_converter.convert_frame(frame)
             if direction > 0:
                 angle = -angle
             angle *= 180.0 / pi  # radians -> degrees
-            self.send_steering_angle(angle)
-        if data[:3] == "080":
             self.send_timestamp(timestamp)
+            self.send_steering_angle(angle)
+
+        if data[:3] == "080":
             tps = focus_rs_tps_converter.convert_frame(frame)
+            self.send_timestamp(timestamp)
             self.send_tps(tps)
         if data[:3] == "090":
-            self.send_timestamp(timestamp)
             rpm = focus_rs_rpm_converter.convert_frame(frame)
+            self.send_timestamp(timestamp)
             self.send_rpm(rpm)
         if data[:3] == "213":
-            self.send_timestamp(timestamp)
             pressure = focus_rs_brake_pressure_converter.convert_frame(frame)
+            self.send_timestamp(timestamp)
             self.send_brake_pressure(pressure)
