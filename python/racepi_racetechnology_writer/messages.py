@@ -24,8 +24,9 @@ GPS_POS_MESSAGE_ID = 10
 GPS_SPEED_MESSAGE_ID = 11
 RPM_MESSAGE_ID = 18
 TPS_MESSAGE_ID = 27  # Analog 1
+BRAKE_MESSAGE_ID = 25  # Analog 2
 STEERING_ANGLE_ID = 93
-BRAKE_PRESSURE_MESSAGE_ID = 94
+EXT_PRESSURE_MESSAGE_ID = 94
 WHEEL_SPEED_LF_ID = 58
 WHEEL_SPEED_RF_ID = 59
 WHEEL_SPEED_LR_ID = 60
@@ -39,11 +40,12 @@ GPS_SPEED_FMT = "!BII"  # header, speed, accuracy
 RPM_FMT = ">4B"  # header, engine speed as frequency
 ANALOG_FMT = ">3B"  # header, value as voltage (5v)
 STEERING_ANGLE_FMT = ">4B"  # header, type of data byte, 2 bytes value
-BRAKE_PRESSURE_FMT = ">BBbBB"  # header, location, scale_factor(signed), 2 bytes value
+EXT_PRESSURE_FMT = ">BBbBB"  # header, location, scale_factor(signed), 2 bytes value
 Z_ACCEL_FMT = ">3B"  # header, data
 
 DL1_PERIOD_CONSTANT = 6e6
 GPS_POS_FIXED_ACCURACY = 0x10  # millimeters
+MAX_BRAKE_PRESSURE = 200.0
 
 
 def get_message_checksum(msg):
@@ -157,16 +159,25 @@ def get_steering_angle_message_bytes(angle):
     return struct.pack(STEERING_ANGLE_FMT, STEERING_ANGLE_ID, 0x3, b2, b3)
 
 
-def get_brake_pressure_message_bytes(pressure):
-    if pressure < 1e-20:
+def get_ext_pressure_message_bytes(pressure_bar):
+
+    # This code will sends the pressure EXT_PRESSURE, but it isn't used
+    if pressure_bar < 1e-20:
         b2 = b3 = b4 = 0
     else:
-        scale_factor = int(math.log10(pressure) - 4)
-        val = int(pressure / math.pow(10, scale_factor))
+        scale_factor = int(math.log10(pressure_bar) - 4)
+        val = int(pressure_bar / math.pow(10, scale_factor))
         b2 = scale_factor
         b3 = val & 0xFF
         b4 = (val >> 8) & 0xFF
+    return struct.pack(EXT_PRESSURE_FMT, EXT_PRESSURE_MESSAGE_ID, 0x1, b2, b3, b4)
 
-    return struct.pack(BRAKE_PRESSURE_FMT, BRAKE_PRESSURE_MESSAGE_ID, 0x1, b2, b3, b4)
 
+def get_brake_pressure_message_bytes(pressure_bar):
+    # Solostorm reads brake pressure as voltage
+    voltage = pressure_bar/MAX_BRAKE_PRESSURE * 5.0  # scale to 5v
+    voltage = max(voltage, 5.0)
+    volt_bytes = get_analog_message_bytes(voltage, BRAKE_MESSAGE_ID)
+
+    return volt_bytes
 

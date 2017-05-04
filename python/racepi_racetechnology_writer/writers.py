@@ -134,6 +134,8 @@ class RaceTechnologyDL1FeedWriter:
         self.__queue_mesg(msg)
 
     def send_brake_pressure(self, brake_pressure):
+        msg = get_ext_pressure_message_bytes(brake_pressure)
+        self.__queue_mesg(msg)
         msg = get_brake_pressure_message_bytes(brake_pressure)
         self.__queue_mesg(msg)
 
