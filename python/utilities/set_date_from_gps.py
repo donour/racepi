@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # Copyright 2016-7 Donour Sizemore
 #
 # This file is part of RacePi
@@ -24,28 +24,62 @@ Time is only set if the clock falls outside of a large, allowed
 window. This is useful for resetting time on a system without
 a RTC, like the Raspberry Pi.
 """
-import gps, datetime, os
-
-#TODO port to python3
+from gps3 import gps3
+import datetime
+import os
 
 ALLOWED_DELTA_SECONDS = 60*10
-s = gps.gps(mode=gps.WATCH_ENABLE)
 
-data = s.next()
+gps_socket = gps3.GPSDSocket()
+data_stream = gps3.DataStream()
+gps_socket.connect()
+gps_socket.watch()
 
-while data is None or 'time' not in data.keys():
-    data = s.next()
 
-t = data["time"]
+def get_time():
+    data = gps_socket.next()
+    if data:
+        data_stream.unpack(data)
+        return data_stream.TPV.get('time')
+    return None
+
+t = None
+while t is None or t == "n/a":
+    t = get_time()
+
 st = datetime.datetime.now()
 now = datetime.datetime.strptime(t, "%Y-%m-%dT%H:%M:%S.%fZ")
 delta = abs((st-now).seconds)
+
 if delta > ALLOWED_DELTA_SECONDS:
     os.system("date --s=%s" % t)
     print("Time delta too large (%.1fs), set time to:" % delta + str(t))
 else:
     print("Time within allowable range, exiting")
 
+####################################################################
+# python2 version
+#
+# import gps, datetime, os
+#
+# ALLOWED_DELTA_SECONDS = 60*10
+# s = gps.gps(mode=gps.WATCH_ENABLE)
+#
+# data = s.next()
+#
+# while data is None or 'time' not in data.keys():
+#     data = s.next()
+#
+# t = data["time"]
+# st = datetime.datetime.now()
+# now = datetime.datetime.strptime(t, "%Y-%m-%dT%H:%M:%S.%fZ")
+# delta = abs((st-now).seconds)
+# if delta > ALLOWED_DELTA_SECONDS:
+#     os.system("date --s=%s" % t)
+#     print("Time delta too large (%.1fs), set time to:" % delta + str(t))
+# else:
+#     print("Time within allowable range, exiting")
+#
 
 
 
