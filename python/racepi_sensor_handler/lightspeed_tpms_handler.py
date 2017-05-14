@@ -46,7 +46,7 @@ class LightSpeedTPMSSensorHandler(SensorHandler):
         """
         dev_addr = None
         while not dev_addr:
-            nearby_devices = bt.discover_devices(lookup_names=True, duration=2)
+            nearby_devices = bt.discover_devices(lookup_names=True)
             for addr, name in nearby_devices:
                 if self.tpms_name in name:
                     print("tpms: %s - %s" % (addr, name))
