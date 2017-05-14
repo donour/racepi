@@ -29,9 +29,11 @@ DEFAULT_TPMS_NAME = 'TPMS'
 TPMS_BT_PORT = 6
 TPMS_MESG_LEN = 40
 
+
 class LightSpeedTPMSSensorHandler(SensorHandler):
 
     def __init__(self, tpms_name=DEFAULT_TPMS_NAME, bt_port=TPMS_BT_PORT):
+        SensorHandler.__init__(self, self.__record_tpms)
         self.tpms_name = tpms_name
         self.port = bt_port
         self.sock = None
@@ -44,7 +46,7 @@ class LightSpeedTPMSSensorHandler(SensorHandler):
         """
         dev_addr = None
         while not dev_addr:
-            nearby_devices = bt.discover_devices(lookup_names=True)
+            nearby_devices = bt.discover_devices(lookup_names=True, duration=2)
             for addr, name in nearby_devices:
                 if self.tpms_name in name:
                     print("tpms: %s - %s" % (addr, name))
@@ -61,8 +63,14 @@ class LightSpeedTPMSSensorHandler(SensorHandler):
         print("Starting LightSpeed TPMS reader")
         while not self.doneEvent.is_set():
             if not self.sock:
-                self.__connect()
+                try:
+                    self.__connect()
+                except OSError as e:
+                    print("tpms: failed to scan BT devices:" + str(e))
+                    return
+
             d = self.sock.recv(TPMS_MESG_LEN)
+
             print(d)
             # TODO, parse and post the data to the rx queue
 
