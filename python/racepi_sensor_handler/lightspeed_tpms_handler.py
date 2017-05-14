@@ -16,6 +16,7 @@
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 """
 This sensor module supports the bluetooth TPMS sensors from Lightspeed/Macsboost.
+http://macsboost.com/motorsports/data-acquisition/tpms/lightspeed-tpms-by-macsboost.html
 """
 
 # TODO: untested
@@ -26,7 +27,7 @@ from .sensor_handler import SensorHandler
 
 DEFAULT_TPMS_NAME = 'TPMS'
 TPMS_BT_PORT = 6
-
+TPMS_MESG_LEN = 40
 
 class LightSpeedTPMSSensorHandler(SensorHandler):
 
@@ -61,7 +62,7 @@ class LightSpeedTPMSSensorHandler(SensorHandler):
         while not self.doneEvent.is_set():
             if not self.sock:
                 self.__connect()
-            d = self.sock.recv(40)
+            d = self.sock.recv(TPMS_MESG_LEN)
             print(d)
             # TODO, parse and post the data to the rx queue
 
