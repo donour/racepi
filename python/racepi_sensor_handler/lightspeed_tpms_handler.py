@@ -18,27 +18,6 @@
 This sensor module supports the bluetooth TPMS sensors from Lightspeed/Macsboost.
 http://macsboost.com/motorsports/data-acquisition/tpms/lightspeed-tpms-by-macsboost.html
 """
-
-# Voltage query message
-# (0x55, 0xAA, 0x6, 0x2, 0x1, 0xFA)
-# GET_RESP_ID_SWITCH
-#        byte[] bArr = new byte[6];
-#        bArr[0] = (byte) 85;
-#        bArr[1] = (byte) -86;
-#        bArr[2] = (byte) 6;
-#        bArr[3] = (byte) 2;
-#        bArr[5] = (byte) -5;
-
-# TireStat Format: 8bytes
-# 1: 85
-# 2: 170
-# 3: 8
-# 4: sensor ID
-# 5: pressure, 68 ~= 33 psi ~= 233 kPA, 71 ~= 244 kPA ~= 35.39 psi,  value*256 * 8.8 = bar
-# 6: temp, Celcius, value - 50
-# 7: 0
-# 8: unknown
-
 # TODO: untested
 
 import bluetooth as bt
@@ -50,7 +29,62 @@ from .sensor_handler import SensorHandler
 
 DEFAULT_TPMS_NAME = 'TPMS'
 TPMS_BT_PORT = 6
+TPMS_MSG_MARKER_BYTES = b'\x55\xAA'
 TPMS_MESG_LEN = 40
+
+TPMS_LOCATION_MAP = {
+    0x00: 'lf',
+    0x01: 'rf',
+    0x10: 'lr',
+    0x11: 'rr'
+}
+TPMS_LOCATION_MAP = defaultdict(str, TPMS_LOCATION_MAP)
+TPMS_DATA_MESG_LEN = 8
+
+
+class LightSpeedTPMSMessageParser:
+
+    @staticmethod
+    def __format_temp_c(val):
+        return float(val) - 50
+
+    @staticmethod
+    def __format_pressure_bar(val):
+        return float(val)*0.0344
+
+    @staticmethod
+    def _parse_data_sample(sample):
+        result = None
+        if sample and len(sample) >= TPMS_DATA_MESG_LEN - 2:
+            size = sample[0]
+            if size == TPMS_DATA_MESG_LEN:
+                location = TPMS_LOCATION_MAP[sample[1]]
+                pressure = LightSpeedTPMSMessageParser.__format_pressure_bar(sample[2])
+                temp = LightSpeedTPMSMessageParser.__format_temp_c(sample[3])
+                low_voltage = (sample[4] & 0x10) != 0
+                signal_loss = (sample[4] & 0x20) != 0
+
+                cksum = sample[5]
+                # TODO, verify checksum
+
+                result = {
+                    'location': location,
+                    'pressure': pressure,
+                    'temp': temp,
+                    'low_voltage': low_voltage,
+                    'signal_loss': signal_loss,
+                }
+        return result
+
+    @staticmethod
+    def unpack_messages(byte_data):
+        results = {}
+        data = byte_data.split(TPMS_MSG_MARKER_BYTES)
+        for sample in data:
+            if sample:
+                r = LightSpeedTPMSMessageParser._parse_data_sample(sample)
+                results[r['location']] = r
+        return results
 
 
 class LightSpeedTPMSSensorHandler(SensorHandler):
@@ -76,7 +110,7 @@ class LightSpeedTPMSSensorHandler(SensorHandler):
                     dev_addr = addr
 
         # Create the client socket
-        self.sock = bt.BluetoothSocket(bt.RFCOMM )
+        self.sock = bt.BluetoothSocket(bt.RFCOMM)
         self.sock.connect((dev_addr, self.port))
 
     def __record_tpms(self):
@@ -94,36 +128,11 @@ class LightSpeedTPMSSensorHandler(SensorHandler):
 
             d = self.sock.recv(TPMS_MESG_LEN)
             now = time.time()
-            data = LightSpeedTPMSSensorHandler.__unpack_message(d)
+            data = LightSpeedTPMSMessageParser.unpack_messages(d)
             print(d)  # TODO, remove me
             self.pipe_out.send((now, data))
 
         if self.sock:
             self.sock.close()
-
-    @staticmethod
-    def __unpack_message(msg):
-        # LS TPMS update messages contains 40 bytes
-        return {
-            'fl': LightSpeedTPMSSensorHandler.__extract_fields(msg[0:8]),
-            'fr': LightSpeedTPMSSensorHandler.__extract_fields(msg[8:16]),
-            'rl': LightSpeedTPMSSensorHandler.__extract_fields(msg[16:24]),
-            'rr': LightSpeedTPMSSensorHandler.__extract_fields(msg[24:32])
-        }
-
-    @staticmethod
-    def __extract_fields(data):
-        result = defaultdict(float)
-        result['temp'] = LightSpeedTPMSSensorHandler.__format_temp_c(data[5])
-        result['pressure'] = LightSpeedTPMSSensorHandler.__format_pressure_bar(data[4])
-        return result
-
-    @staticmethod
-    def __format_temp_c(val):
-        return float(val) - 50
-
-    @staticmethod
-    def __format_pressure_bar(val):
-        return float(val)/256.0 * 8.8
 
 
