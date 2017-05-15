@@ -19,9 +19,32 @@ This sensor module supports the bluetooth TPMS sensors from Lightspeed/Macsboost
 http://macsboost.com/motorsports/data-acquisition/tpms/lightspeed-tpms-by-macsboost.html
 """
 
+# Voltage query message
+# (0x55, 0xAA, 0x6, 0x2, 0x1, 0xFA)
+# GET_RESP_ID_SWITCH
+#        byte[] bArr = new byte[6];
+#        bArr[0] = (byte) 85;
+#        bArr[1] = (byte) -86;
+#        bArr[2] = (byte) 6;
+#        bArr[3] = (byte) 2;
+#        bArr[5] = (byte) -5;
+
+# TireStat Format: 8bytes
+# 1: 85
+# 2: 170
+# 3: 8
+# 4: sensor ID
+# 5: pressure, 68 ~= 33 psi ~= 233 kPA, 71 ~= 244 kPA ~= 35.39 psi,  value*256 * 8.8 = bar
+# 6: temp, Celcius, value - 50
+# 7: 0
+# 8: unknown
+
 # TODO: untested
 
 import bluetooth as bt
+from collections import defaultdict
+
+import time
 
 from .sensor_handler import SensorHandler
 
@@ -70,11 +93,37 @@ class LightSpeedTPMSSensorHandler(SensorHandler):
                     return
 
             d = self.sock.recv(TPMS_MESG_LEN)
-
-            print(d)
-            # TODO, parse and post the data to the rx queue
+            now = time.time()
+            data = LightSpeedTPMSSensorHandler.__unpack_message(d)
+            print(d)  # TODO, remove me
+            self.pipe_out.send((now, data))
 
         if self.sock:
             self.sock.close()
+
+    @staticmethod
+    def __unpack_message(msg):
+        # LS TPMS update messages contains 40 bytes
+        return {
+            'fl': LightSpeedTPMSSensorHandler.__extract_fields(msg[0:8]),
+            'fr': LightSpeedTPMSSensorHandler.__extract_fields(msg[8:16]),
+            'rl': LightSpeedTPMSSensorHandler.__extract_fields(msg[16:24]),
+            'rr': LightSpeedTPMSSensorHandler.__extract_fields(msg[24:32])
+        }
+
+    @staticmethod
+    def __extract_fields(data):
+        result = defaultdict(float)
+        result['temp'] = LightSpeedTPMSSensorHandler.__format_temp_c(data[5])
+        result['pressure'] = LightSpeedTPMSSensorHandler.__format_pressure_bar(data[4])
+        return result
+
+    @staticmethod
+    def __format_temp_c(val):
+        return float(val) - 50
+
+    @staticmethod
+    def __format_pressure_bar(val):
+        return float(val)/256.0 * 8.8
 
 
