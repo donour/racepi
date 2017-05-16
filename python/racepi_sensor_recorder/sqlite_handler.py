@@ -123,6 +123,11 @@ class DbHandler:
         if can_data:
             self.conn.commit()
 
+    def insert_tpms_updates(self, tpms_data, session_id):
+        pass
+        #print("tpms data len: ", len(tpms_data))
+        #TODO implment db insert
+
     def populate_session_info(self, session_id):
         """
         Populate the session info data with metadata from the

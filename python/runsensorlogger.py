@@ -18,7 +18,7 @@
 from racepi_sensor_handler.data_utilities import uptime_helper
 from racepi_sensor_recorder import DbHandler, SensorLogger
 from racepi_sensor_handler import GpsSensorHandler, RpiImuSensorHandler, GPS_REQUIRED_FIELDS, \
-    STN11XXCanSensorHandler, SocketCanSensorHandler
+    STN11XXCanSensorHandler, SocketCanSensorHandler, LightSpeedTPMSSensorHandler
 
 # TODO: move the DB filename to a config file in /etc
 DEFAULT_SQLITE_FILE = '/external/racepi_data/test.db'
@@ -44,6 +44,7 @@ if __name__ == "__main__":
     print("Opening Sensor Handlers")
     handlers = {
         'gps': GpsSensorHandler(),
+        'tpms': LightSpeedTPMSSensorHandler(),
         'imu': RpiImuSensorHandler(),
         'can': SocketCanSensorHandler(can_filters=FORD_FOCUS_RS_CAN_IDS)
         # 'can': STN11XXCanSensorHandler(FORD_FOCUS_RS_CAN_IDS)
