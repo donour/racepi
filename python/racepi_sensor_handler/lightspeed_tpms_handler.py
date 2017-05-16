@@ -18,7 +18,6 @@
 This sensor module supports the bluetooth TPMS sensors from Lightspeed/Macsboost.
 http://macsboost.com/motorsports/data-acquisition/tpms/lightspeed-tpms-by-macsboost.html
 """
-# TODO: untested
 
 import bluetooth as bt
 from collections import defaultdict
@@ -130,7 +129,6 @@ class LightSpeedTPMSSensorHandler(SensorHandler):
                 d = self.sock.recv(TPMS_MESG_LEN)
                 now = time.time()
                 data = LightSpeedTPMSMessageParser.unpack_messages(d)
-                print(d)  # TODO, remove me
                 self.pipe_out.send((now, data))
             except bt.btcommon.BluetoothError:
                 print("tpms: disconnected")
