@@ -126,11 +126,15 @@ class LightSpeedTPMSSensorHandler(SensorHandler):
                     print("tpms: failed to scan BT devices:" + str(e))
                     return
 
-            d = self.sock.recv(TPMS_MESG_LEN)
-            now = time.time()
-            data = LightSpeedTPMSMessageParser.unpack_messages(d)
-            print(d)  # TODO, remove me
-            self.pipe_out.send((now, data))
+            try:
+                d = self.sock.recv(TPMS_MESG_LEN)
+                now = time.time()
+                data = LightSpeedTPMSMessageParser.unpack_messages(d)
+                print(d)  # TODO, remove me
+                self.pipe_out.send((now, data))
+            except bt.btcommon.BluetoothError:
+                print("tpms: disconnected")
+                self.sock = None
 
         if self.sock:
             self.sock.close()
