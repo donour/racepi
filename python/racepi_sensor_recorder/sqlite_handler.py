@@ -124,9 +124,51 @@ class DbHandler:
             self.conn.commit()
 
     def insert_tpms_updates(self, tpms_data, session_id):
-        pass
-        #print("tpms data len: ", len(tpms_data))
-        #TODO implment db insert
+        """  
+        :param tpms_data: list(tuple(float, defaultdict(dict)))
+        :param session_id: 
+        :return: 
+        """
+        for sample in tpms_data:
+            t, raw = sample
+            lf_data = raw['lf']
+            rf_data = raw['rf']
+            lr_data = raw['lr']
+            rr_data = raw['rr']
+
+            lf_pressure = lf_data.get('pressure')
+            rf_pressure = rf_data.get('pressure')
+            lr_pressure = lr_data.get('pressure')
+            rr_pressure = rr_data.get('pressure')
+
+            lf_temp = lf_data.get('temp')
+            rf_temp = rf_data.get('temp')
+            lr_temp = lr_data.get('temp')
+            rr_temp = rr_data.get('temp')
+
+            lf_low_voltage = 1 if lf_data.get('low_voltage') else 0
+            rf_low_voltage = 1 if rf_data.get('low_voltage') else 0
+            lr_low_voltage = 1 if lr_data.get('low_voltage') else 0
+            rr_low_voltage = 1 if rr_data.get('low_voltage') else 0
+
+            insert_cmd = """
+              insert into tire_data
+              (session_id, timestamp,
+               lf_pressure,rf_pressure,lr_pressure,rr_pressure,
+               lf_temp, rf_temp, lr_temp, rr_temp,
+               lf_sensor_battery,rf_sensor_battery,lr_sensor_battery,rr_sensor_battery)
+              values              
+              ('%s', %s, 
+              '%s','%s','%s','%s',
+              '%s','%s','%s','%s',
+              '%s','%s','%s','%s')
+            """ % (
+                (session_id.hex, t,
+                 lf_pressure, rf_pressure, lr_pressure, rr_pressure,
+                 lf_temp, rf_temp, lr_temp, rr_temp,
+                 lf_low_voltage, rf_low_voltage, lr_low_voltage, rr_low_voltage))
+            insert_cmd = insert_cmd.replace("'None'", "null")
+            self.conn.execute(insert_cmd)
 
     def populate_session_info(self, session_id):
         """

@@ -77,7 +77,7 @@ class LightSpeedTPMSMessageParser:
 
     @staticmethod
     def unpack_messages(byte_data):
-        results = {}
+        results = defaultdict(dict)
         data = byte_data.split(TPMS_MSG_MARKER_BYTES)
         for sample in data:
             if sample:
