@@ -15,10 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 """
-Abtraction of RacePi's LED display interface
+Abstraction of RacePi's LED display interface
 """
 
-import atexit, time
+import atexit
+import time
+
 try:
     from sense_hat import SenseHat
 except ImportError:
@@ -108,10 +110,10 @@ class RacePiStatusDisplay:
         for i in range(8):
             self.sense.set_pixel(7, i, 0 if state else BRIGHTNESS, BRIGHTNESS if state else 0, 0)
 
-    def heartbeat(self, frequency = 1):
+    def heartbeat(self, frequency=1):
         now = time.time()
         if now - self.last_heartbeat > frequency:
-            self.sense.set_pixel(0, 7,
+            self.sense.set_pixel(0, 0,
                                  BRIGHTNESS if not self.heartbeat_active else 0,
                                  BRIGHTNESS if self.heartbeat_active else 0,
                                  0)
