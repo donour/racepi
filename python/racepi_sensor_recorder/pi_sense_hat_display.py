@@ -34,6 +34,7 @@ CAN_COL = 3
 BRIGHTNESS = 80
 DISPLAY_UPDATE_TIME = 0.05
 SENSOR_DISPLAY_TIMEOUT = 1.0
+TIRE_DISPLAY_TIMEOUT = 8.0
 
 
 class RacePiStatusDisplay:
@@ -110,6 +111,14 @@ class RacePiStatusDisplay:
         for i in range(8):
             self.sense.set_pixel(7, i, 0 if state else BRIGHTNESS, BRIGHTNESS if state else 0, 0)
 
+
+    def set_tire_state(self, state):
+        v = (0, BRIGHTNESS, 0) if state else (BRIGHTNESS, 0,0)
+        self.sense.set_pixel(0, 6, v)
+        self.sense.set_pixel(0, 7, v)
+        self.sense.set_pixel(1, 6, v)
+        self.sense.set_pixel(1, 7, v)
+    
     def heartbeat(self, frequency=1):
         now = time.time()
         if now - self.last_heartbeat > frequency:
@@ -120,7 +129,7 @@ class RacePiStatusDisplay:
             self.last_heartbeat = now
             self.heartbeat_active = not self.heartbeat_active
 
-    def refresh_display(self, db_time=0, gps_time=0, imu_time=0, can_time=0, recording=False):
+    def refresh_display(self, db_time=0, gps_time=0, imu_time=0, can_time=0, tire_time=0, recording=False):
 
         now = time.time()
         if now - self.update_time >  DISPLAY_UPDATE_TIME:
@@ -144,9 +153,12 @@ class RacePiStatusDisplay:
                     self.set_col_init(CAN_COL)
                 else:
                     self.set_col_ready(CAN_COL)
+                    
+                self.set_tire_state( (now-tire_time) < TIRE_DISPLAY_TIMEOUT)
 
                 self.update_time = now
                 self.set_recording_state(recording)
+
                 self.heartbeat()
         
 if __name__ == "__main__":

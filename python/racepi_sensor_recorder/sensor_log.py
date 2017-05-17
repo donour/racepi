@@ -225,6 +225,7 @@ class SensorLogger:
                                                  gps_time=update_times['gps'],
                                                  imu_time=update_times['imu'],
                                                  can_time=update_times['can'],
+                                                 tire_time=update_times['tpms'],
                                                  recording=(self.state == LoggerState.logging))
 
                 time.sleep(0.1)  # there is no reason to ever poll faster than this
