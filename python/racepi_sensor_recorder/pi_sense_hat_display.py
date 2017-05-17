@@ -113,7 +113,7 @@ class RacePiStatusDisplay:
     def heartbeat(self, frequency=1):
         now = time.time()
         if now - self.last_heartbeat > frequency:
-            self.sense.set_pixel(0, 0,
+            self.sense.set_pixel(7, 7,
                                  BRIGHTNESS if not self.heartbeat_active else 0,
                                  BRIGHTNESS if self.heartbeat_active else 0,
                                  0)
@@ -146,9 +146,10 @@ class RacePiStatusDisplay:
                     self.set_col_ready(CAN_COL)
 
                 self.update_time = now
-                self.heartbeat()
                 self.set_recording_state(recording)
 
+                # this must be last to be visible
+                self.heartbeat()
         
 if __name__ == "__main__":
     if SenseHat:
