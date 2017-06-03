@@ -206,6 +206,8 @@ class RaceTechnologyDL1FeedWriter:
             rpm = focus_rs_rpm_converter.convert_frame(frame)
             self.send_timestamp(timestamp)
             self.send_rpm(rpm)
+
+        # Brake pressure messages do not currently work
         #if data[:3] == "213":
         #    pressure = focus_rs_brake_pressure_converter.convert_frame(frame)
         #    self.send_timestamp(timestamp)

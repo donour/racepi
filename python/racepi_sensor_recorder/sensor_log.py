@@ -192,7 +192,7 @@ class SensorLogger:
                     self.db_handler.insert_gps_updates(self.data.get_sensor_data('gps'), self.session_id)
                     self.db_handler.insert_imu_updates(self.data.get_sensor_data('imu'), self.session_id)
                     self.db_handler.insert_can_updates(self.data.get_sensor_data('can'), self.session_id)
-                    #self.db_handler.insert_tpms_updates(self.data.get_sensor_data('tpms'), self.session_id)
+                    # self.db_handler.insert_tpms_updates(self.data.get_sensor_data('tpms'), self.session_id)
                 except TypeError as te:
                     print("Failed to insert data: %s" % te)
             self.data.clear()
