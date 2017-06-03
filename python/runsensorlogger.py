@@ -44,7 +44,7 @@ if __name__ == "__main__":
     print("Opening Sensor Handlers")
     handlers = {
         'gps': GpsSensorHandler(),
-        'tpms': LightSpeedTPMSSensorHandler(),
+        #'tpms': LightSpeedTPMSSensorHandler(),
         'imu': RpiImuSensorHandler(),
         'can': SocketCanSensorHandler(can_filters=FORD_FOCUS_RS_CAN_IDS)
         # 'can': STN11XXCanSensorHandler(FORD_FOCUS_RS_CAN_IDS)

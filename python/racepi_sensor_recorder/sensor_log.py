@@ -31,8 +31,8 @@ from racepi_racetechnology_writer.writers import RaceTechnologyDL1FeedWriter
 from .pi_sense_hat_display import RacePiStatusDisplay, SenseHat
 from .data_buffer import DataBuffer
 
-ACTIVATE_RECORDING_M_PER_S = 3.5
-MOVEMENT_THRESHOLD_M_PER_S = 2.0
+ACTIVATE_RECORDING_M_PER_S = 9.0
+MOVEMENT_THRESHOLD_M_PER_S = 2.5
 DEFAULT_DATA_BUFFER_TIME_SECONDS = 10.0
 
 
@@ -192,7 +192,7 @@ class SensorLogger:
                     self.db_handler.insert_gps_updates(self.data.get_sensor_data('gps'), self.session_id)
                     self.db_handler.insert_imu_updates(self.data.get_sensor_data('imu'), self.session_id)
                     self.db_handler.insert_can_updates(self.data.get_sensor_data('can'), self.session_id)
-                    self.db_handler.insert_tpms_updates(self.data.get_sensor_data('tpms'), self.session_id)
+                    #self.db_handler.insert_tpms_updates(self.data.get_sensor_data('tpms'), self.session_id)
                 except TypeError as te:
                     print("Failed to insert data: %s" % te)
             self.data.clear()
@@ -225,7 +225,7 @@ class SensorLogger:
                                                  gps_time=update_times['gps'],
                                                  imu_time=update_times['imu'],
                                                  can_time=update_times['can'],
-                                                 tire_time=update_times['tpms'],
+                                                 tire_time=0, # update_times['tpms'],
                                                  recording=(self.state == LoggerState.logging))
 
                 time.sleep(0.1)  # there is no reason to ever poll faster than this
