@@ -75,3 +75,16 @@ class CANData(Base):
     rtr = Column(Integer, nullable=False)  # 0 for data frames, 1 for data requests
     msg = Column(TEXT, nullable=False)  # data payload, string of 8 hexidecimal bytes
 
+
+class TireData(Base):
+    __tablename__ = "tire_data"
+    session_id = Column(TEXT, ForeignKey("sessions.id"), nullable=False)
+    timestamp = Column(REAL, primary_key=True, nullable=False)
+    lf_pressure = Column(REAL)
+    rf_pressure = Column(REAL)
+    lr_pressure = Column(REAL)
+    rr_pressure = Column(REAL)
+    lf_temp = Column(REAL)
+    rf_temp = Column(REAL)
+    lr_temp = Column(REAL)
+    rr_temp = Column(REAL)
