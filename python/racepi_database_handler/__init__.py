@@ -15,3 +15,13 @@
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 from .objects import *
 from .processed_data_objects import *
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+
+def create_db_session(filename):
+    engine = create_engine('sqlite:///' + filename)
+    Base.metadata.bind = engine
+    sm = sessionmaker(bind=engine)
+    s = sm()
+    return s

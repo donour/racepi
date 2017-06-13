@@ -84,7 +84,14 @@ class TireData(Base):
     rf_pressure = Column(REAL)
     lr_pressure = Column(REAL)
     rr_pressure = Column(REAL)
+
     lf_temp = Column(REAL)
     rf_temp = Column(REAL)
     lr_temp = Column(REAL)
     rr_temp = Column(REAL)
+
+    lf_sensor_battery = Column(Integer)
+    rf_sensor_battery = Column(Integer)
+    lr_sensor_battery = Column(Integer)
+    rr_sensor_battery = Column(Integer)
+
