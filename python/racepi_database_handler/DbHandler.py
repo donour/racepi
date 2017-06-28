@@ -73,16 +73,20 @@ class DbHandler:
             v.timestamp = t
 
             # Set GPSd fields
-            v.time = data.get("time")
-            v.lat = data.get("lat")
-            v.lon = data.get("lon")
-            v.alt = data.get("alt")
-            v.epv = data.get("epv")
-            v.epx = data.get("epx")
-            v.epy = data.get("epy")
-            v.speed = data.get("speed")
-            v.track = data.get("track")
-            self.db_session.add(v)
+            try:
+                v.time = float(data.get("time"))
+                v.lat = float(data.get("lat"))
+                v.lon = float(data.get("lon"))
+                v.alt = float(data.get("alt"))
+                v.speed = float(data.get("speed"))
+                v.track = float(data.get("track"))
+                v.epv = data.get("epv")
+                v.epx = data.get("epx")
+                v.epy = data.get("epy")
+                self.db_session.add(v)
+            except:
+                # skip invalid data
+                pass
 
         self.db_session.commit()
 

@@ -17,8 +17,8 @@
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 from racepi_sensor_handler.data_utilities import uptime_helper
 from racepi_sensor_recorder import SensorLogger
-from racepi_database_handler import DbHandler
-from racepi_sensor_handler import GpsSensorHandler, RpiImuSensorHandler, GPS_REQUIRED_FIELDS, \
+from racepi_database_handler.DbHandler import DbHandler
+from racepi_sensor_handler import GpsSensorHandler, RpiImuSensorHandler, \
     STN11XXCanSensorHandler, SocketCanSensorHandler, LightSpeedTPMSSensorHandler
 
 # TODO: move the DB filename to a config file in /etc
@@ -54,6 +54,6 @@ if __name__ == "__main__":
     print("Opening Database: %s" % dbfile)
     # TODO: look at opening DB as needed
     # to avoid corruption of tables
-    db_handler = DbHandler(dbfile, GPS_REQUIRED_FIELDS)
+    db_handler = DbHandler(dbfile)
     sl = SensorLogger(db_handler, handlers)
     sl.start()
