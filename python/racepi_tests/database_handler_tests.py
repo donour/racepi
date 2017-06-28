@@ -41,7 +41,7 @@ class DatabaseHandlerTest(TestCase):
         s = self.h.get_new_session()
         self.assertEqual(0,
                          len(self.h.db_session.query(GPSData).filter(GPSData.session_id == s).all()))
-        data = {'time': "123.456", "speed": "12.34", "track": '300.0'}
+        data = {'time': "123.456", "speed": "12.34", "track": '300.0', "lat": "12.34", "lon": "45.67", "alt": "12.345"}
         data = [(123.456, data)]
         self.h.insert_gps_updates(data, s)
         self.assertEqual(1,
@@ -88,3 +88,30 @@ class DatabaseHandlerTest(TestCase):
         self.h.insert_imu_updates([], s)
         self.h.insert_can_updates([], s)
         self.h.insert_tpms_updates([], s)
+
+    def test_example_gps_data(self):
+        s = self.h.get_new_session()
+
+        # this is some actual gps data that broke parsing
+        v = {'speed': 0.035,
+             'mode': 3,
+             'device': '/dev/ttyUSB0',
+             'time': '2017-06-28T02:27:37.050Z',
+             'epx': 65.484,
+             'epv': 31.05,
+             'epc': 'n/a',
+             'tag': 'GLL',
+             'lon': -11.001166,
+             'lat': 99.725708333,
+             'epd': 'n/a',
+             'epy': 20.665,
+             'alt': 17.2,
+             'track': 0.0,
+             'eps': 1637.1,
+             'climb': 0.0,
+             'ept': 0.005
+             }
+
+        self.h.insert_gps_updates([(123.456, v)], s)
+        results = self.h.db_session.query(GPSData).filter(GPSData.session_id==s).all()
+        self.assertEqual(len(results), 1)
