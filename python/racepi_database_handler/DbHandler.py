@@ -39,6 +39,8 @@ class DbHandler:
         self.db_session = sm()
         self.db_session.execute("PRAGMA foreign_keys = ON;")
         self.db_session.execute("PRAGMA journal_mode = WAL;")
+        #TODO: ensure that the requeste file exists an that
+        # the required tables are here
 
     def get_new_session(self):
         """
@@ -74,17 +76,17 @@ class DbHandler:
 
             # Set GPSd fields
             try:
-                v.time = float(data.get("time"))
                 v.lat = float(data.get("lat"))
                 v.lon = float(data.get("lon"))
                 v.alt = float(data.get("alt"))
                 v.speed = float(data.get("speed"))
                 v.track = float(data.get("track"))
+                v.time = data.get("time")
                 v.epv = data.get("epv")
                 v.epx = data.get("epx")
                 v.epy = data.get("epy")
                 self.db_session.add(v)
-            except:
+            except ValueError:
                 # skip invalid data
                 pass
 

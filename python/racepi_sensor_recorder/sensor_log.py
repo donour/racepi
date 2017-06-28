@@ -31,7 +31,7 @@ from racepi_racetechnology_writer.writers import RaceTechnologyDL1FeedWriter
 from .pi_sense_hat_display import RacePiStatusDisplay, SenseHat
 from .data_buffer import DataBuffer
 
-ACTIVATE_RECORDING_M_PER_S = 9.0
+ACTIVATE_RECORDING_M_PER_S = 9.5
 MOVEMENT_THRESHOLD_M_PER_S = 2.5
 DEFAULT_DATA_BUFFER_TIME_SECONDS = 10.0
 
