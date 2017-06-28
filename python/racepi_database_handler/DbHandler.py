@@ -17,6 +17,7 @@
 from uuid import uuid1
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
 from racepi_database_handler.objects import *
 from racepi_sensor_handler.data_utilities import uptime_helper
@@ -182,37 +183,34 @@ class DbHandler:
         :return:
         """
 
-        #TODO replace this with an ORM implementation
-
         if not session_id:
             return
         if not self.db_session:
             raise RuntimeWarning("No database connected")
-            return
 
-        update_cmd = """
-        INSERT OR REPLACE into session_info
-        (session_id, start_time_utc, max_speed, num_data_samples, duration)
-            select
-                sessions.id as session_id,
-                start_time_utc,
-                max_speed,
-                gps_count+imu_count+ COALESCE(can_count,0) as num_data_samples,
-                stop_time-start_time_utc as duration
-        from sessions
-        join
-            (select session_id,count(distinct timestamp) as gps_count, MAX(speed) as max_speed, MIN(timestamp) as start_time_utc, MAX(timestamp) as stop_time
-            from gps_data group by session_id) as gps
-            on gps.session_id = sessions.id
-        left join
-            (select session_id,count(distinct timestamp) as imu_count
-            from imu_data group by session_id) as imu
-            on imu.session_id = sessions.id
-        left join
-            (select session_id,count(distinct timestamp) as can_count
-            from can_data group by session_id) as can
-            on can.session_id = sessions.id
-                where sessions.id = '%s'
-                """ % session_id.hex
-        self.db_session.execute(update_cmd)
-        self.db_session.commit
+        gps_data = self.db_session.query(GPSData).filter(GPSData.session_id == session_id).\
+            order_by(GPSData.timestamp).all()
+        imu_data_count = self.db_session.query(IMUData).filter(IMUData.session_id == session_id).\
+            order_by(IMUData.timestamp).count()
+        can_data_count = self.db_session.query(CANData).filter(CANData.session_id == session_id).\
+            order_by(CANData.timestamp).count()
+        tire_data_count = self.db_session.query(TireData).filter(TireData.session_id == session_id).\
+            order_by(TireData.timestamp).count()
+
+        # if we only have one sample of speed, there isn't enough data to calculate stats
+        if len(gps_data) > 2:
+            try:
+                si = self.db_session.query(SessionInfo).filter(SessionInfo.session_id == session_id).one()
+            except NoResultFound:
+                si = SessionInfo()
+                self.db_session.add(si)
+            except MultipleResultsFound:
+                print("Warning: Multiple info entries for session " + session_id)
+
+            si.session_id = session_id
+            si.num_data_samples = len(gps_data) + imu_data_count + can_data_count + tire_data_count
+            si.start_time_utc = gps_data[0].timestamp
+            si.duration = gps_data[1].timestamp - gps_data[0].timestamp
+            si.max_speed = max([x.speed for x in gps_data])
+
+        self.db_session.commit()
