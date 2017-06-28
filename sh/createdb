@@ -27,6 +27,7 @@ SCHEMA_FILES=(                \
     "${SCHEMA_HOME}/gps.sql"          \
     "${SCHEMA_HOME}/imu.sql"          \
     "${SCHEMA_HOME}/can.sql"          \
+    "${SCHEMA_HOME}/tire.sql"         \
 )
 
 if [ -z $1 ]; then
