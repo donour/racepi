@@ -22,10 +22,13 @@ from racepi_database_handler import *
 
 
 #TODO rewrite to use DB bindings
+@DeprecationWarning
 class DbHandler:
     """
     Class for handling RacePi access to sqlite
     """
+
+    @DeprecationWarning
     def __init__(self, db_location, gps_fields=[]):
         self.db_location = db_location
         self.gps_fields = gps_fields
@@ -116,7 +119,7 @@ class DbHandler:
               (session_id, timestamp, arbitration_id, rtr, msg)
               values
               ('%s', %s, %d, %d, '%s')
-            """ % (
+            """ %    (
                 (session_id.hex, t, int(arbId, 16), 0, payload))            
             self.conn.execute(insert_cmd)
 
