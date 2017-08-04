@@ -1,0 +1,21 @@
+<div>
+    <div>
+        <!--This doesn't properly select the active config-->
+        <select ng-init="selectedConfig = vm.config_profiles[0]"
+                ng-model="selectedConfig"
+                ng-options="x for x in vm.config_profiles"></select>
+    </div>
+    <div>
+        <table class="table table-striped">
+            <thead><tr><th>Time</th></tr></thead>
+            <tbody>
+            <tr ng-repeat="profile in vm.config_profiles">
+                <td>
+                    foo
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
