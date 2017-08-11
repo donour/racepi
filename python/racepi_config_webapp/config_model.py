@@ -17,9 +17,10 @@
 
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+import time
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///config.db'
 db = SQLAlchemy(app)
 
 
@@ -45,7 +46,7 @@ class CapturedCanIds(db.Model):
     """
     Collections of CAN IDs that are captured through direct bus listening
     """
-    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    id = db.Column(db.Integer, primary_key=True, unique=True, nullable=False)
     configuration_profile_id = db.Column(db.Integer, db.ForeignKey("configuration_profile.id"))
     can_id = db.Column(db.Integer, nullable=False)
 
@@ -55,4 +56,19 @@ class CapturedCanIds(db.Model):
     def __repr__(self):
         return '<CapturedCanIds %r>' % self.id
 
+
+class ActiveConfigurationProfile(db.Model):
+    """
+    History of active configurations
+    """
+    id = db.Column(db.Integer, primary_key=True, unique=True, nullable=False)
+    configuration_profile_id = db.Column(db.Integer, db.ForeignKey("configuration_profile.id"), nullable=False)
+    time_set = db.Column(db.Integer, unique=True, nullable=False)
+
+    def __init__(self, configuration_profile_id):
+        self.configuration_profile_id = configuration_profile_id
+        self.time_set = int(time.time()*1000)
+
+    def __repr__(self):
+        return '<ActiveConfigurationProfile %r>' % self.id
 
