@@ -72,3 +72,11 @@ class ActiveConfigurationProfile(db.Model):
     def __repr__(self):
         return '<ActiveConfigurationProfile %r>' % self.id
 
+
+# Helper Utilities
+def get_active_config_profile():
+    acp = ActiveConfigurationProfile.query.\
+        order_by(ActiveConfigurationProfile.time_set.desc()).first()
+    return ConfigurationProfile.query.filter_by(id=acp.configuration_profile_id)
+
+

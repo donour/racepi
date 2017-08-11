@@ -61,7 +61,7 @@ def readwrite_config_profile(configuration_profile_name):
         data = request.json.get('configuration_profile')
         return set_configuration_profile(configuration_profile_name, data)
     else:
-        return get_configuration_list(configuration_profile_name)
+        return get_configuration_profile(configuration_profile_name)
 
 
 @app.route('/settings')
