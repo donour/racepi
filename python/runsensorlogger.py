@@ -24,7 +24,8 @@ from racepi_sensor_handler import GpsSensorHandler, RpiImuSensorHandler, \
 # TODO: move the DB filename to a config file in /etc
 DEFAULT_SQLITE_FILE = '/external/racepi_data/test.db'
 # TODO: make recorded can ids configurable
-FORD_FOCUS_RS_CAN_IDS = [0x010, 0x070, 0x080, 0x090, 0x190, 0x213, 0x420]
+FORD_FOCUS_RS_CAN_IDS = [0x010, 0x080, 0x090, 0x420]
+#FORD_FOCUS_RS_CAN_IDS = [0x010, 0x070, 0x080, 0x090, 0x190, 0x130, 0x213, 0x420]
 ENDCOLOR  = '\033[0m'
 UNDERLINE = '\033[4m'
 
