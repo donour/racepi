@@ -33,6 +33,7 @@ if __name__ == "__main__":
     while True:
         data = h.get_all_data()
         if data:
-            print(data)
+            print([x[1][3:] for x in data])
+
         else:
             time.sleep(0.1)
