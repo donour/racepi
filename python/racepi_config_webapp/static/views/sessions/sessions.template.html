@@ -1,0 +1,50 @@
+<div class="row">
+    <div class="col-sm-12">
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <!--<th>Session ID</th>-->
+                <th>Time</th>
+                <th>Vmax</th>
+                <th>Num Samples</th>
+                <th>Duration (s)</th>
+                <th></th>
+                <th></th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="session in vm.sessions">
+                <!--
+                <td>
+                    <div>{{session[0]}}</div>
+                </td>
+                -->
+                <td>
+                    <div>{{session[1]*1000 | date : "yyyy-MM-dd HH:mm"}}</div>
+                </td>
+                <td>
+                    <div>{{session[3] | number : 1}}</div>
+                </td>
+                <td>
+                    <div>{{session[4]}}</div>
+                </td>
+                <td>
+                    <div>{{session[2] | number : 1}}</div>
+                </td>
+                <td width="125px">
+                    <a ui-sref="details({sessionId: session[0]})">
+                        <button class="btn btn-block btn-default" ng-click="">View</button>
+                    </a>
+                </td>
+                <td>
+                    <a download="{{session[0]}}.csv" ng-href="/export/csv?session_id={{session[0]}}">[Download CSV]</a>
+                </td>
+                <td>
+                    <a ng-href="/plot/bokeh_test/{{session[0]}}">[BOKEH]</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

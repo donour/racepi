@@ -66,7 +66,6 @@ class SensorLogger:
         :param db_handler: output handler for writing sensor data to a database
         :param sensor_handlers: input data handlers, these should be racepi sensor_handlers
         """
-        # TODO: is this still used!?
         self.data = DataBuffer()
         self.display = None
         if SenseHat:

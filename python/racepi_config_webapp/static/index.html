@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <title>RacePI</title>
+    <link rel="stylesheet" href="static/styles/bootstrap.min.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="static/styles/w3.css">
+    <link rel="stylesheet" href="static/styles/main.css">
+
+    <script src="static/angular/angular.min.js"></script>
+    <script src="static/angular/angular-resource.min.js"></script>
+    <script src="static/angular/angular-ui-router.js"></script>
+    <!--<script src="static/plotly/plotly-latest.min.js"></script>-->
+
+    <script src="static/app.js"></script>
+    <script src="static/views/sessions/sessions.controller.js"></script>
+    <script src="static/views/settings/settings.controller.js"></script>
+    <script src="static/views/details/details.controller.js"></script>
+    <script src="static/directives/rpNavBar/rpNavBar.directive.js"></script>
+    <!--<script src="static/directives/rpPlotly/rpPlotly.directive.js"></script>-->
+</head>
+
+<body ng-app='racepi'>
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12">
+            <h2>RacePI</h2>
+        </div>
+    </div>
+    <rp-nav-bar></rp-nav-bar>
+    <div ui-view></div>
+</div>
+</body>
+</html>

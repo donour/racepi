@@ -113,5 +113,5 @@ class DatabaseHandlerTest(TestCase):
              }
 
         self.h.insert_gps_updates([(123.456, v)], s)
-        results = self.h.db_session.query(GPSData).filter(GPSData.session_id==s).all()
+        results = self.h.db_session.query(GPSData).filter(GPSData.session_id == s).all()
         self.assertEqual(len(results), 1)

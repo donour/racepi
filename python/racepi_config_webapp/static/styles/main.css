@@ -1,0 +1,23 @@
+table {
+      overflow: hidden;
+    }
+.tablerow:hover {
+    background-color: cyan;
+}
+
+.breadcrumb {
+    margin: 0;
+    position: relative;
+    display: block;
+    padding: 10px 15px;
+    line-height: 20px;
+    color: #777;
+    background-color: transparent;
+}
+
+@media (min-width: 768px) {
+    .breadcrumb {
+        padding-top: 15px;
+        padding-bottom: 15px;
+    }
+}

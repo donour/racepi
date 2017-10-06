@@ -1,0 +1,28 @@
+<div>
+    <div>
+        <!--This doesn't properly select the active config-->
+        Active Config:
+        <select ng-init="vm.selectedConfig = vm.config_profiles[0]"
+                ng-model="vm.selectedConfig"
+                ng-options="x for x in vm.config_profiles"
+                ng-change="vm.load_fields()"
+        ></select>
+    </div>
+    <div>
+        <table class="table table-striped">
+            <tr>
+                <td>ID</td>
+                <td><input ng-model="vm.config_setting.configuration_profile.id"></td>
+            </tr>
+            <tr>
+                <td>Recordings DB</td>
+                <td><input ng-model="vm.config_setting.configuration_profile.session_db_path"></td>
+            </tr>
+            <tr>
+                <td>Config Name</td>
+                <td><input ng-model="vm.config_setting.configuration_profile.name"></td>
+            </tr>
+        </table>
+        <input type="submit" ng-click="vm.save_fields()" value="Save"/>
+    </div>
+</div>
