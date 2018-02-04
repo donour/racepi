@@ -1,0 +1,29 @@
+#!/bin/bash
+# Copyright 2018 Donour Sizemore
+#
+# This file is part of RacePi
+#
+# RacePi is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, version 2.
+#
+# RacePi is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
+
+set -xe
+
+MINICONDA_LOCATION="https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh"
+LOCAL_FILE="/tmp/miniconda.sh"
+wget "$MINICONDA_LOCATION" -O "$LOCAL_FILE"
+chmod +x "$LOCAL_FILE"
+
+"$LOCAL_FILE" -b -f
+
+rm "$LOCAL_FILE"
+
+
