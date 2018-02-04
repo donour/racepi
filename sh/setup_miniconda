@@ -15,15 +15,24 @@
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
-set -xe
+set -eo pipefail
 
 MINICONDA_LOCATION="https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh"
-LOCAL_FILE="/tmp/miniconda.sh"
-wget "$MINICONDA_LOCATION" -O "$LOCAL_FILE"
-chmod +x "$LOCAL_FILE"
+LOCAL_FILE="$HOME/miniconda.sh"
 
+if [ ! -e "$LOCAL_FILE" ]; then
+    wget "$MINICONDA_LOCATION" -O "$LOCAL_FILE"
+fi
+
+chmod +x "$LOCAL_FILE"
 "$LOCAL_FILE" -b -f
 
-rm "$LOCAL_FILE"
+source ~/miniconda3/bin/activate
+conda update conda -y
+conda update pip -y
+conda install sqlalchemy pyserial bokeh -y
+pip install serial gps3 pybluez
 
+source deactivate
 
+echo "== RacePi Conda Environment Configuration Success =="
