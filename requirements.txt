@@ -1,0 +1,7 @@
+sqlalchemy
+serial
+pyserial
+gps3
+pybluez
+jupyter
+bokeh
