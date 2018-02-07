@@ -31,7 +31,7 @@ source ~/miniconda3/bin/activate
 conda update conda -y
 conda update pip -y
 conda install sqlalchemy pyserial bokeh -y
-pip install serial gps3 pybluez
+pip install gps3 pybluez
 
 source deactivate
 

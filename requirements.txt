@@ -1,5 +1,4 @@
 sqlalchemy
-serial
 pyserial
 gps3
 pybluez
