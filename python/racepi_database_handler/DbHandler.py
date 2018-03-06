@@ -39,7 +39,7 @@ class DbHandler:
         self.db_session = sm()
         self.db_session.execute("PRAGMA foreign_keys = ON;")
         self.db_session.execute("PRAGMA journal_mode = WAL;")
-        #TODO: ensure that the requeste file exists an that
+        #TODO: ensure that the requeste file exists and that
         # the required tables are here
 
     def get_new_session(self):
