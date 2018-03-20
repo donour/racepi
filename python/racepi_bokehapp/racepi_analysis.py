@@ -26,7 +26,7 @@ from bokeh.plotting import figure
 from scipy.signal import savgol_filter
 
 from racepi_can_decoder import *
-from racepi_sensor_handler.data_utilities import TimeToDistanceConverter
+from racepi.sensor.data_utilities import TimeToDistanceConverter
 
 RACEPI_MAP_SIZE = 600
 

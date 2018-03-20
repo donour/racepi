@@ -16,10 +16,9 @@
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
 import gps3.gps3 as gps3
-import os
 import time
 
-from .sensor_handler import SensorHandler
+from racepi.sensor.handler.sensor_handler import SensorHandler
 
 GPS_REQUIRED_FIELDS = ['time', 'lat', 'lon', 'speed', 'track', 'epx', 'epy', 'epv', 'alt']
 GPS_READ_TIMEOUT = 2.0

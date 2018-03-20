@@ -16,7 +16,7 @@
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
 import time
-from racepi_sensor_handler.lightspeed_tpms_handler import LightSpeedTPMSSensorHandler
+from racepi.sensor.handler.lightspeed_tpms import LightSpeedTPMSSensorHandler
 
 if __name__ == "__main__":
     sh = LightSpeedTPMSSensorHandler()

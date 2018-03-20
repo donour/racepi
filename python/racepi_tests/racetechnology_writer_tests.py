@@ -16,7 +16,7 @@
 
 from unittest import TestCase, main
 
-from racepi_racetechnology_writer.writers import *
+from racepi.racetech.writers import *
 
 
 class RaceCaptureWriterTests(TestCase):

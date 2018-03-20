@@ -16,7 +16,7 @@
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
 from unittest import TestCase
-from racepi_sensor_recorder.data_buffer import DataBuffer
+from racepi.sensor.recorder.data_buffer import DataBuffer
 
 TEST_COUNT = 10
 

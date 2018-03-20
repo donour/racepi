@@ -17,7 +17,7 @@
 import os
 import time
 
-from .sensor_handler import SensorHandler
+from racepi.sensor.handler.sensor_handler import SensorHandler
 
 try:
     import RTIMU

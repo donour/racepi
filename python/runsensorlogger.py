@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright 2016-7 Donour Sizemore
+# Copyright 2016-8 Donour Sizemore
 #
 # This file is part of RacePi
 #
@@ -15,11 +15,12 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
-from racepi_sensor_handler.data_utilities import uptime_helper
-from racepi_sensor_recorder import SensorLogger
-from racepi_database_handler.DbHandler import DbHandler
-from racepi_sensor_handler import GpsSensorHandler, RpiImuSensorHandler, \
-    STN11XXCanSensorHandler, SocketCanSensorHandler, LightSpeedTPMSSensorHandler
+from racepi.sensor.data_utilities import uptime_helper
+from racepi.sensor.recorder.sensor_log import SensorLogger
+from racepi_database_handler.db_handler import DbHandler
+from racepi.sensor.handler.gps import GpsSensorHandler
+from racepi.sensor.handler.pi_sense_hat_imu import RpiImuSensorHandler
+from racepi.sensor.handler.socketcan_handler import SocketCanSensorHandler
 
 # TODO: move the DB filename to a config file in /etc
 DEFAULT_SQLITE_FILE = '/external/racepi_data/test.db'
@@ -30,7 +31,7 @@ ENDCOLOR  = '\033[0m'
 UNDERLINE = '\033[4m'
 
 if __name__ == "__main__":   
-    import sys, time, logo  # display logo
+    import sys, time  # display logo
 
     # delay startup while devices initialize
     while float(uptime_helper()) < 30.0:

@@ -20,12 +20,12 @@ import socket
 from math import pi
 from threading import Event, Thread
 
-from racepi_can_decoder import CanFrame, \
+from racepi.can.can_data import CanFrame
+from racepi.can import \
     focus_rs_tps_converter, focus_rs_rpm_converter, \
-    focus_rs_steering_angle_converter, focus_rs_steering_direction_converter, \
-    focus_rs_brake_pressure_converter
-from racepi_sensor_handler.data_utilities import safe_speed_to_float
-from .messages import *
+    focus_rs_steering_angle_converter, focus_rs_steering_direction_converter
+from racepi.sensor.data_utilities import safe_speed_to_float
+from racepi.racetech.messages import *
 
 DL1_ANALOG_MAX_VOLTAGE = 5.0
 MAX_BRAKE_PRESSURE = float(1e-6)  # TODO determine proper unit

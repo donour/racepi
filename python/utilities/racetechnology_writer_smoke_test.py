@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
-from racepi_racetechnology_writer.writers import *
+from racepi.racetech.writers import *
 import time
 from random import random
 

@@ -26,8 +26,8 @@ import time
 from enum import Enum
 from collections import defaultdict
 
-from racepi_sensor_handler.data_utilities import merge_and_generate_ordered_log, safe_speed_to_float
-from racepi_racetechnology_writer.writers import RaceTechnologyDL1FeedWriter
+from racepi.sensor.data_utilities import merge_and_generate_ordered_log, safe_speed_to_float
+from racepi.racetech.writers import RaceTechnologyDL1FeedWriter
 from .pi_sense_hat_display import RacePiStatusDisplay, SenseHat
 from .data_buffer import DataBuffer
 

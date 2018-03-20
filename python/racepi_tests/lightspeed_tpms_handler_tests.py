@@ -17,7 +17,7 @@
 
 from unittest import TestCase
 
-from racepi_sensor_handler.lightspeed_tpms_handler import LightSpeedTPMSMessageParser
+from racepi.sensor.handler.lightspeed_tpms import LightSpeedTPMSMessageParser
 
 
 class LightSpeedSensorHandlerTests(TestCase):

@@ -17,8 +17,7 @@
 import sqlite3
 import uuid
 
-from racepi_sensor_handler.data_utilities import uptime_helper
-from racepi_database_handler import *
+from racepi.sensor.data_utilities import uptime_helper
 
 
 #TODO rewrite to use DB bindings

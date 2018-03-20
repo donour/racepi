@@ -20,7 +20,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
 from racepi_database_handler.objects import *
-from racepi_sensor_handler.data_utilities import uptime_helper
+from racepi.sensor.data_utilities import uptime_helper
 
 
 class DbHandler:

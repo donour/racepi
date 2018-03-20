@@ -16,7 +16,7 @@
 
 from unittest import TestCase, main
 
-from racepi_racetechnology_writer.messages import *
+from racepi.racetech.messages import *
 
 
 class RaceCaptureMessageTests(TestCase):

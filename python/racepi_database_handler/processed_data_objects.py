@@ -15,7 +15,7 @@
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
 from .objects import Base, CANData
-from racepi_can_decoder import CanFrame
+from racepi.can.can_data import CanFrame
 
 
 class ProcessedCANSample(CANData):

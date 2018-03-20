@@ -16,7 +16,7 @@
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
 from unittest import TestCase
-import racepi_sensor_recorder.sqlite_handler as slh
+import racepi.sensor.recorder.sqlite_handler as slh
 
 
 class DbHandlerTests(TestCase):

@@ -26,9 +26,9 @@ import time
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from racepi_racetechnology_writer.writers import RaceTechnologyDL1FeedWriter
+from racepi.racetech.writers import RaceTechnologyDL1FeedWriter
 from racepi_database_handler import Base, SessionInfo, GPSData, IMUData, CANData
-from racepi_sensor_handler.data_utilities import merge_and_generate_ordered_log
+from racepi.sensor.data_utilities import merge_and_generate_ordered_log
 
 
 BLUETOOTH_CLIENT_WAIT_SECONDS = 0.1

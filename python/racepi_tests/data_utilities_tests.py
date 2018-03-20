@@ -16,7 +16,7 @@
 from collections import defaultdict
 from unittest import TestCase, main
 
-from racepi_sensor_handler.data_utilities import TimeToDistanceConverter, \
+from racepi.sensor.data_utilities import TimeToDistanceConverter, \
     merge_and_generate_ordered_log, oversteer_coefficient
 
 

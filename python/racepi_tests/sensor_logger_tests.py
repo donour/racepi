@@ -16,7 +16,7 @@
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
 from unittest import TestCase
-from racepi_sensor_recorder.sensor_log import SensorLogger, LoggerState, \
+from racepi.sensor.recorder.sensor_log import SensorLogger, LoggerState, \
     MOVEMENT_THRESHOLD_M_PER_S, ACTIVATE_RECORDING_M_PER_S
 
 TEST_COUNT = 10
