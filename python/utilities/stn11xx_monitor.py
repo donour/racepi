@@ -46,6 +46,6 @@ if __name__ == "__main__":
         now = time.time()
         if now - last_update > 0.2:
             last_update = now
-            os.write(1, "\r")
+            os.write(1, b"\r")
             for k in last_mesg.keys():
-                os.write(1, "[%s] " % last_mesg[k])
+                os.write(1, ("[%s] " % last_mesg[k]).encode())
