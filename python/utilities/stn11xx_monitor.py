@@ -18,7 +18,7 @@
 import time
 import sys
 import os
-from racepi_sensor_handler.stn11xx import STNHandler
+from racepi_sensor_handler.stn11xx import STNHandler, DEV_NAME, BAUD_RATE
 
 if __name__ == "__main__":
 

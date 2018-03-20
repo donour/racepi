@@ -1,5 +1,5 @@
-#!/usr/bin/env python2
-# Copyright 2016 Donour Sizemore
+#!/usr/bin/env python3
+# Copyright 2016-8 Donour Sizemore
 #
 # This file is part of RacePi
 #
@@ -23,8 +23,8 @@ import time
 
 from serial.serialutil import SerialException
 
-from .sensor_handler import SensorHandler
-from .stn11xx import STNHandler
+from racepi_sensor_handler.sensor_handler import SensorHandler
+from racepi_sensor_handler.stn11xx import STNHandler
 
 
 class STN11XXCanSensorHandler(SensorHandler):
