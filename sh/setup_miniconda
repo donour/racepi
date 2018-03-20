@@ -17,7 +17,9 @@
 
 set -eo pipefail
 
-MINICONDA_LOCATION="https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh"
+ARCH=$(uname -m)
+
+MINICONDA_LOCATION="http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-${ARCH}.sh"
 LOCAL_FILE="$HOME/miniconda.sh"
 
 if [ ! -e "$LOCAL_FILE" ]; then
@@ -27,7 +29,7 @@ fi
 chmod +x "$LOCAL_FILE"
 "$LOCAL_FILE" -b -f
 
-source ~/miniconda3/bin/activate
+source ~/miniconda3/bin/activate root
 conda update conda -y
 conda update pip -y
 conda install sqlalchemy pyserial bokeh -y
