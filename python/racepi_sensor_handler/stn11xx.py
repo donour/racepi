@@ -45,8 +45,6 @@ class STNHandler:
         # TODO auto retry and reinit on hotplug
         print("Initializing STN11xx device on port %s" % dev)
         self.port = serial.Serial(dev, baud)
-        if dev != self.port.getPort():
-            raise IOError("Could not open" + dev)
 
         # reset device and wait for startup
         self.__send_command('atz')
@@ -129,8 +127,8 @@ class STNHandler:
             self.port.flushOutput()
             self.port.flushInput()
             for c in cmd:
-                self.port.write(c)
-            self.port.write("\r")
+                self.port.write(c.encode())
+            self.port.write("\r".encode())
 
     def start_monitor(self):
         """
@@ -156,8 +154,8 @@ class STNHandler:
         if self.port:
             buf = ''
             while True:
-                c = self.port.read(1)
-                if c == '\r' and len(buf) > 0:
+                c = self.port.read(1).decode()
+                if c == "\r" and len(buf) > 0:
                     break
                 else:
                     # if something is in buffer, add everything
