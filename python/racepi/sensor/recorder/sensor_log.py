@@ -28,8 +28,8 @@ from collections import defaultdict
 
 from racepi.sensor.data_utilities import merge_and_generate_ordered_log, safe_speed_to_float
 from racepi.racetech.writers import RaceTechnologyDL1FeedWriter
-from .pi_sense_hat_display import RacePiStatusDisplay, SenseHat
-from .data_buffer import DataBuffer
+from racepi.sensor.recorder.pi_sense_hat_display import RacePiStatusDisplay, SenseHat
+from racepi.sensor.recorder.data_buffer import DataBuffer
 
 ACTIVATE_RECORDING_M_PER_S = 9.5
 MOVEMENT_THRESHOLD_M_PER_S = 2.5

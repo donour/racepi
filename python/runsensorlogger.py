@@ -21,12 +21,14 @@ from racepi_database_handler.db_handler import DbHandler
 from racepi.sensor.handler.gps import GpsSensorHandler
 from racepi.sensor.handler.pi_sense_hat_imu import RpiImuSensorHandler
 from racepi.sensor.handler.socketcan_handler import SocketCanSensorHandler
+from racepi.sensor.handler.stn11xx_can import STN11XXCanSensorHandler
 
 # TODO: move the DB filename to a config file in /etc
 DEFAULT_SQLITE_FILE = '/external/racepi_data/test.db'
 # TODO: make recorded can ids configurable
 FORD_FOCUS_RS_CAN_IDS = [0x010, 0x080, 0x090, 0x420]
 #FORD_FOCUS_RS_CAN_IDS = [0x010, 0x070, 0x080, 0x090, 0x190, 0x130, 0x213, 0x420]
+LOTUS_EVORA_S1_CAN_IDS = [0x085, 0x114, 0x400]
 ENDCOLOR  = '\033[0m'
 UNDERLINE = '\033[4m'
 
@@ -48,8 +50,8 @@ if __name__ == "__main__":
     handlers = {
         'gps': GpsSensorHandler(),
         'imu': RpiImuSensorHandler(),
-        'can': SocketCanSensorHandler(can_filters=FORD_FOCUS_RS_CAN_IDS)
-        # 'can': STN11XXCanSensorHandler(FORD_FOCUS_RS_CAN_IDS),
+        #'can': SocketCanSensorHandler(can_filters=FORD_FOCUS_RS_CAN_IDS)
+        'can': STN11XXCanSensorHandler(LOTUS_EVORA_S1_CAN_IDS),
         # 'tpms': LightSpeedTPMSSensorHandler(),
     }
 

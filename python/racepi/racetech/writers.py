@@ -23,7 +23,8 @@ from threading import Event, Thread
 from racepi.can.can_data import CanFrame
 from racepi.can import \
     focus_rs_tps_converter, focus_rs_rpm_converter, \
-    focus_rs_steering_angle_converter, focus_rs_steering_direction_converter
+    focus_rs_steering_angle_converter, focus_rs_steering_direction_converter, \
+    lotus_evora_s1_rpm_converter, lotus_evora_s1_steering_angle_converter, lotus_evora_s1_tps_converter
 from racepi.sensor.data_utilities import safe_speed_to_float
 from racepi.racetech.messages import *
 
@@ -206,6 +207,22 @@ class RaceTechnologyDL1FeedWriter:
             rpm = focus_rs_rpm_converter.convert_frame(frame)
             self.send_timestamp(timestamp)
             self.send_rpm(rpm)
+
+        if data[:3] == "400":
+            rpm = lotus_evora_s1_rpm_converter(frame)
+            self.send_timestamp(timestamp)
+            self.send_rpm(rpm)
+
+        if data[:3] == "114":
+            tps = lotus_evora_s1_tps_converter(frame)
+            self.send_timestamp(timestamp)
+            self.send_tps(tps)
+
+        if data[:3] == "085":
+            angle = lotus_evora_s1_steering_angle_converter(frame)
+            self.send_timestamp(timestamp)
+            self.send_steering_angle(angle)
+
 
         # Brake pressure messages do not currently work
         #if data[:3] == "213":
