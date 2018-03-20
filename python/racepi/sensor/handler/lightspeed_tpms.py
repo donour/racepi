@@ -24,7 +24,7 @@ from collections import defaultdict
 
 import time
 
-from .sensor_handler import SensorHandler
+from racepi.sensor.handler.sensor_handler import SensorHandler
 
 DEFAULT_TPMS_NAME = 'TPMS'
 TPMS_BT_PORT = 6

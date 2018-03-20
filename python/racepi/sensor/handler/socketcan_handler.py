@@ -20,7 +20,7 @@ import time
 import struct
 import sys
 
-from .sensor_handler import SensorHandler
+from racepi.sensor.handler.sensor_handler import SensorHandler
 
 if not hasattr(socket, "PF_CAN"):
     raise RuntimeError("No SocketCAN support found: please use Python3.3+")

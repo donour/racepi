@@ -23,8 +23,8 @@ import time
 
 from serial.serialutil import SerialException
 
-from racepi_sensor_handler.sensor_handler import SensorHandler
-from racepi_sensor_handler.stn11xx import STNHandler
+from racepi.sensor.handler.sensor_handler import SensorHandler
+from racepi.sensor.handler.stn11xx import STNHandler
 
 
 class STN11XXCanSensorHandler(SensorHandler):
@@ -55,6 +55,7 @@ class STN11XXCanSensorHandler(SensorHandler):
             # stop monitors
             self.stn.stop_monitor()
         print("Shutting down CAN reader")
+
 
 if __name__ == "__main__":
     sh = STN11XXCanSensorHandler()
