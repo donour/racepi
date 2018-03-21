@@ -17,7 +17,6 @@
 from racepi.can.can_data import CanFrameValueExtractor
 from math import pi
 import ctypes
-import struct
 
 # Focus RS Mk3 CAN converters
 focus_rs_steering_angle_converter       = CanFrameValueExtractor(49, 15, a=(pi/0x1000))
