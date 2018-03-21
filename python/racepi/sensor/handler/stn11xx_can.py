@@ -49,8 +49,9 @@ class STN11XXCanSensorHandler(SensorHandler):
 
             while not self.doneEvent.is_set():
                 data = self.stn.readline()
-                now = time.time()
-                self.pipe_out.send((now, data))
+                if "CAN ERROR" not in data:
+                    now = time.time()
+                    self.pipe_out.send((now, data))
                 
             # stop monitors
             self.stn.stop_monitor()

@@ -17,6 +17,7 @@
 from racepi.can.can_data import CanFrameValueExtractor
 from math import pi
 import ctypes
+import struct
 
 # Focus RS Mk3 CAN converters
 focus_rs_steering_angle_converter       = CanFrameValueExtractor(49, 15, a=(pi/0x1000))
@@ -31,6 +32,8 @@ focus_rs_wheelspeed4_converter          = CanFrameValueExtractor(49, 15, a=1/307
 
 lotus_evora_s1_rpm_converter            = CanFrameValueExtractor(1, 15)
 lotus_evora_s1_tps_converter            = CanFrameValueExtractor(24, 8, a=100.0/0xFB)
-lotus_evora_s1_steering_angle_converter = CanFrameValueExtractor(0, 16,
-                                                                 custom_transform=lambda v: ctypes.c_short(v).value)
+lotus_evora_s1_steering_angle_converter = CanFrameValueExtractor(0, 16, custom_transform=lambda v:
+                                    ctypes.c_short(((v & 0xff) << 8) + ((v&0xff00) >> 8)).value / 10.0)
+
+
 

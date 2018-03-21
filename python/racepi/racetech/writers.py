@@ -222,7 +222,7 @@ class RaceTechnologyDL1FeedWriter:
             angle = lotus_evora_s1_steering_angle_converter.convert_frame(frame)
             self.send_timestamp(timestamp)
             self.send_steering_angle(angle)
-
+            print("Steering: " + str(angle))
 
         # Brake pressure messages do not currently work
         #if data[:3] == "213":
