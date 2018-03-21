@@ -209,17 +209,17 @@ class RaceTechnologyDL1FeedWriter:
             self.send_rpm(rpm)
 
         if data[:3] == "400":
-            rpm = lotus_evora_s1_rpm_converter(frame)
+            rpm = lotus_evora_s1_rpm_converter.convert_frame(frame)
             self.send_timestamp(timestamp)
             self.send_rpm(rpm)
 
         if data[:3] == "114":
-            tps = lotus_evora_s1_tps_converter(frame)
+            tps = lotus_evora_s1_tps_converter.convert_frame(frame)
             self.send_timestamp(timestamp)
             self.send_tps(tps)
 
         if data[:3] == "085":
-            angle = lotus_evora_s1_steering_angle_converter(frame)
+            angle = lotus_evora_s1_steering_angle_converter.convert_frame(frame)
             self.send_timestamp(timestamp)
             self.send_steering_angle(angle)
 
