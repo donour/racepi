@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # Copyright 2016 Donour Sizemore
 #
 # This file is part of RacePi
@@ -88,7 +88,7 @@ class STNHandler:
         self.__run_config_cmd("stfab FFF,FFF")
         if ids:
             for can_id in ids:
-                self.__run_config_cmd("stfap %s,FFF" % can_id)
+                self.__run_config_cmd("stfap %03x,FFF" % can_id)
 
     def __run_config_cmd(self, cmd):
         r = self.get_sample(cmd)
