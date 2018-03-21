@@ -17,6 +17,8 @@
 from unittest import TestCase
 
 from racepi.can.can_data import CanFrameValueExtractor, CanFrame
+from racepi.can import lotus_evora_s1_rpm_converter, \
+    lotus_evora_s1_tps_converter, lotus_evora_s1_steering_angle_converter
 
 
 class CanDataFrameTest(TestCase):
@@ -52,6 +54,12 @@ class CanFrameValueExtractorTest(TestCase):
         self.fulltps  = CanFrame('080', '93E87D00007FF3F7')
         self.sdr      = CanFrame('010', '0229000080008036')
         self.sdl      = CanFrame('010', '0229000000008036')
+
+        self.lotus_704_rpm    = CanFrame('400', '02C00000BAC000')
+        self.lotus_zero_rpm   = CanFrame('400', '00000000BAC000')
+        self.lotus_max_tps    = CanFrame('114', '000000FB000400')
+        self.lotus_min_tps    = CanFrame('114', 'FFFFFF00FFFFFF')
+        self.lotus_zero_steer = CanFrame('085', '0000FFFFFFFFFF')
 
     def test_init(self):
         self.assertIsNotNone(CanFrameValueExtractor(1, 2))
@@ -121,4 +129,25 @@ class CanFrameValueExtractorTest(TestCase):
 
     def test_ford_steering_direction_left(self):
         c = CanFrameValueExtractor(32, 1)
-        self.assertEquals(0, c.convert_frame(self.sdl))
+        self.assertEqual(0, c.convert_frame(self.sdl))
+
+    def test_lotus_evora_rpm_704(self):
+        self.assertEqual(704, lotus_evora_s1_rpm_converter
+                         .convert_frame(self.lotus_704_rpm))
+
+    def test_lotus_evora_rpm_zero(self):
+        self.assertEqual(0, lotus_evora_s1_rpm_converter
+                         .convert_frame(self.lotus_zero_rpm))
+
+    def test_lotus_evora_max_tps(self):
+        self.assertEqual(100, lotus_evora_s1_tps_converter
+                         .convert_frame(self.lotus_max_tps))
+
+    def test_lotus_evora_min_tps(self):
+        self.assertEqual(0, lotus_evora_s1_tps_converter
+                         .convert_frame(self.lotus_min_tps))
+
+    def test_lotus_evora_zero_steering(self):
+        self.assertEqual(0, lotus_evora_s1_steering_angle_converter
+                         .convert_frame(self.lotus_zero_steer))
+
