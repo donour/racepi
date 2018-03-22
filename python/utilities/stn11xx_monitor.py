@@ -31,7 +31,7 @@ if __name__ == "__main__":
     last_mesg = {}
     for can_id in sys.argv[1:]:
         last_mesg[can_id] = None
-    sh.set_monitor_ids(last_mesg.keys())
+    sh.set_monitor_ids([eval('0x' + x) for x in last_mesg.keys()])
 
     sh.start_monitor()
     last_update = 0
@@ -42,10 +42,12 @@ if __name__ == "__main__":
             can_id = data[:3]
             if can_id in last_mesg.keys():
                 last_mesg[can_id] = data
+            else:
+                last_mesg[can_id] = None
 
         now = time.time()
         if now - last_update > 0.2:
             last_update = now
             os.write(1, b"\r")
-            for k in last_mesg.keys():
+            for k in sorted(last_mesg.keys()):
                 os.write(1, ("[%s] " % last_mesg[k]).encode())
