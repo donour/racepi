@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
-from sensor_handler import SensorHandler
+from racepi.sensor.handler.sensor_handler import SensorHandler
 import time
 
 
@@ -50,7 +50,7 @@ class SimulatedCanSensorHandler(SensorHandler):
         print("Shutting down CAN reader")
 
 if __name__ == "__main__":
-    sh = SimulatedCanSensorHandler([("foo", 500), ("bar", 1000)])
+    sh = SimulatedCanSensorHandler([("4000000000000", 10), ("0850000000000", 100)])
     sh.start()
     while True:
         data = sh.get_all_data()
