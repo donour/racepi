@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
-from database.objects import CANData
+from racepi.database.objects import CANData
 from racepi.can.data import CanFrame
 
 

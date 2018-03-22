@@ -19,7 +19,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
-from database.objects import *
+from racepi.database.objects import *
 from racepi.sensor.data_utilities import uptime_helper
 
 

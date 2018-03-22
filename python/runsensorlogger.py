@@ -17,7 +17,7 @@
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 from racepi.sensor.data_utilities import uptime_helper
 from racepi.sensor.recorder.sensor_log import SensorLogger
-from database.db_handler import DbHandler
+from racepi.database.db_handler import DbHandler
 from racepi.sensor.handler.gps import GpsSensorHandler
 from racepi.sensor.handler.pi_sense_hat_imu import RpiImuSensorHandler
 from racepi.sensor.handler.stn11xx_can import STN11XXCanSensorHandler
