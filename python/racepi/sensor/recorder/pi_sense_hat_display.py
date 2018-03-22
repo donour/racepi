@@ -32,7 +32,7 @@ IMU_COL = 1
 GPS_COL = 2
 CAN_COL = 3
 BRIGHTNESS = 80
-DISPLAY_UPDATE_TIME = 0.05
+DISPLAY_UPDATE_TIME = 0.05  # 20 hz
 SENSOR_DISPLAY_TIMEOUT = 1.0
 TIRE_DISPLAY_TIMEOUT = 8.0
 
@@ -119,7 +119,7 @@ class RacePiStatusDisplay:
         self.sense.set_pixel(1, 6, v)
         self.sense.set_pixel(1, 7, v)
     
-    def heartbeat(self, frequency=1):
+    def heartbeat(self, frequency=0.5):
         now = time.time()
         if now - self.last_heartbeat > frequency:
             self.sense.set_pixel(6, 7,
