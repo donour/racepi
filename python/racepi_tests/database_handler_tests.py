@@ -17,7 +17,7 @@
 
 from unittest import TestCase
 from racepi_database_handler import *
-from racepi_database_handler.db_handler import DbHandler
+from database.db_handler import DbHandler
 from uuid import UUID
 
 TEST_DB_LOCATION = "testdata/test.db"

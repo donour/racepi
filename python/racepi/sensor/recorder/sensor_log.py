@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright 2016-7 Donour Sizemore
+# Copyright 2016-8 Donour Sizemore
 #
 # This file is part of RacePi
 #
@@ -143,8 +143,10 @@ class SensorLogger:
                 elif val[0] == 'imu':
                     self.racetech_feed_writer.write_imu_sample(val[1], val[2])
                 elif val[0] == 'can':
-                    self.racetech_feed_writer.write_can_sample(val[1], val[2])
-
+                    try:  # handle crazy or unexpected messages from the can bus
+                        self.racetech_feed_writer.write_can_sample(val[1], val[2])
+                    except ValueError:
+                        pass  # TODO log exceptions on can handling
         self.racetech_feed_writer.flush_queued_messages()
 
     def process_new_data(self, data):
@@ -173,7 +175,11 @@ class SensorLogger:
                 self.state = LoggerState.ready
                 # populate metadata for recently ended session
                 if self.session_id:
-                    self.db_handler.populate_session_info(self.session_id)
+                    # TODO, this session info population blocks the main thread for too
+                    # long. It needs to be in a separate thread or process to keep remote
+                    # data clients from losing their minds.
+                    #
+                    # self.db_handler.populate_session_info(self.session_id)
                     self.session_id = None
         else:
             raise RuntimeError("Invalid logger state:" + str(self.state))
@@ -181,7 +187,7 @@ class SensorLogger:
         # process data based on current state
 
         if self.state == LoggerState.ready:
-            self.data.expire_old_samples(time.time() - 10.0)
+            self.data.expire_old_samples(time.time() - DEFAULT_DATA_BUFFER_TIME_SECONDS)
 
         elif self.state == LoggerState.logging:
             # write all buffered data to the db
@@ -191,6 +197,7 @@ class SensorLogger:
                     self.db_handler.insert_gps_updates(self.data.get_sensor_data('gps'), self.session_id)
                     self.db_handler.insert_imu_updates(self.data.get_sensor_data('imu'), self.session_id)
                     self.db_handler.insert_can_updates(self.data.get_sensor_data('can'), self.session_id)
+                    # TODO workout whether TPMS data makese sense to keep
                     # self.db_handler.insert_tpms_updates(self.data.get_sensor_data('tpms'), self.session_id)
                 except TypeError as te:
                     print("Failed to insert data: %s" % te)
@@ -224,7 +231,7 @@ class SensorLogger:
                                                  gps_time=update_times['gps'],
                                                  imu_time=update_times['imu'],
                                                  can_time=update_times['can'],
-                                                 tire_time=0, # update_times['tpms'],
+                                                 tire_time=0,  # update_times['tpms'],
                                                  recording=(self.state == LoggerState.logging))
 
                 time.sleep(0.1)  # there is no reason to ever poll faster than this

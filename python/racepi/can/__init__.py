@@ -1,4 +1,4 @@
-# Copyright 2017 Donour Sizemore
+# Copyright 2017-8 Donour Sizemore
 #
 # This file is part of RacePi
 #
@@ -14,10 +14,9 @@
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
-from racepi.can.can_data import CanFrameValueExtractor
+from racepi.can.data import CanFrameValueExtractor, CanFrame
 from math import pi
 import ctypes
-import struct
 
 # Focus RS Mk3 CAN converters
 focus_rs_steering_angle_converter       = CanFrameValueExtractor(49, 15, a=(pi/0x1000))
@@ -30,10 +29,10 @@ focus_rs_wheelspeed2_converter          = CanFrameValueExtractor(17, 15, a=1/307
 focus_rs_wheelspeed3_converter          = CanFrameValueExtractor(33, 15, a=1/307.0)
 focus_rs_wheelspeed4_converter          = CanFrameValueExtractor(49, 15, a=1/307.0)
 
-lotus_evora_s1_rpm_converter            = CanFrameValueExtractor(1, 15)
+lotus_evora_s1_rpm_converter            = CanFrameValueExtractor(4, 12)
 lotus_evora_s1_tps_converter            = CanFrameValueExtractor(24, 8, a=100.0/0xFB)
 lotus_evora_s1_steering_angle_converter = CanFrameValueExtractor(0, 16, custom_transform=lambda v:
-                                    ctypes.c_short(((v & 0xff) << 8) + ((v&0xff00) >> 8)).value / 10.0)
-
+                                    ctypes.c_short(((v & 0xff) << 8) + ((v & 0xff00) >> 8)).value / 10.0)
+# TODO this seems like a really silly way to reverse byte order
 
 

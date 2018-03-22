@@ -14,12 +14,13 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
-
 import serial, time
 
-BAUD_RATE="576000"
-DEV_NAME="/dev/obdlink"
+BAUD_RATE = "576000"
+DEV_NAME = "/dev/obdlink"
 
+
+@DeprecationWarning
 class ElmHandler:
 
     def __init__(self, dev, baud):

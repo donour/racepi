@@ -13,14 +13,14 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
-
 import sqlite3
 import uuid
 
 from racepi.sensor.data_utilities import uptime_helper
 
+# TODO rewrite to use DB bindings
 
-#TODO rewrite to use DB bindings
+
 @DeprecationWarning
 class DbHandler:
     """

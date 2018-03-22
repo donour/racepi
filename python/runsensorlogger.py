@@ -17,26 +17,25 @@
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 from racepi.sensor.data_utilities import uptime_helper
 from racepi.sensor.recorder.sensor_log import SensorLogger
-from racepi_database_handler.db_handler import DbHandler
+from database.db_handler import DbHandler
 from racepi.sensor.handler.gps import GpsSensorHandler
 from racepi.sensor.handler.pi_sense_hat_imu import RpiImuSensorHandler
-from racepi.sensor.handler.socketcan_handler import SocketCanSensorHandler
 from racepi.sensor.handler.stn11xx_can import STN11XXCanSensorHandler
 
 # TODO: move the DB filename to a config file in /etc
 DEFAULT_SQLITE_FILE = '/external/racepi_data/test.db'
 # TODO: make recorded can ids configurable
-FORD_FOCUS_RS_CAN_IDS = [0x010, 0x080, 0x090, 0x420]
 #FORD_FOCUS_RS_CAN_IDS = [0x010, 0x070, 0x080, 0x090, 0x190, 0x130, 0x213, 0x420]
 LOTUS_EVORA_S1_CAN_IDS = [0x085, 0x114, 0x400]
 ENDCOLOR  = '\033[0m'
 UNDERLINE = '\033[4m'
 
 if __name__ == "__main__":   
-    import sys, time  # display logo
+    import sys
+    import time
 
     # delay startup while devices initialize
-    while float(uptime_helper()) < 30.0:
+    while float(uptime_helper()) < 10.0:
         time.sleep(1)
 
     if len(sys.argv) < 2:

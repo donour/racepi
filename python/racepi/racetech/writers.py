@@ -1,4 +1,4 @@
-# Copyright 2017 Donour Sizemore
+# Copyright 2017-8 Donour Sizemore
 #
 # This file is part of RacePi
 #
@@ -18,9 +18,10 @@
 import time
 import socket
 from math import pi
+from collections import defaultdict
 from threading import Event, Thread
 
-from racepi.can.can_data import CanFrame
+from racepi.can.data import CanFrame
 from racepi.can import \
     focus_rs_tps_converter, focus_rs_rpm_converter, \
     focus_rs_steering_angle_converter, focus_rs_steering_direction_converter, \
@@ -31,7 +32,14 @@ from racepi.racetech.messages import *
 DL1_ANALOG_MAX_VOLTAGE = 5.0
 MAX_BRAKE_PRESSURE = float(1e-6)  # TODO determine proper unit
 
+# Occasionally, the can bus (or sensor) will spit out absurd steering angle values
+# for a second or too. This happened on both the FocusRS and Evora. The writer
+# will clip these values if their magnitude is greater than a threshold.
 CLIP_STEERING_ANGLE = 720.0  # degrees
+
+# Some sensors are rate limited
+MIN_SAMPLE_INTERVAL = 0.05  # 20 hz
+last_sample_time = defaultdict(int)
 
 
 class RaceTechnologyDL1FeedWriter:
@@ -162,10 +170,9 @@ class RaceTechnologyDL1FeedWriter:
 
     def write_imu_sample(self, timestamp, data):
         """
-        
+        Write IMU data to Racetech data clients
         :param timestamp: 
-        :param data: 
-        :return: 
+        :param data: dictionary of accel and gyro data
         """
         accel = data.get('accel')
         if not accel:
@@ -177,10 +184,11 @@ class RaceTechnologyDL1FeedWriter:
 
     def write_can_sample(self, timestamp, data):
         """
-        
-        :param timestamp: 
-        :param data: 
-        :return: 
+        Write an unprocessed can sample to Racetech data clients
+
+        :param timestamp: timestamp of the can message
+        :param data: unprocesses can data as byte array
+        :raises: ValueError if can message is unprocessable
         """
 
         if len(data) < 5:
@@ -188,9 +196,16 @@ class RaceTechnologyDL1FeedWriter:
 
         arb_id = data[:3]
         payload = data[3:]
+
+        if (timestamp - last_sample_time[arb_id]) < MIN_SAMPLE_INTERVAL:
+            return  # skip, rate limit
+        else:
+            last_sample_time[arb_id] = timestamp
+
         frame = CanFrame(arb_id, payload)
 
-        if data[:3] == "010":
+        # Focus RS MK3 Messages
+        if arb_id == "010":
             direction = focus_rs_steering_direction_converter.convert_frame(frame)
             angle = focus_rs_steering_angle_converter.convert_frame(frame)
             if direction > 0:
@@ -199,33 +214,34 @@ class RaceTechnologyDL1FeedWriter:
             self.send_timestamp(timestamp)
             self.send_steering_angle(angle)
 
-        if data[:3] == "080":
+        if arb_id == "080":
             tps = focus_rs_tps_converter.convert_frame(frame)
             self.send_timestamp(timestamp)
             self.send_tps(tps)
-        if data[:3] == "090":
+
+        if arb_id == "090":
             rpm = focus_rs_rpm_converter.convert_frame(frame)
             self.send_timestamp(timestamp)
             self.send_rpm(rpm)
 
-        if data[:3] == "400":
-            rpm = lotus_evora_s1_rpm_converter.convert_frame(frame)
-            self.send_timestamp(timestamp)
-            self.send_rpm(rpm)
+        #  Brake pressure messages do not currently work
+        #  if arb_id == "213":
+        #    pressure = focus_rs_brake_pressure_converter.convert_frame(frame)
+        #    self.send_timestamp(timestamp)
+        #    self.send_brake_pressure(pressure)
 
-        if data[:3] == "114":
+        # Evora Messages
+        if arb_id == "085":
+            angle = lotus_evora_s1_steering_angle_converter.convert_frame(frame)
+            self.send_timestamp(timestamp)
+            self.send_steering_angle(angle)
+
+        if arb_id == "114":
             tps = lotus_evora_s1_tps_converter.convert_frame(frame)
             self.send_timestamp(timestamp)
             self.send_tps(tps)
 
-        if data[:3] == "085":
-            angle = lotus_evora_s1_steering_angle_converter.convert_frame(frame)
+        if arb_id == "400":
+            rpm = lotus_evora_s1_rpm_converter.convert_frame(frame)
             self.send_timestamp(timestamp)
-            self.send_steering_angle(angle)
-            print("Steering: " + str(angle))
-
-        # Brake pressure messages do not currently work
-        #if data[:3] == "213":
-        #    pressure = focus_rs_brake_pressure_converter.convert_frame(frame)
-        #    self.send_timestamp(timestamp)
-        #    self.send_brake_pressure(pressure)
+            self.send_rpm(rpm)
