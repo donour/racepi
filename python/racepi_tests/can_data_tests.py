@@ -16,7 +16,7 @@
 
 from unittest import TestCase
 
-from racepi.can.can_data import CanFrameValueExtractor, CanFrame
+from racepi.can.data import CanFrameValueExtractor, CanFrame
 from racepi.can import lotus_evora_s1_rpm_converter, \
     lotus_evora_s1_tps_converter, lotus_evora_s1_steering_angle_converter
 
@@ -55,11 +55,12 @@ class CanFrameValueExtractorTest(TestCase):
         self.sdr      = CanFrame('010', '0229000080008036')
         self.sdl      = CanFrame('010', '0229000000008036')
 
-        self.lotus_704_rpm    = CanFrame('400', '02C00000BAC000')
-        self.lotus_zero_rpm   = CanFrame('400', '00000000BAC000')
-        self.lotus_max_tps    = CanFrame('114', '000000FB000400')
-        self.lotus_min_tps    = CanFrame('114', 'FFFFFF00FFFFFF')
-        self.lotus_zero_steer = CanFrame('085', '0000FFFFFFFFFF')
+        self.lotus_704_rpm        = CanFrame('400', '02C00000BAC000')
+        self.lotus_zero_rpm       = CanFrame('400', '00000000BAC000')
+        self.lotus_max_tps        = CanFrame('114', '000000FB000400')
+        self.lotus_min_tps        = CanFrame('114', 'FFFFFF00FFFFFF')
+        self.lotus_zero_steer     = CanFrame('085', '0000FFFFFFFFFF')
+        self.lotus_negative_steer = CanFrame('085', 'FFFF0000000000')
 
     def test_init(self):
         self.assertIsNotNone(CanFrameValueExtractor(1, 2))
@@ -150,4 +151,8 @@ class CanFrameValueExtractorTest(TestCase):
     def test_lotus_evora_zero_steering(self):
         self.assertEqual(0, lotus_evora_s1_steering_angle_converter
                          .convert_frame(self.lotus_zero_steer))
+
+    def test_lotus_evora_negative_one_steering(self):
+        self.assertTrue(lotus_evora_s1_steering_angle_converter
+                         .convert_frame(self.lotus_negative_steer) < 0)
 

@@ -18,7 +18,7 @@
 import time
 import sys
 
-from racepi.sensor.handler.socketcan_handler import SocketCanSensorHandler
+from racepi.sensor.handler.socketcan import SocketCanSensorHandler
 
 if __name__ == "__main__":
 
