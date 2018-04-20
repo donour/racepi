@@ -234,7 +234,7 @@ class SensorLogger:
                                                  tire_time=0,  # update_times['tpms'],
                                                  recording=(self.state == LoggerState.logging))
 
-                time.sleep(0.1)  # there is no reason to ever poll faster than this
+                time.sleep(0.05)  # there is no reason to ever poll faster than this
         finally:
             self.racetech_feed_writer.close()
             for h in self.handlers.values():

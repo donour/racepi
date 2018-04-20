@@ -25,13 +25,13 @@ set +x
 
 if [ ! -e "${WEBAPP}" ];
 then
-    echo "Could not file webapp"
+    echo "Could not find webapp"
     exit -1
 fi
 
 if [ ! -e "${LOGGER}" ];
 then
-    echo "Could not file logger"
+    echo "Could not find logger"
     exit 1
 fi
 
