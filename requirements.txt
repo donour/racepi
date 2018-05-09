@@ -1,3 +1,5 @@
+flask
+flask-sqlalchemy
 sqlalchemy
 pyserial
 gps3
