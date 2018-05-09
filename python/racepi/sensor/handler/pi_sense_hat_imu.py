@@ -41,6 +41,7 @@ class RpiImuSensorHandler(SensorHandler):
         if not self.pipe_out:
             raise ValueError("Illegal argument, no queue specified")
 
+        os.system("taskset -p 0xfe %d" % os.getpid())
         os.nice(30)
 
         if not os.path.exists(SETTINGS_FILE):

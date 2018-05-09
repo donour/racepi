@@ -40,9 +40,12 @@ class STN11XXCanSensorHandler(SensorHandler):
             self.stn = None
 
     def __record_from_canbus(self):
-        os.nice(30)
+
         if not self.pipe_out:
             raise ValueError("Illegal argument, no queue specified")
+
+        os.system("taskset -p 0xfe %d" % os.getpid())        
+        os.nice(30)
 
         print("Starting CAN reader")
         if self.stn:

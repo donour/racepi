@@ -73,6 +73,7 @@ class SocketCanSensorHandler(SensorHandler):
         if not self.pipe_out:
             raise ValueError("Illegal argument, no queue specified")
 
+        os.system("taskset -p 0xfe %d" % os.getpid())
         os.nice(30)
         
         message_size = struct.calcsize(CAN_MESSAGE_FMT)

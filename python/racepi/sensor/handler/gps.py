@@ -36,6 +36,7 @@ class GpsSensorHandler(SensorHandler):
         if not self.pipe_out:
             raise ValueError("Illegal argument, no queue specified")
 
+        os.system("taskset -p 0xfe %d" % os.getpid())        
         os.nice(19);
 
         print("Starting GPS reader")

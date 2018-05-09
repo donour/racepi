@@ -117,6 +117,7 @@ class LightSpeedTPMSSensorHandler(SensorHandler):
         if not self.pipe_out:
             raise ValueError("Illegal argument, no queue specified")
 
+        os.system("taskset -p 0xfe %d" % os.getpid())        
         import os.nice(20)
         
         print("Starting LightSpeed TPMS reader")

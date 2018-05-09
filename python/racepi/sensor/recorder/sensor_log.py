@@ -23,6 +23,7 @@ system resources.
 """
 
 import time
+import os
 from enum import Enum
 from collections import defaultdict
 
@@ -66,6 +67,7 @@ class SensorLogger:
         :param db_handler: output handler for writing sensor data to a database
         :param sensor_handlers: input data handlers, these should be racepi sensor_handlers
         """
+        os.system("taskset -p 0x01 %d" % os.getpid())
         self.data = DataBuffer()
         self.display = None
         if SenseHat:
