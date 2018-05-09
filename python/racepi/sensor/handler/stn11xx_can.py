@@ -20,6 +20,7 @@ for a list of specified arbitration IDs. Messages are returned as
 received, not decoded.
 """
 import time
+import os
 
 from serial.serialutil import SerialException
 
@@ -39,7 +40,7 @@ class STN11XXCanSensorHandler(SensorHandler):
             self.stn = None
 
     def __record_from_canbus(self):
-
+        os.nice(30)
         if not self.pipe_out:
             raise ValueError("Illegal argument, no queue specified")
 

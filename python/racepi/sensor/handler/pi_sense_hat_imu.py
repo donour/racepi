@@ -41,6 +41,8 @@ class RpiImuSensorHandler(SensorHandler):
         if not self.pipe_out:
             raise ValueError("Illegal argument, no queue specified")
 
+        os.nice(30)
+
         if not os.path.exists(SETTINGS_FILE):
             print("Settings file not found, creating file: " + SETTINGS_FILE)
         else:

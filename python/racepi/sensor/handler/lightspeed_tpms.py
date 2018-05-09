@@ -23,6 +23,7 @@ import bluetooth as bt
 from collections import defaultdict
 
 import time
+import os
 
 from racepi.sensor.handler.sensor_handler import SensorHandler
 
@@ -116,6 +117,8 @@ class LightSpeedTPMSSensorHandler(SensorHandler):
         if not self.pipe_out:
             raise ValueError("Illegal argument, no queue specified")
 
+        import os.nice(20)
+        
         print("Starting LightSpeed TPMS reader")
         while not self.doneEvent.is_set():
             if not self.sock:

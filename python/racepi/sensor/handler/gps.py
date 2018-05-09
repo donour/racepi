@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import gps3.gps3 as gps3
 import time
 
@@ -34,6 +35,8 @@ class GpsSensorHandler(SensorHandler):
 
         if not self.pipe_out:
             raise ValueError("Illegal argument, no queue specified")
+
+        os.nice(19);
 
         print("Starting GPS reader")
         gps_socket = gps3.GPSDSocket()

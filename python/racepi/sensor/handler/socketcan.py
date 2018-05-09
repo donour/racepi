@@ -19,6 +19,7 @@ import socket
 import time
 import struct
 import sys
+import os
 
 from racepi.sensor.handler.sensor_handler import SensorHandler
 
@@ -72,6 +73,8 @@ class SocketCanSensorHandler(SensorHandler):
         if not self.pipe_out:
             raise ValueError("Illegal argument, no queue specified")
 
+        os.nice(30)
+        
         message_size = struct.calcsize(CAN_MESSAGE_FMT)
 
         print("Starting Socket-CAN reader")
