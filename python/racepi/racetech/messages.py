@@ -98,13 +98,14 @@ def get_z_accel_message_bytes(z_accel):
     return struct.pack(Z_ACCEL_FMT, Z_ACCEL_MESSAGE_ID, b1, b2)
 
 
-def get_gps_pos_message_bytes(gps_lat_xe7, gps_long_xe7):
+def get_gps_pos_message_bytes(gps_lat_xe7, gps_long_xe7, gps_err_xe3):
     """
     :param gps_lat_xe7: latitude value, scaled by 1e7
     :param gps_long_xe7: longitude value, scale by 1e7
     :return:
     """
-    return struct.pack(GPS_POS_FMT, GPS_POS_MESSAGE_ID,  int(gps_long_xe7), int(gps_lat_xe7), GPS_POS_FIXED_ACCURACY)
+    return struct.pack(GPS_POS_FMT, GPS_POS_MESSAGE_ID,  int(gps_long_xe7), int(gps_lat_xe7), int(gps_err_xe3))
+    # GPS_POS_FIXED_ACCURACY)
 
 
 def get_gps_speed_message_bytes(gps_speed_x100):

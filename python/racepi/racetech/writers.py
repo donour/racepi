@@ -121,11 +121,12 @@ class RaceTechnologyDL1FeedWriter:
         msg = get_gps_speed_message_bytes(speed*100.0)
         self.__queue_mesg(msg)
 
-    def send_gps_pos(self, lat, lon):
+    def send_gps_pos(self, lat, lon, err):
         if not lat or not lon:
             return
-
-        msg = get_gps_pos_message_bytes(float(lat) * float(1e7), float(lon) * float(1e7))
+        if not err:
+            err = 0.0
+        msg = get_gps_pos_message_bytes(float(lat) * float(1e7), float(lon) * float(1e7), float(err)*1000.0)
         self.__queue_mesg(msg)
 
     def send_xyz_accel(self, x_accel, y_accel, z_accel):
@@ -165,8 +166,10 @@ class RaceTechnologyDL1FeedWriter:
         self.send_gps_speed(safe_speed_to_float(data.get('speed')))
         lat = data.get('lat')
         lon = data.get('lon')
+        err = data.get('epy')
+        
         if type(lat) is float:
-            self.send_gps_pos(lat, lon)
+            self.send_gps_pos(lat, lon, err)
 
     def write_imu_sample(self, timestamp, data):
         """
