@@ -49,6 +49,7 @@ class SimulatedCanSensorHandler(SensorHandler):
 
         print("Shutting down CAN reader")
 
+
 if __name__ == "__main__":
     sh = SimulatedCanSensorHandler([("4000000000000", 10), ("0850000000000", 100)])
     sh.start()
