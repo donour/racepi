@@ -238,11 +238,10 @@ class SensorLogger:
                                                  tire_time=0,  # update_times['tpms'],
                                                  recording=(self.state == LoggerState.logging))
 
-                if not new_data:
-                    # there is no reason to ever poll faster than this
-                    # 20hz is generally faster than you need refresh remote
-                    # receivers
-                    time.sleep(0.05)
+                # there is no reason to ever poll faster than this
+                # 20hz is generally faster than you need refresh remote
+                # receivers
+                time.sleep(0.05)
         finally:
             self.racetech_feed_writer.close()
             for h in self.handlers.values():
