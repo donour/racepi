@@ -242,7 +242,7 @@ class SensorLogger:
                 # 20hz is generally faster than you need refresh remote
                 # receivers
                 time.sleep(0.05)
- 
+
         finally:
             self.racetech_feed_writer.close()
             for h in self.handlers.values():
