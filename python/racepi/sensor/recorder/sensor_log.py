@@ -34,7 +34,7 @@ from racepi.sensor.recorder.data_buffer import DataBuffer
 
 ACTIVATE_RECORDING_M_PER_S = 9.5
 MOVEMENT_THRESHOLD_M_PER_S = 2.5
-DEFAULT_DATA_BUFFER_TIME_SECONDS = 10.0
+DEFAULT_DATA_BUFFER_TIME_SECONDS = 1.0 # should be bigger for actual recordings
 
 
 class LoggerState(Enum):
@@ -166,6 +166,9 @@ class SensorLogger:
         # send all data to RaceCapture recorder if available
         self.write_data_rc_feed(data)
 
+        if not self.db_handler: 
+            return # recording is possible
+        
         # if necessary, transition state
         if self.state == LoggerState.ready:
             if self.activate_conditions(data):
@@ -241,7 +244,7 @@ class SensorLogger:
                 # there is no reason to ever poll faster than this
                 # 20hz is generally faster than you need refresh remote
                 # receivers
-                time.sleep(0.05)
+                time.sleep(0.03)
 
         finally:
             self.racetech_feed_writer.close()

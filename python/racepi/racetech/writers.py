@@ -121,12 +121,25 @@ class RaceTechnologyDL1FeedWriter:
         msg = get_gps_speed_message_bytes(speed*100.0)
         self.__queue_mesg(msg)
 
-    def send_gps_pos(self, lat, lon, err):
+    def send_gps_pos(self, lat, lon, err):        
+
+        # missing position data is a no-op
         if not lat or not lon:
             return
-        if not err:
-            err = 0.0
-        msg = get_gps_pos_message_bytes(float(lat) * float(1e7), float(lon) * float(1e7), float(err)*1000.0)
+
+        try:
+            lat_val = float(lat)
+            lon_val = float(lon)
+        except ValueError as e:
+            return
+
+        # missing error data is ignored
+        try:
+            err_val = float(err)
+        except ValueError as e:
+            err_val = 0.0       
+
+        msg = get_gps_pos_message_bytes(lat_val * float(1e7), lon_val * float(1e7), err_val*1000.0)
         self.__queue_mesg(msg)
 
     def send_xyz_accel(self, x_accel, y_accel, z_accel):
