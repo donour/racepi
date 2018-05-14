@@ -105,15 +105,14 @@ def get_gps_pos_message_bytes(gps_lat_xe7, gps_long_xe7, gps_err_xe3):
     :return:
     """
     return struct.pack(GPS_POS_FMT, GPS_POS_MESSAGE_ID,  int(gps_long_xe7), int(gps_lat_xe7), int(gps_err_xe3))
-    # GPS_POS_FIXED_ACCURACY)
 
 
-def get_gps_speed_message_bytes(gps_speed_x100):
+def get_gps_speed_message_bytes(gps_speed_x100, gps_speed_acc_x100):
     """
     :param gps_speed_x100: speed (m/s), scaled by 100
     :return:
     """
-    return struct.pack(GPS_SPEED_FMT, GPS_SPEED_MESSAGE_ID, int(gps_speed_x100), 0)
+    return struct.pack(GPS_SPEED_FMT, GPS_SPEED_MESSAGE_ID, int(gps_speed_x100), int(gps_speed_acc_x100) & 0xffffff)
 
 
 def get_rpm_message_bytes(rpm):

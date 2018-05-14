@@ -114,11 +114,14 @@ class RaceTechnologyDL1FeedWriter:
         msg = get_timestamp_message_bytes(time_delta * 100.0)
         self.__queue_mesg(msg)
 
-    def send_gps_speed(self, speed):
+    def send_gps_speed(self, speed, accuracy):
         if not speed:
             return
 
-        msg = get_gps_speed_message_bytes(speed*100.0)
+        if not accuracy:
+            accuracy = 0.0
+
+        msg = get_gps_speed_message_bytes(speed*100.0, accuracy)
         self.__queue_mesg(msg)
 
     def send_gps_pos(self, lat, lon, err):        
@@ -176,7 +179,13 @@ class RaceTechnologyDL1FeedWriter:
         :return: 
         """
         self.send_timestamp(timestamp)
-        self.send_gps_speed(safe_speed_to_float(data.get('speed')))
+
+        # mode indicate the type of fix, 2 = 2D, 3 = 3D
+        mode = data.get('mode')
+        if not 2 == mode and not 3 == mode:
+            return # no fix
+
+        self.send_gps_speed(safe_speed_to_float(data.get('speed')), data.get('eps'))
         lat = data.get('lat')
         lon = data.get('lon')
         err = data.get('epy')
