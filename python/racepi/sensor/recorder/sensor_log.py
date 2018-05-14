@@ -34,7 +34,7 @@ from racepi.sensor.recorder.data_buffer import DataBuffer
 
 ACTIVATE_RECORDING_M_PER_S = 9.5
 MOVEMENT_THRESHOLD_M_PER_S = 2.5
-DEFAULT_DATA_BUFFER_TIME_SECONDS = 1.0 # should be bigger for actual recordings
+DEFAULT_DATA_BUFFER_TIME_SECONDS = 10.0
 
 
 class LoggerState(Enum):
@@ -166,8 +166,9 @@ class SensorLogger:
         # send all data to RaceCapture recorder if available
         self.write_data_rc_feed(data)
 
-        if not self.db_handler: 
-            return # recording is possible
+        if not self.db_handler:
+            self.data.expire_old_samples(time.time())
+            return # recording is not possible
         
         # if necessary, transition state
         if self.state == LoggerState.ready:
