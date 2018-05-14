@@ -22,6 +22,7 @@ XYACCEL_MESSAGE_ID = 8
 TIMESTAMP_MESSAGE_ID = 9
 GPS_POS_MESSAGE_ID = 10
 GPS_SPEED_MESSAGE_ID = 11
+GPS_COURSE_MESSAGE_ID = 56
 RPM_MESSAGE_ID = 18
 TPS_MESSAGE_ID = 27  # Analog 1
 BRAKE_MESSAGE_ID = 25  # Analog 2
@@ -37,6 +38,7 @@ XYACCEL_FMT = ">5B"
 TIMESTAMP_FMT = ">4B"    # header, time
 GPS_POS_FMT = "!BiiI"   # header, longitude, latitude, accuracy
 GPS_SPEED_FMT = "!BII"  # header, speed, accuracy
+GPS_COURSE_FMT = "!BII" # header, track, accuracy
 RPM_FMT = ">4B"  # header, engine speed as frequency
 ANALOG_FMT = ">3B"  # header, value as voltage (5v)
 STEERING_ANGLE_FMT = ">4B"  # header, type of data byte, 2 bytes value
@@ -44,7 +46,6 @@ EXT_PRESSURE_FMT = ">BBbBB"  # header, location, scale_factor(signed), 2 bytes v
 Z_ACCEL_FMT = ">3B"  # header, data
 
 DL1_PERIOD_CONSTANT = 6e6
-GPS_POS_FIXED_ACCURACY = 0x10  # millimeters
 MAX_BRAKE_PRESSURE = 200.0
 
 
