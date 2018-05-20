@@ -39,11 +39,12 @@ BOLD = '\033[1m'
 
 class STNHandler:
 
-    def __init__(self, dev=DEV_NAME, baud=BAUD_RATE):
+    def __init__(self, dev=DEV_NAME, baud=BAUD_RATE, headers=True):
 
         # TODO autodetect and set baudrate
         # TODO auto retry and reinit on hotplug
         print("Initializing STN11xx device on port %s" % dev)
+        self.headers = headers
         self.port = serial.Serial(dev, baud)
 
         # reset device and wait for startup
@@ -55,7 +56,10 @@ class STNHandler:
         self.__run_config_cmd("ATL0")  # line breaks
         self.__run_config_cmd("ATS0")  # whitespace
         self.__run_config_cmd("ATAL")  # long messages
-        self.__run_config_cmd("ATH1")  # headers
+        if self.headers:
+            self.__run_config_cmd("ATH1")  # headers
+        else:
+            self.__run_config_cmd("ATH0")  # headers
 
         self.elm_version = self.get_sample('ati')
         self.stn_version = self.get_sample('sti')
@@ -141,6 +145,17 @@ class STNHandler:
         Disable device monitor mode
         """
         self.get_sample('ati')
+
+    def get_pid(self, mode, pid):
+        """
+        Get a single OBD2 parameter id
+        :param mode: J1979 mode id as string
+        :param pid:  J1979 parameter id as string
+        :return: result
+        """
+        self.__send_command(mode+pid)
+        # TODO, headers should be checked and stripped here
+        return self.__get_result()
 
     def readline(self):
         """
