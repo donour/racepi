@@ -1,0 +1,19 @@
+[Unit]
+Description=RacePi Sensor Logger Service
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi
+ExecStart=/home/pi/git/racepi/python/runsensorlogger.py
+PIDFile=/var/run/racepi-sensorlogger.pid
+StandardOutput=syslog
+StandardError=syslog
+Restart=always
+Nice=-15
+CPUSchedulingPolicy=fifo
+CPUSchedulingPriority=40
+
+[Install]
+WantedBy=multi-user.target
