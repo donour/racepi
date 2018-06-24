@@ -168,8 +168,10 @@ class SensorLogger:
 
         if not self.db_handler:
             self.data.expire_old_samples(time.time())
-            return # recording is not possible
-        
+            return  # recording is not possible
+
+        # TODO, all of these logic should be in a separate thread
+
         # if necessary, transition state
         if self.state == LoggerState.ready:
             if self.activate_conditions(data):
@@ -199,16 +201,8 @@ class SensorLogger:
 
         elif self.state == LoggerState.logging:
             # write all buffered data to the db
-            # TODO: change do a single insert/transaction
             if self.db_handler:
-                try:
-                    self.db_handler.insert_gps_updates(self.data.get_sensor_data('gps'), self.session_id)
-                    self.db_handler.insert_imu_updates(self.data.get_sensor_data('imu'), self.session_id)
-                    self.db_handler.insert_can_updates(self.data.get_sensor_data('can'), self.session_id)
-                    # TODO workout whether TPMS data makese sense to keep
-                    # self.db_handler.insert_tpms_updates(self.data.get_sensor_data('tpms'), self.session_id)
-                except TypeError as te:
-                    print("Failed to insert data: %s" % te)
+                self.db_handler.log_data_from_active_session(self.data, self.session_id)
             self.data.clear()
 
     def start(self):

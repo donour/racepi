@@ -1,4 +1,4 @@
-# Copyright 2016-7 Donour Sizemore
+# Copyright 2016-8 Donour Sizemore
 #
 # This file is part of RacePi
 #
@@ -39,7 +39,7 @@ class DbHandler:
         self.db_session = sm()
         self.db_session.execute("PRAGMA foreign_keys = ON;")
         self.db_session.execute("PRAGMA journal_mode = WAL;")
-        #TODO: ensure that the requeste file exists and that
+        # TODO: ensure that the requested file exists and that
         # the required tables are here
 
     def get_new_session(self):
@@ -220,3 +220,21 @@ class DbHandler:
             si.max_speed = max([x.speed for x in gps_data])
 
         self.db_session.commit()
+
+    def log_data_from_active_session(self, data, session_id):
+        """
+        Write a dictionary of data to the database
+
+        :param data: DataBuffer of recorded data
+        :param session_id: id of current sessions
+        """
+        # TODO: change do a single insert/transaction
+        # TODO: change this to a background thread
+        try:
+            self.insert_gps_updates(data.get_sensor_data('gps'), session_id)
+            self.insert_imu_updates(data.get_sensor_data('imu'), session_id)
+            self.insert_can_updates(data.get_sensor_data('can'), session_id)
+            # TODO workout whether TPMS data makes sense to keep
+            # self.db_handler.insert_tpms_updates(self.data.get_sensor_data('tpms'), self.session_id)
+        except TypeError as te:
+            print("Failed to insert data: %s" % te)
