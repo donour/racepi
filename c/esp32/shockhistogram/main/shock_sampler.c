@@ -25,19 +25,19 @@
 
 // This code calculates histogram for shock (suspension damper) velocities by
 // reading four (4) ADC channels. It samples around ~1 khz, so a large number of
-// samples are collected per lap/run/session. We care about the distribution 
-// of the samples, generally, and not their exact values. We expect off-by-one
-// errors in the count to be well below the noise of the system. Therefore, 
-// we don't both to implement the sample counter as atomics. Given infinite time
-// We would replace all the counter increments with hardware atomic compare
-// and swap, but it just isn't needed. 
+// samples are collected per lap/run/session. We care about the distribution of 
+// the samples, generally, and not their exact values. We expect off-by-one 
+// errors in the count to be well below the noise of the system. Therefore, we 
+// don't both to implement the sample counters as atomics. Given infinite time 
+// We would replace all the counter increments with hardware atomic compare and 
+// swap, but it just isn't needed. 
 
 // TODO: we may want to also keep track of the sample counts when displaying results
 unsigned long             histogram[CORNER_COUNT][CONFIG_NUM_HISTOGRAM_BUCKETS];
 unsigned short normalized_histogram[CORNER_COUNT][CONFIG_NUM_HISTOGRAM_BUCKETS];
 
 static const adc_atten_t atten = ADC_ATTEN_DB_0;
-static const adc_unit_t unit = ADC_UNIT_1;
+static const adc_unit_t   unit = ADC_UNIT_1;
 static unsigned short last_shock_position[CORNER_COUNT];
 static unsigned long  last_shock_time[CORNER_COUNT];
 
@@ -62,7 +62,7 @@ void populate_normalized_histogram() {
       total_samples_count += histogram[corner][bucket];
     }
     for (int bucket = 0; bucket < CONFIG_NUM_HISTOGRAM_BUCKETS; bucket++) {
-      normalized_histogram[corner][bucket] = (unsigned short)(histogram[corner][bucket]*100 / total_samples_count) 
+      normalized_histogram[corner][bucket] = (unsigned short)(histogram[corner][bucket]*100 / total_samples_count);
     }  
   }
 }
@@ -74,6 +74,10 @@ void shock_histogram_init() {
     adc1_config_channel_atten(adc_channels[i], atten);
   }
   zero_histogram();    
+
+  if (TICKS_PER_SHOCK_SAMPLE <= 0 ) {
+    // TODO: select appropriate sleep time.
+  }
 }
 
 static int get_bucket_from_rate(int rate) {
@@ -108,7 +112,7 @@ void sample_shock_channels() {
       last_shock_position[i] = adc_val;
       last_shock_time[i] = timestamp;
     }
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(TICKS_PER_SHOCK_SAMPLE);
   }
 }
 

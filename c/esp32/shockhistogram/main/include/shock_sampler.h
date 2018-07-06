@@ -29,6 +29,8 @@
 // center bucket.
 #define HISTOGRAM_BUCKET_SIZE ((ADC_MAX_RATE*2) / CONFIG_NUM_HISTOGRAM_BUCKETS)
 
+#define TICKS_PER_SHOCK_SAMPLE (1 / portTICK_PERIOD_MS) // 1 khz
+
 void shock_histogram_init();
 void sample_shock_channels();
 void zero_histogram();
