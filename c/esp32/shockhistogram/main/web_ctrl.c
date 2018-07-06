@@ -47,11 +47,14 @@ static void handle_request(struct netconn *conn)
     
     if ( ! strncmp("GET", buf, 3)) {
 
+      populate_normalized_histogram();
+
       netconn_write(conn, HEADER, sizeof(HEADER)-1, NETCONN_NOCOPY);
       netconn_write(conn, HTML_HEADER, sizeof(HTML_HEADER)-1, NETCONN_NOCOPY);
       for (int corner = 0 ; corner < CORNER_COUNT ; corner++) {
 	netconn_write(conn, "<tr>", 4, NETCONN_NOCOPY);
 	for(int col = 0; col < CONFIG_NUM_HISTOGRAM_BUCKETS; col++) {	  
+	  // TODO: this should display the normalized histogram
 	  sprintf(hist_row, "<td>% 7d</td>", (int)histogram[corner][col]);
 	  netconn_write(conn, hist_row, 16, NETCONN_NOCOPY);
 	}

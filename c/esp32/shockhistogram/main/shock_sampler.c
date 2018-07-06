@@ -23,7 +23,18 @@
 #include "driver/adc.h"
 #include "shock_sampler.h"
 
-unsigned long histogram[CORNER_COUNT][CONFIG_NUM_HISTOGRAM_BUCKETS];
+// This code calculates histogram for shock (suspension damper) velocities by
+// reading four (4) ADC channels. It samples around ~1 khz, so a large number of
+// samples are collected per lap/run/session. We care about the distribution 
+// of the samples, generally, and not their exact values. We expect off-by-one
+// errors in the count to be well below the noise of the system. Therefore, 
+// we don't both to implement the sample counter as atomics. Given infinite time
+// We would replace all the counter increments with hardware atomic compare
+// and swap, but it just isn't needed. 
+
+// TODO: we may want to also keep track of the sample counts when displaying results
+unsigned long             histogram[CORNER_COUNT][CONFIG_NUM_HISTOGRAM_BUCKETS];
+unsigned short normalized_histogram[CORNER_COUNT][CONFIG_NUM_HISTOGRAM_BUCKETS];
 
 static const adc_atten_t atten = ADC_ATTEN_DB_0;
 static const adc_unit_t unit = ADC_UNIT_1;
@@ -41,30 +52,29 @@ void zero_histogram() {
   memset(histogram, 0, (sizeof(unsigned long))*CORNER_COUNT*CONFIG_NUM_HISTOGRAM_BUCKETS);
 }
 
+// Populate normalized histogram array where buckets represent percentage of the 
+// total sample count
+void populate_normalized_histogram() {
+  // TODO: this should take the destination object as an argument
+  for (int corner = 0; corner < CORNER_COUNT; corner++) {
+    unsigned long total_samples_count = 0;
+    for (int bucket = 0; bucket < CONFIG_NUM_HISTOGRAM_BUCKETS; bucket++) {
+      total_samples_count += histogram[corner][bucket];
+    }
+    for (int bucket = 0; bucket < CONFIG_NUM_HISTOGRAM_BUCKETS; bucket++) {
+      normalized_histogram[corner][bucket] = (unsigned short)(histogram[corner][bucket]*100 / total_samples_count) 
+    }  
+  }
+}
+
 void shock_histogram_init() {
-  zero_histogram();
-    
   //Configure ADC
   adc1_config_width(ADC_WIDTH_BIT_12);
   for (int i = 0; i < CORNER_COUNT; i++) { 
     adc1_config_channel_atten(adc_channels[i], atten);
   }
+  zero_histogram();    
 }
-
-/*
-static void normalize_histogram_buckets(unsigned long *data[]) {
-  for(int i = 0; i < CORNER_COUNT; i++) {
-    unsigned long total_count = 0;
-    for (int j = 0; j < NUM_HISTOGRAM_BUCKETS; j++) {
-      total_count += data[i][j];
-    }
-
-    for (int j = 0; j < NUM_HISTOGRAM_BUCKETS; j++) {
-      data[i][j] = data[i][j]*100 / total_count;
-    }    
-  }
-}
-*/
 
 static int get_bucket_from_rate(int rate) {
   int bucket = (int)( rate + ADC_MAX_RATE) / HISTOGRAM_BUCKET_SIZE;
