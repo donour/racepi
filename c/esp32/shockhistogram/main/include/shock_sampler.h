@@ -18,10 +18,11 @@
 #ifndef __SHOCK_SAMPLER_H__
 #define __SHOCK_SAMPLER_H__
 
-#define CORNER_COUNT          (4) // LF, RF, LR, RR
-#define ADC_MAX_VALUE         ((1<<12)-1)
-#define ADC_MAX_RATE          (200 * ADC_MAX_VALUE)
+#include "freertos/FreeRTOS.h"
 
+#define CORNER_COUNT  (4) // LF, RF, LR, RR
+#define ADC_MAX_VALUE ((1<<12)-1)
+#define ADC_MAX_RATE  (200 * ADC_MAX_VALUE)
 
 // Because the buckets contain both positive and negative values, we need
 // the buckets to be _twice_ the max rate / number of buckets. Zero is the
@@ -31,5 +32,7 @@
 void shock_histogram_init();
 void sample_shock_channels();
 void zero_histogram();
+
+extern unsigned long histogram[CORNER_COUNT][CONFIG_NUM_HISTOGRAM_BUCKETS];
 
 #endif // __SHOCK_SAMPLER_H__

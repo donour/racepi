@@ -18,12 +18,13 @@
 
 #include <string.h>
 #include <sys/time.h>
-#include "shock_sampler.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/adc.h"
+#include "shock_sampler.h"
 
-static unsigned long  histogram[CORNER_COUNT][CONFIG_NUM_HISTOGRAM_BUCKETS];
+unsigned long histogram[CORNER_COUNT][CONFIG_NUM_HISTOGRAM_BUCKETS];
+
 static const adc_atten_t atten = ADC_ATTEN_DB_0;
 static const adc_unit_t unit = ADC_UNIT_1;
 static unsigned short last_shock_position[CORNER_COUNT];
