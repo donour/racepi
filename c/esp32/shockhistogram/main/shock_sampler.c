@@ -40,6 +40,7 @@ static const adc_atten_t atten = ADC_ATTEN_DB_0;
 static const adc_unit_t   unit = ADC_UNIT_1;
 static unsigned short last_shock_position[CORNER_COUNT];
 static unsigned long  last_shock_time[CORNER_COUNT];
+static unsigned int sample_delay_ticks = TICKS_PER_SHOCK_SAMPLE;
 
 static const adc_channel_t adc_channels[] = {
   ADC_CHANNEL_1,
@@ -75,8 +76,10 @@ void shock_histogram_init() {
   }
   zero_histogram();    
 
-  if (TICKS_PER_SHOCK_SAMPLE <= 0 ) {
+  if (sample_delay_ticks <= 0 ) {
     // TODO: select appropriate sleep time.
+    printf("Warning: shock sampling interval is more frequent than clock tick. Please rebuild with a higher tick frequency.");
+    sample_delay_ticks = 1;
   }
 }
 
@@ -112,7 +115,7 @@ void sample_shock_channels() {
       last_shock_position[i] = adc_val;
       last_shock_time[i] = timestamp;
     }
-    vTaskDelay(TICKS_PER_SHOCK_SAMPLE);
+    vTaskDelay(sample_delay_ticks);
   }
 }
 
