@@ -21,6 +21,8 @@
 #include "nvs_flash.h"
 #include "shock_sampler.h"
 #include "wifi_setup.h"
+#include "web_ctrl.h"
+#include "tcpip_adapter.h"
 
 void app_main()
 {
@@ -33,8 +35,12 @@ void app_main()
     ESP_ERROR_CHECK(ret);
 
     wifi_init();
-    
+
     // start histogram task
     shock_histogram_init();
-    xTaskCreate(sample_shock_channels, "sample_shock", 1024*2, NULL, configMAX_PRIORITIES-1, NULL);
+    xTaskCreate(sample_shock_channels, "sample_shock", 2048, NULL, configMAX_PRIORITIES-1, NULL);
+
+    // start web controller
+    tcpip_adapter_init();
+    xTaskCreate(httpd_task, "httpd task", 2048, NULL, configMAX_PRIORITIES-3, NULL);
 }

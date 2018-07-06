@@ -1,10 +1,16 @@
 menu "Shock Histogram Controller Config"
 
 config NUM_HISTOGRAM_BUCKETS
-    int "Num histogram buckets"
+    int "Num Histogram Buckets"
     default 7
     help
         Select the number of histogram buckets to generate for each input. This must be odd.
+
+config WEB_SERVER_PORT
+    int "Controller Web Server Port (TCP)"
+    default 80
+    help
+	Select the TCP port used the embedded web server 
 
 choice ESP_WIFI_MODE
     prompt "AP or STA (client)"
