@@ -23,14 +23,74 @@
 
 const static char HEADER[] = "HTTP/1.1 200 OK\r\nContent-type: text/html\r\n\r\n";
 const static char HTML_HEADER[] =
-  "<!DOCTYPE html><html><head>"
-  "<style> table, th, td { border: 1px solid black; } </style>"
-  "<title>Racepi Shock Histogrammer</title> </head>\n"
-  "<body> <h1>Shock histograms forthcoming</h1><BR>\n"
-  "<table>";
+"<html>"
+"  <head>"
+"    <script type=\"text/javascript\" src=\"https://www.gstatic.com/charts/loader.js\"></script>"
+"    <script type=\"text/javascript\">"
+"      google.charts.load('current', {'packages':['bar']});"
+"      google.charts.setOnLoadCallback(drawChart);"
+"      function drawChart() {"
+"        var data = google.visualization.arrayToDataTable("
+"        [";
+
 
 // TODO the zero button needs to be implemented
-const static char HTML_FOOTER[] = "</table><br><br> <button type=\"button\">Zero</button></body></html>\n";
+const static char HTML_FOOTER[] =
+"  ]);"
+"        var options = {chart: {title: 'Histogram'}};"
+"        var chart = new google.charts.Bar(document.getElementById('hist_chart'));"
+"        chart.draw(data, google.charts.Bar.convertOptions(options));"
+"      }"
+"    </script></head>"
+"  <body><div id=\"hist_chart\" style=\"width:100vw; height:50vh;\"></div>"
+"  </body></html>";
+
+static int write_page(struct netconn *conn) {
+  netconn_write(conn, HEADER, sizeof(HEADER)-1, NETCONN_NOCOPY);
+  netconn_write(conn, HTML_HEADER, sizeof(HTML_HEADER)-1, NETCONN_NOCOPY);
+
+  // Legend row
+  netconn_write(conn, "['Speed'", 8, NETCONN_NOCOPY);
+  for (int column = 0; column < CONFIG_NUM_HISTOGRAM_BUCKETS; column++) {
+    char buf[32];
+    // TODO populate actual values
+    short bucket_val = (column - (CONFIG_NUM_HISTOGRAM_BUCKETS)/2); 
+    snprintf(buf, 8, ",'%d'", bucket_val);
+    netconn_write(conn, buf, strlen(buf-1), NETCONN_NOCOPY);
+  }
+  netconn_write(conn, "],", 2, NETCONN_NOCOPY);
+
+  // Write a row for each corner
+
+  for (int corner = 0; corner < CORNER_COUNT; corner++) {
+
+    // write HEADER
+    char *header="['unknown'";
+    switch(corner) {
+    case 0:
+      header="['LF'";
+      break;
+    case 1:
+      header="['RF'";
+      break;
+    case 2:
+      header="['LR'";
+      break;
+    case 3: 
+      header="['RR'";
+      break;
+    default:break;
+    }
+    netconn_write(conn, header, strlen(header)-1, NETCONN_NOCOPY);
+    // TODO finish
+    netconn_write(conn, "]", 1, NETCONN_NOCOPY);
+  }
+
+
+  netconn_write(conn, HTML_FOOTER, sizeof(HTML_FOOTER)-1, NETCONN_NOCOPY);
+
+  return 0;
+};
 
 static void handle_request(struct netconn *conn)
 {
@@ -51,6 +111,7 @@ static void handle_request(struct netconn *conn)
 
       netconn_write(conn, HEADER, sizeof(HEADER)-1, NETCONN_NOCOPY);
       netconn_write(conn, HTML_HEADER, sizeof(HTML_HEADER)-1, NETCONN_NOCOPY);
+
       for (int corner = 0 ; corner < CORNER_COUNT ; corner++) {
 	netconn_write(conn, "<tr>", 4, NETCONN_NOCOPY);
 	for(int col = 0; col < CONFIG_NUM_HISTOGRAM_BUCKETS; col++) {	  
