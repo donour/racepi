@@ -24,6 +24,8 @@
 #define ADC_MAX_VALUE ((1<<12)-1)
 #define ADC_MAX_RATE  (200 * ADC_MAX_VALUE)
 
+#define ADC_MULTISAMPLE_COUNT (4)
+
 // Because the buckets contain both positive and negative values, we need
 // the buckets to be _twice_ the max rate / number of buckets. Zero is the
 // center bucket.

@@ -36,17 +36,17 @@
 unsigned long             histogram[CORNER_COUNT][CONFIG_NUM_HISTOGRAM_BUCKETS];
 unsigned short normalized_histogram[CORNER_COUNT][CONFIG_NUM_HISTOGRAM_BUCKETS];
 
-static const adc_atten_t atten = ADC_ATTEN_DB_0;
+static const adc_atten_t atten = ADC_ATTEN_DB_11; // full 3.9v range
 static const adc_unit_t   unit = ADC_UNIT_1;
 static unsigned short last_shock_position[CORNER_COUNT];
 static unsigned long  last_shock_time[CORNER_COUNT];
 static unsigned int sample_delay_ticks = TICKS_PER_SHOCK_SAMPLE;
 
 static const adc_channel_t adc_channels[] = {
-  ADC_CHANNEL_1,
-  ADC_CHANNEL_2,
-  ADC_CHANNEL_3,
-  ADC_CHANNEL_4
+  ADC1_CHANNEL_6,
+  ADC1_CHANNEL_3,
+  ADC1_CHANNEL_0,
+  ADC1_CHANNEL_5,
 };  
 
 void zero_histogram() {
@@ -98,7 +98,12 @@ void sample_shock_channels() {
     for(int i = 0; i < CORNER_COUNT; i++) {
 
       // Read and timestamp the channel
-      unsigned short adc_val = adc1_get_raw((adc1_channel_t)adc_channels[i]);
+      unsigned int adc_val = 0;
+      for (int sample_count = 0; sample_count < ADC_MULTISAMPLE_COUNT; sample_count++) {
+	adc_val += adc1_get_raw((adc1_channel_t)adc_channels[i]);
+      }
+      adc_val /= ADC_MULTISAMPLE_COUNT;
+
       gettimeofday(&tv, 0); // TODO: check return code
       unsigned long timestamp = (unsigned long) tv.tv_usec + ((unsigned long) tv.tv_sec) * 1e6;
 
