@@ -22,7 +22,7 @@
 
 #define CORNER_COUNT  (4) // LF, RF, LR, RR
 #define ADC_MAX_VALUE ((1<<12)-1)
-#define ADC_MAX_RATE  (200 * ADC_MAX_VALUE)
+#define ADC_MAX_RATE  (8*ADC_MAX_VALUE)
 
 #define ADC_MULTISAMPLE_COUNT (4)
 

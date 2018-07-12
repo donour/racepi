@@ -21,7 +21,14 @@
 #include "web_ctrl.h"
 #include "shock_sampler.h"
 
-const static char HEADER[] = "HTTP/1.1 200 OK\r\nContent-type: text/html\r\n\r\n";
+/* 
+It's quite absurd that this has to be inplemented on such a low level. There should be 
+a simple HTTP request handling library available, but it looks like none is. nghttp doesn't
+do HTTP/1. 
+*/
+
+
+const static char HEADER[] = "HTTP/1.1 200 OK\r\nContent-type: text/html; charset=ISO-8859-4 \r\n\r\n";
 const static char HTML_HEADER[] =
 "<html>"
 "  <head>"
@@ -42,7 +49,7 @@ const static char HTML_FOOTER[] =
 "        chart.draw(data, google.charts.Bar.convertOptions(options));"
 "      }"
 "    </script></head>"
-"  <body><div id=\"hist_chart\" style=\"width:100vw; height:50vh;\"></div>"
+"  <body><div id=\"hist_chart\" style=\"width:100vw; height:90vh;\"></div>"
 "  </body></html>";
 
 static int write_page(struct netconn *conn) {
@@ -54,39 +61,40 @@ static int write_page(struct netconn *conn) {
   for (int column = 0; column < CONFIG_NUM_HISTOGRAM_BUCKETS; column++) {
     char buf[32];
     // TODO populate actual values
-    short bucket_val = (column - (CONFIG_NUM_HISTOGRAM_BUCKETS)/2); 
-    snprintf(buf, 8, ",'%d'", bucket_val);
-    netconn_write(conn, buf, strlen(buf-1), NETCONN_NOCOPY);
+    short bucket_val = HISTOGRAM_BUCKET_SIZE*(column - (CONFIG_NUM_HISTOGRAM_BUCKETS)/2); 
+    snprintf(buf, 12, ",'%d'", bucket_val);
+    netconn_write(conn, buf, strlen(buf), NETCONN_NOCOPY);
   }
   netconn_write(conn, "],", 2, NETCONN_NOCOPY);
 
   // Write a row for each corner
-
   for (int corner = 0; corner < CORNER_COUNT; corner++) {
-
     // write HEADER
     char *header="['unknown'";
     switch(corner) {
-    case 0:
-      header="['LF'";
-      break;
-    case 1:
-      header="['RF'";
-      break;
-    case 2:
-      header="['LR'";
-      break;
-    case 3: 
-      header="['RR'";
-      break;
-    default:break;
+        case 0:
+	  header="['LF'";
+	  break;
+        case 1:
+	  header="['RF'";
+	  break;
+        case 2:
+	  header="['LR'";
+	  break;
+        case 3: 
+	  header="['RR'";
+	  break;
+        default:break;
     }
-    netconn_write(conn, header, strlen(header)-1, NETCONN_NOCOPY);
+    netconn_write(conn, header, strlen(header), NETCONN_NOCOPY);
     // TODO finish
-    netconn_write(conn, "]", 1, NETCONN_NOCOPY);
+    for(int col = 0; col < CONFIG_NUM_HISTOGRAM_BUCKETS; col++) {
+      char buf[16];
+      sprintf(buf, ",%d", (int)normalized_histogram[corner][col]);
+      netconn_write(conn, buf, strlen(buf), NETCONN_NOCOPY);
+    }
+    netconn_write(conn, "],", 2, NETCONN_NOCOPY);
   }
-
-
   netconn_write(conn, HTML_FOOTER, sizeof(HTML_FOOTER)-1, NETCONN_NOCOPY);
 
   return 0;
@@ -94,7 +102,6 @@ static int write_page(struct netconn *conn) {
 
 static void handle_request(struct netconn *conn)
 {
-  char hist_row[16]; // TODO get exact size
   char *buf;
   u16_t buflen;
   err_t err;
@@ -103,25 +110,10 @@ static void handle_request(struct netconn *conn)
   // TODO: allow for multi part requests
   err = netconn_recv(conn, &rx_buffer);
   if (ERR_OK == err) {
-    netbuf_data(rx_buffer, (void**)&buf, &buflen);
-    
+    netbuf_data(rx_buffer, (void**)&buf, &buflen);   
     if ( ! strncmp("GET", buf, 3)) {
-
       populate_normalized_histogram();
-
-      netconn_write(conn, HEADER, sizeof(HEADER)-1, NETCONN_NOCOPY);
-      netconn_write(conn, HTML_HEADER, sizeof(HTML_HEADER)-1, NETCONN_NOCOPY);
-
-      for (int corner = 0 ; corner < CORNER_COUNT ; corner++) {
-	netconn_write(conn, "<tr>", 4, NETCONN_NOCOPY);
-	for(int col = 0; col < CONFIG_NUM_HISTOGRAM_BUCKETS; col++) {	  
-	  // TODO: this should display the normalized histogram
-	  sprintf(hist_row, "<td>% 7d</td>", (int)histogram[corner][col]);
-	  netconn_write(conn, hist_row, 16, NETCONN_NOCOPY);
-	}
-	netconn_write(conn, "</tr>", 5, NETCONN_NOCOPY);	      
-      }
-      netconn_write(conn, HTML_FOOTER, sizeof(HTML_FOOTER)-1, NETCONN_NOCOPY);
+      write_page(conn);
     }
   }
   netbuf_delete(rx_buffer);

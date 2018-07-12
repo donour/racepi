@@ -38,8 +38,8 @@ unsigned short normalized_histogram[CORNER_COUNT][CONFIG_NUM_HISTOGRAM_BUCKETS];
 
 static const adc_atten_t atten = ADC_ATTEN_DB_11; // full 3.9v range
 static const adc_unit_t   unit = ADC_UNIT_1;
-static unsigned short last_shock_position[CORNER_COUNT];
-static unsigned long  last_shock_time[CORNER_COUNT];
+static int last_shock_position[CORNER_COUNT];
+static long last_shock_time[CORNER_COUNT];
 static unsigned int sample_delay_ticks = TICKS_PER_SHOCK_SAMPLE;
 
 static const adc_channel_t adc_channels[] = {
@@ -96,24 +96,22 @@ void sample_shock_channels() {
     struct timeval tv;
   
     for(int i = 0; i < CORNER_COUNT; i++) {
-
       // Read and timestamp the channel
-      unsigned int adc_val = 0;
+      int adc_val = 0;
       for (int sample_count = 0; sample_count < ADC_MULTISAMPLE_COUNT; sample_count++) {
 	adc_val += adc1_get_raw((adc1_channel_t)adc_channels[i]);
       }
+
       adc_val /= ADC_MULTISAMPLE_COUNT;
 
       gettimeofday(&tv, 0); // TODO: check return code
-      unsigned long timestamp = (unsigned long) tv.tv_usec + ((unsigned long) tv.tv_sec) * 1e6;
+      long timestamp = (long) tv.tv_usec + ((long) tv.tv_sec) * 1e6;
 
       // calculate the channel rate
       long count_per_second = ((adc_val - last_shock_position[i])*1e6) / (timestamp - last_shock_time[i]);
 
-      shock_velocity[i] = count_per_second;
-    
       // TODO: scale to distance
-
+      shock_velocity[i] = count_per_second;
       histogram[i][get_bucket_from_rate(shock_velocity[i])]++;
 
       // save current readings
