@@ -58,7 +58,9 @@ void zero_histogram() {
 void populate_normalized_histogram() {
   // TODO: this should take the destination object as an argument
   for (int corner = 0; corner < CORNER_COUNT; corner++) {
-    unsigned long total_samples_count = 0;
+    // add extra sampel to avoid divide by zero
+    unsigned long total_samples_count = 1;
+    
     for (int bucket = 0; bucket < CONFIG_NUM_HISTOGRAM_BUCKETS; bucket++) {
       total_samples_count += histogram[corner][bucket];
     }
