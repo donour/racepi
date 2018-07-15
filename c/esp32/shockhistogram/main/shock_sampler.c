@@ -65,14 +65,14 @@ void populate_normalized_histogram() {
       total_samples_count += histogram[corner][bucket];
     }
     for (int bucket = 0; bucket < CONFIG_NUM_HISTOGRAM_BUCKETS; bucket++) {
-      normalized_histogram[corner][bucket] = (unsigned short)(histogram[corner][bucket]*100 / total_samples_count);
+      normalized_histogram[corner][bucket] = (unsigned short)(histogram[corner][bucket]*1000 / total_samples_count);
     }  
   }
 }
 
 void shock_histogram_init() {
   //Configure ADC
-  adc1_config_width(ADC_WIDTH_BIT_12);
+  adc1_config_width(ADC_WIDTH_BIT);  
   for (int i = 0; i < CORNER_COUNT; i++) { 
     adc1_config_channel_atten(adc_channels[i], atten);
   }
@@ -85,8 +85,9 @@ void shock_histogram_init() {
   }
 }
 
+// rate must be in mm/s
 static int get_bucket_from_rate(int rate) {
-  int bucket = (int)( rate + ADC_MAX_RATE) / HISTOGRAM_BUCKET_SIZE;
+  int bucket = (int)( rate + MAX_SPEED_MM_S) / HISTOGRAM_BUCKET_SIZE;
   if (bucket < 0) return  0;
   if (bucket >=  CONFIG_NUM_HISTOGRAM_BUCKETS) return CONFIG_NUM_HISTOGRAM_BUCKETS - 1;
   return bucket;
@@ -96,10 +97,11 @@ void sample_shock_channels() {
   while (true) {
     int shock_velocity[CORNER_COUNT];
     struct timeval tv;
-  
+
+    int adc_val = 0;
     for(int i = 0; i < CORNER_COUNT; i++) {
       // Read and timestamp the channel
-      int adc_val = 0;
+      adc_val = 0;
       for (int sample_count = 0; sample_count < ADC_MULTISAMPLE_COUNT; sample_count++) {
 	adc_val += adc1_get_raw((adc1_channel_t)adc_channels[i]);
       }
@@ -110,17 +112,15 @@ void sample_shock_channels() {
       long timestamp = (long) tv.tv_usec + ((long) tv.tv_sec) * 1e6;
 
       // calculate the channel rate
-      long count_per_second = ((adc_val - last_shock_position[i])*1e6) / (timestamp - last_shock_time[i]);
-
-      // TODO: scale to distance
-      shock_velocity[i] = count_per_second;
+      int count_per_second = ((adc_val - last_shock_position[i])*1e6) / (timestamp - last_shock_time[i]);
+      shock_velocity[i] = ADC_TO_MM(count_per_second);
       histogram[i][get_bucket_from_rate(shock_velocity[i])]++;
 
       // save current readings
       last_shock_position[i] = adc_val;
       last_shock_time[i] = timestamp;
+      vTaskDelay(sample_delay_ticks);
     }
-    vTaskDelay(sample_delay_ticks);
   }
 }
 

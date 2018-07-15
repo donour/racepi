@@ -6,6 +6,12 @@ config NUM_HISTOGRAM_BUCKETS
     help
         Select the number of histogram buckets to generate for each input. This must be odd.
 
+config LINEAR_POT_LEN_MM
+    int "Length in mm"
+    default 250
+    help
+	Length of each linear pot sensor in millimeters
+
 config WEB_SERVER_PORT
     int "Controller Web Server Port (TCP)"
     default 80

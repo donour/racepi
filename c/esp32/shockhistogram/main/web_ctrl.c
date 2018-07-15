@@ -187,12 +187,10 @@ static void handle_request(struct netconn *conn)
     if ( ! strncmp("GET", buf, 3)) {
 
       if (strstr(buf, "/zero") != NULL) {
-	zero_histogram();
-	printf("zeroed\n");
-	handle_zero_request(conn);
-      }
-      
-      else {
+	//zero_histogram();
+	//printf("zeroed\n");
+	//handle_zero_request(conn);
+      } else {
 	populate_normalized_histogram();
 	write_page(conn);
       }
