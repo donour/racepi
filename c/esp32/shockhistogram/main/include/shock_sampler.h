@@ -41,4 +41,6 @@ void populate_normalized_histogram();
 
 extern unsigned long             histogram[CORNER_COUNT][CONFIG_NUM_HISTOGRAM_BUCKETS];
 extern unsigned short normalized_histogram[CORNER_COUNT][CONFIG_NUM_HISTOGRAM_BUCKETS];
+extern volatile bool recording_active;
+
 #endif // __SHOCK_SAMPLER_H__

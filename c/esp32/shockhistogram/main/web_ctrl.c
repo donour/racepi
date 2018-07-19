@@ -136,7 +136,14 @@ static void write_hist_table(struct netconn *conn) {
     }
     netconn_write(conn,"</tr>", 5, NETCONN_NOCOPY);  
   }
-  netconn_write(conn,"</table>", 8, NETCONN_NOCOPY);      
+  netconn_write(conn,"</table>", 8, NETCONN_NOCOPY);
+
+  netconn_write(conn,"<BR><BR>Recording: ", 19, NETCONN_NOCOPY);
+  if (recording_active) {
+    netconn_write(conn,"<label>on</label>", 17, NETCONN_NOCOPY);
+  } else {
+    netconn_write(conn,"<label>off</label>", 18, NETCONN_NOCOPY);
+  }
 }
 
 static void write_calibration_controls(struct netconn *conn){
@@ -147,17 +154,15 @@ static void write_calibration_controls(struct netconn *conn){
     
   netconn_write(conn, ctrls, strlen(ctrls), NETCONN_NOCOPY);      
 }
-  
 
 static void write_page(struct netconn *conn) {
   netconn_write(conn, HEADER, sizeof(HEADER)-1, NETCONN_NOCOPY);
   netconn_write(conn, HTML_HEADER, sizeof(HTML_HEADER)-1, NETCONN_NOCOPY);
   //write_google_charts(conn);
   write_hist_table(conn);
-  write_calibration_controls(conn);
+  //write_calibration_controls(conn);
   netconn_write(conn, HTML_FOOTER, sizeof(HTML_FOOTER)-1, NETCONN_NOCOPY);
 };
-
 
 static void handle_zero_request(struct netconn *conn) {
   static char ZERO_RESPONSE[] =

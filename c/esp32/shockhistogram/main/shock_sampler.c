@@ -20,8 +20,10 @@
 #include <sys/time.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "esp_task_wdt.h"
 #include "driver/adc.h"
 #include "shock_sampler.h"
+
 
 // This code calculates histogram for shock (suspension damper) velocities by
 // reading four (4) ADC channels. It samples around ~1 khz, so a large number of
@@ -35,6 +37,7 @@
 // TODO: we may want to also keep track of the sample counts when displaying results
 unsigned long             histogram[CORNER_COUNT][CONFIG_NUM_HISTOGRAM_BUCKETS];
 unsigned short normalized_histogram[CORNER_COUNT][CONFIG_NUM_HISTOGRAM_BUCKETS];
+volatile bool recording_active = true;
 
 static const adc_atten_t atten = ADC_ATTEN_DB_11; // full 3.9v range
 static const adc_unit_t   unit = ADC_UNIT_1;
@@ -93,33 +96,41 @@ static int get_bucket_from_rate(int rate) {
   return bucket;
 }
 
+void sample_corner(unsigned int corner) {
+  int shock_velocity;
+  struct timeval tv;
+  int adc_val = 0;
+  
+  // Read and timestamp the channel		    
+  for (int sample_count = 0; sample_count < ADC_MULTISAMPLE_COUNT; sample_count++) {
+    adc_val += adc1_get_raw((adc1_channel_t)adc_channels[corner]);
+    esp_task_wdt_reset();
+  }
+  adc_val /= ADC_MULTISAMPLE_COUNT;
+  
+  gettimeofday(&tv, 0); // TODO: check return code
+  long timestamp = (long) tv.tv_usec + ((long) tv.tv_sec) * 1e6;
+  
+  // calculate the channel rate
+  int count_per_second = ((adc_val - last_shock_position[corner])*1e6) / (timestamp - last_shock_time[corner]);
+  shock_velocity = ADC_TO_MM(count_per_second);
+  histogram[corner][get_bucket_from_rate(shock_velocity)]++;
+  // save current readings
+  last_shock_position[corner] = adc_val;
+  last_shock_time[corner] = timestamp;
+}
+
 void sample_shock_channels() {
+  // subscribe to watchdog and verify
+  ESP_ERROR_CHECK(esp_task_wdt_add(NULL));
+  ESP_ERROR_CHECK(esp_task_wdt_status(NULL));
   while (true) {
-    int shock_velocity[CORNER_COUNT];
-    struct timeval tv;
-
-    int adc_val = 0;
-    for(int i = 0; i < CORNER_COUNT; i++) {
-      // Read and timestamp the channel
-      adc_val = 0;
-      for (int sample_count = 0; sample_count < ADC_MULTISAMPLE_COUNT; sample_count++) {
-	adc_val += adc1_get_raw((adc1_channel_t)adc_channels[i]);
+    vTaskDelay(sample_delay_ticks);
+    if (recording_active) {
+      for(int i = 0; i < CORNER_COUNT; i++) {
+	sample_corner(i);
+	ESP_ERROR_CHECK(esp_task_wdt_reset());
       }
-
-      adc_val /= ADC_MULTISAMPLE_COUNT;
-
-      gettimeofday(&tv, 0); // TODO: check return code
-      long timestamp = (long) tv.tv_usec + ((long) tv.tv_sec) * 1e6;
-
-      // calculate the channel rate
-      int count_per_second = ((adc_val - last_shock_position[i])*1e6) / (timestamp - last_shock_time[i]);
-      shock_velocity[i] = ADC_TO_MM(count_per_second);
-      histogram[i][get_bucket_from_rate(shock_velocity[i])]++;
-
-      // save current readings
-      last_shock_position[i] = adc_val;
-      last_shock_time[i] = timestamp;
-      vTaskDelay(sample_delay_ticks);
     }
   }
 }

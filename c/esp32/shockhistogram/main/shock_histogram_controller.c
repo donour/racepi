@@ -36,11 +36,11 @@ void app_main()
 
     wifi_init();
 
-    // start histogram task
-    shock_histogram_init();
-    xTaskCreate(sample_shock_channels, "sample_shock", 2048, NULL, configMAX_PRIORITIES-1, NULL);
-
     // start web controller
     tcpip_adapter_init();
-    xTaskCreate(httpd_task, "httpd task", 2048, NULL, configMAX_PRIORITIES-3, NULL);
+    xTaskCreate(httpd_task, "httpd task", 2048, NULL, configMAX_PRIORITIES-4, NULL);
+
+    // start histogram task
+    shock_histogram_init();
+    xTaskCreate(sample_shock_channels, "sample_shock", 2048, NULL, configMAX_PRIORITIES-3, NULL);
 }
