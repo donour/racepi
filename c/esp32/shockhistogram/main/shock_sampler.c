@@ -54,7 +54,7 @@ static const adc_channel_t adc_channels[] = {
 };  
 
 void zero_histogram() {
-  memset(histogram, 0, (sizeof(unsigned long))*CORNER_COUNT*CONFIG_NUM_HISTOGRAM_BUCKETS);
+  memset(histogram, 0, (sizeof(uint64_t))*CORNER_COUNT*CONFIG_NUM_HISTOGRAM_BUCKETS);
 }
 
 // Populate normalized histogram array where buckets represent percentage of the 
@@ -90,7 +90,7 @@ void shock_histogram_init() {
 }
 
 // rate must be in mm/s
-static int get_bucket_from_rate(int32_t rate) {
+static int32_t get_bucket_from_rate(int32_t rate) {
   int16_t bucket = (int16_t)( rate + MAX_SPEED_MM_S) / HISTOGRAM_BUCKET_SIZE;
   if (bucket < 0) return  0;
   if (bucket >=  CONFIG_NUM_HISTOGRAM_BUCKETS) return CONFIG_NUM_HISTOGRAM_BUCKETS - 1;
