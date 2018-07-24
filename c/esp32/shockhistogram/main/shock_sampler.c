@@ -18,9 +18,11 @@
 
 #include <string.h>
 #include <sys/time.h>
+#include <time.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_task_wdt.h"
+#include "esp_log.h"
 #include "driver/adc.h"
 #include "shock_sampler.h"
 
@@ -39,6 +41,8 @@ uint64_t            histogram[CORNER_COUNT][CONFIG_NUM_HISTOGRAM_BUCKETS];
 uint16_t normalized_histogram[CORNER_COUNT][CONFIG_NUM_HISTOGRAM_BUCKETS];
 
 volatile bool recording_active = true;
+
+static const char *LOGGER_TAG = "shockhistogram";
 
 static const adc_atten_t atten = ADC_ATTEN_DB_11; // full 3.9v range
 static const adc_unit_t   unit = ADC_UNIT_1;
@@ -76,16 +80,16 @@ void populate_normalized_histogram() {
 
 void shock_histogram_init() {
   //Configure ADC
-  adc1_config_width(ADC_WIDTH_BIT);  
+  adc1_config_width(ADC_WIDTH_BIT);
   for (uint16_t i = 0; i < CORNER_COUNT; i++) { 
     adc1_config_channel_atten(adc_channels[i], atten);
   }
   zero_histogram();    
 
   if (sample_delay_ticks <= 0 ) {
-    // TODO: select appropriate sleep time.
-    printf("Warning: shock sampling interval is more frequent than clock tick. Please rebuild with a higher tick frequency.");
-    sample_delay_ticks = 1;
+    ESP_LOGE(LOGGER_TAG, "Warning: shock sampling interval is more frequent than "
+	     "clock tick. Please rebuild with a higher tick frequency.");
+    sample_delay_ticks = 10;
   }
 }
 
@@ -109,7 +113,10 @@ void sample_corner(uint16_t corner) {
   }
   adc_val /= ADC_MULTISAMPLE_COUNT;
   
-  gettimeofday(&tv, 0); // TODO: check return code
+  if (gettimeofday(&tv, 0) != 0) {
+    ESP_LOGE(LOGGER_TAG, "Failed to read system time, aborting");
+    return;
+  }
   int64_t timestamp = (int64_t) tv.tv_usec + ((int64_t) tv.tv_sec) * 1e6;
   
   // calculate the channel rate
@@ -118,21 +125,44 @@ void sample_corner(uint16_t corner) {
   histogram[corner][get_bucket_from_rate(shock_velocity)]++;
   // save current readings
   last_shock_position[corner] = adc_val;
-  last_shock_time[corner] = timestamp;
+  last_shock_time[corner] = timestamp;  
 }
 
-void sample_shock_channels() {
+struct timeval tv, last_tv;
+uint32_t sample_count = 0;
+
+void log_sample_rate(const char *tag) {
+  struct timeval time_diff;
+  if (++sample_count > 250) {
+    gettimeofday(&tv, 0);
+    time_diff.tv_sec  = tv.tv_sec  - last_tv.tv_sec;
+    time_diff.tv_usec = tv.tv_usec - last_tv.tv_usec;
+    ESP_LOGI(tag, "Shock sample rate: %3.1f hz", (float)sample_count / (time_diff.tv_sec + time_diff.tv_usec * 1e-6));
+    last_tv = tv;
+    sample_count = 0;	
+  }  
+}
+
+void sample_shock_channels(const uint8_t first_channel, const uint8_t last_channel) {
   // subscribe to watchdog and verify
   ESP_ERROR_CHECK(esp_task_wdt_add(NULL));
   ESP_ERROR_CHECK(esp_task_wdt_status(NULL));
-  while (true) {
+
+  gettimeofday(&last_tv, 0);
+  while (true) {    
     vTaskDelay(sample_delay_ticks);
     if (recording_active) {
-      for(uint16_t i = 0; i < CORNER_COUNT; i++) {
+      for(uint16_t i = first_channel; i <= last_channel; i++) {
 	sample_corner(i);
 	ESP_ERROR_CHECK(esp_task_wdt_reset());
       }
+      log_sample_rate("ADC1");
     }
   }
+}
+
+// TODO: reading of rear channels on separate ADC is not yet supported
+void sample_front_channels() {
+  sample_shock_channels(0,3);
 }
 

@@ -35,7 +35,7 @@
 #define TICKS_PER_SHOCK_SAMPLE (1 / portTICK_PERIOD_MS) // 1 khz
 
 void shock_histogram_init();
-void sample_shock_channels();
+void sample_front_channels();
 void zero_histogram();
 void populate_normalized_histogram();
 

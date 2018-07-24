@@ -42,5 +42,5 @@ void app_main()
 
     // start histogram task
     shock_histogram_init();
-    xTaskCreate(sample_shock_channels, "sample_shock", 2048, NULL, configMAX_PRIORITIES-3, NULL);
+    xTaskCreate(sample_front_channels, "sample_front", 2048, NULL, configMAX_PRIORITIES-3, NULL);
 }
