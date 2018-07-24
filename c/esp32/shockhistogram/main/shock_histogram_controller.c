@@ -21,6 +21,7 @@
 #include "nvs_flash.h"
 #include "shock_sampler.h"
 #include "wifi_setup.h"
+#include "gpio_ctrls.h"
 #include "web_ctrl.h"
 #include "tcpip_adapter.h"
 
@@ -34,6 +35,7 @@ void app_main()
     }
     ESP_ERROR_CHECK(ret);
 
+    gpio_ctrls_init();
     wifi_init();
 
     // start web controller

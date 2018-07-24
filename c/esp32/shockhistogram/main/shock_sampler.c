@@ -42,7 +42,7 @@ uint16_t normalized_histogram[CORNER_COUNT][CONFIG_NUM_HISTOGRAM_BUCKETS];
 
 volatile bool recording_active = true;
 
-static const char *LOGGER_TAG = "shockhistogram";
+static const char *LOGGER_TAG = "[shock sampler]";
 
 static const adc_atten_t atten = ADC_ATTEN_DB_11; // full 3.9v range
 static const adc_unit_t   unit = ADC_UNIT_1;
@@ -125,7 +125,7 @@ void sample_corner(uint16_t corner) {
   histogram[corner][get_bucket_from_rate(shock_velocity)]++;
   // save current readings
   last_shock_position[corner] = adc_val;
-  last_shock_time[corner] = timestamp;  
+  last_shock_time[corner] = timestamp;
 }
 
 struct timeval tv, last_tv;
@@ -133,7 +133,7 @@ uint32_t sample_count = 0;
 
 void log_sample_rate(const char *tag) {
   struct timeval time_diff;
-  if (++sample_count > 250) {
+  if (++sample_count > 100) {
     gettimeofday(&tv, 0);
     time_diff.tv_sec  = tv.tv_sec  - last_tv.tv_sec;
     time_diff.tv_usec = tv.tv_usec - last_tv.tv_usec;
@@ -157,6 +157,8 @@ void sample_shock_channels(const uint8_t first_channel, const uint8_t last_chann
 	ESP_ERROR_CHECK(esp_task_wdt_reset());
       }
       log_sample_rate("ADC1");
+    } else {
+      ESP_ERROR_CHECK(esp_task_wdt_reset());
     }
   }
 }
