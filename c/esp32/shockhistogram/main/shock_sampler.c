@@ -149,9 +149,16 @@ void sample_shock_channels(const uint8_t first_channel, const uint8_t last_chann
   ESP_ERROR_CHECK(esp_task_wdt_status(NULL));
 
   gettimeofday(&last_tv, 0);
+  bool zero_next_iteration = false;
+  
   while (true) {    
     vTaskDelay(sample_delay_ticks);
     if (recording_active) {
+      if (zero_next_iteration) {
+	zero_histogram();
+	zero_next_iteration = false;
+      }
+      
       for(uint16_t i = first_channel; i <= last_channel; i++) {
 	sample_corner(i);
 	ESP_ERROR_CHECK(esp_task_wdt_reset());
@@ -159,6 +166,7 @@ void sample_shock_channels(const uint8_t first_channel, const uint8_t last_chann
       log_sample_rate("ADC1");
     } else {
       ESP_ERROR_CHECK(esp_task_wdt_reset());
+      zero_next_iteration = true;
     }
   }
 }

@@ -29,7 +29,6 @@ static void IRAM_ATTR gpio_button_handler(void* arg) {
   uint32_t gpio_num = (uint32_t) arg;
   recording_active = (gpio_get_level(gpio_num) == 1);
   gpio_set_level(GPIO_LED_PIN, recording_active ? 1 : 0);
-
 }
 
 void gpio_ctrls_init() {
@@ -46,14 +45,13 @@ void gpio_ctrls_init() {
   gpio_install_isr_service(ESP_INTR_FLAG_EDGE);
   gpio_isr_handler_add(GPIO_BUTTON_PIN, gpio_button_handler, (void*)GPIO_BUTTON_PIN);
 
-
+  // configure status LED
   gpio_conf.intr_type = GPIO_PIN_INTR_DISABLE;
   gpio_conf.mode = GPIO_MODE_OUTPUT;
   gpio_conf.pin_bit_mask = (1ULL<< GPIO_LED_PIN);
   gpio_conf.pull_down_en = 0;
   gpio_conf.pull_up_en = 1;
   gpio_config(&gpio_conf);
-
 }
 
 
