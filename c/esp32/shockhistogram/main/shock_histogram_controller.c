@@ -23,6 +23,7 @@
 #include "wifi_setup.h"
 #include "gpio_ctrls.h"
 #include "web_ctrl.h"
+#include "bt_ctrl.h"
 #include "tcpip_adapter.h"
 
 void app_main()
@@ -35,9 +36,10 @@ void app_main()
     }
     ESP_ERROR_CHECK(ret);
 
+    //wifi_init();
     gpio_ctrls_init();
-    wifi_init();
-
+    bt_ctrl_init();
+    
     // start web controller
     tcpip_adapter_init();
     xTaskCreate(httpd_task, "httpd task", 2048, NULL, configMAX_PRIORITIES-4, NULL);
