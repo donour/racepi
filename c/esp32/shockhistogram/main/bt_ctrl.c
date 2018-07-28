@@ -38,9 +38,13 @@ static const esp_spp_sec_t  sec_mask     = ESP_SPP_SEC_AUTHENTICATE;
 static const esp_spp_role_t role_slave   = ESP_SPP_ROLE_SLAVE;
 
 static char* create_histogram_json() {
+  int x_axis[CONFIG_NUM_HISTOGRAM_BUCKETS];
+  
   populate_normalized_histogram();
   cJSON *root = cJSON_CreateObject();
   cJSON_AddItemToObject(root, "name", cJSON_CreateString("RacePi Shock Histogram"));
+
+  // write each corners data
   for (int corner = 0; corner < CORNER_COUNT; corner++) {
     char *header="unknown";
     switch(corner) {
@@ -57,13 +61,19 @@ static char* create_histogram_json() {
           header="RR";
           break;
         default:break;
-    }      
+    }
     cJSON_AddItemToObject(root, header,
-			  cJSON_CreateIntArray((int*)normalized_histogram[corner],CONFIG_NUM_HISTOGRAM_BUCKETS));
+			  cJSON_CreateIntArray((int*)normalized_histogram[corner],CONFIG_NUM_HISTOGRAM_BUCKETS));    
   }
+
+  // write x axis data
+  for (int column = 0; column < CONFIG_NUM_HISTOGRAM_BUCKETS; column++) {
+    x_axis[column] = HISTOGRAM_BUCKET_SIZE*(column - (CONFIG_NUM_HISTOGRAM_BUCKETS)/2); 
+  } 
+  cJSON_AddItemToObject(root, "x_axis",
+			cJSON_CreateIntArray(x_axis,CONFIG_NUM_HISTOGRAM_BUCKETS));    
   
   char *rv = cJSON_Print(root);
-
   cJSON_Delete(root);
   return rv;
 } 
@@ -83,9 +93,9 @@ static void handle_input(esp_spp_cb_param_t *param) {
   if (rv != NULL) {
     if (ESP_OK != 
 	esp_spp_write(param->srv_open.handle, strlen(rv), (uint8_t *)rv)) {
-
            ESP_LOGE(TAG, "Result Generation Failed");
     }
+    free(rv);
   } else {
      ESP_LOGE(TAG, "Histogram JSON creation failed");
   }
