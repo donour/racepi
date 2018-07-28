@@ -38,7 +38,7 @@
 
 // TODO: we may want to also keep track of the sample counts when displaying results
 uint64_t            histogram[CORNER_COUNT][CONFIG_NUM_HISTOGRAM_BUCKETS];
-uint16_t normalized_histogram[CORNER_COUNT][CONFIG_NUM_HISTOGRAM_BUCKETS];
+uint32_t normalized_histogram[CORNER_COUNT][CONFIG_NUM_HISTOGRAM_BUCKETS];
 
 volatile bool recording_active = true;
 
