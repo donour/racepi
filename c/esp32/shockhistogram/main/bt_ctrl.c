@@ -27,6 +27,8 @@
 #include "esp_gap_bt_api.h"
 #include "esp_bt_device.h"
 #include "esp_spp_api.h"
+#include "cJSON.h"
+#include "shock_sampler.h"
 
 #define TAG             "[bt_ctrl]"
 #define SPP_SERVER_NAME "SPP_SERVER"
@@ -35,18 +37,65 @@ static const esp_spp_mode_t esp_spp_mode = ESP_SPP_MODE_CB;
 static const esp_spp_sec_t  sec_mask     = ESP_SPP_SEC_AUTHENTICATE;
 static const esp_spp_role_t role_slave   = ESP_SPP_ROLE_SLAVE;
 
+static char* create_histogram_json() {
+  populate_normalized_histogram();
+  cJSON *root = cJSON_CreateObject();
+  cJSON_AddItemToObject(root, "name", cJSON_CreateString("RacePi Shock Histogram"));
+  for (int corner = 0; corner < CORNER_COUNT; corner++) {
+    char *header="unknown";
+    switch(corner) {
+        case 0:
+          header="LF";
+          break;
+        case 1:
+          header="RF";
+          break;
+        case 2:
+          header="LR";
+          break;
+        case 3: 
+          header="RR";
+          break;
+        default:break;
+    }      
+    cJSON_AddItemToObject(root, header,
+			  cJSON_CreateIntArray((int*)normalized_histogram[corner],CONFIG_NUM_HISTOGRAM_BUCKETS));
+  }
+  
+  char *rv = cJSON_Print(root);
+
+  cJSON_Delete(root);
+  return rv;
+} 
+
+
 static void handle_input(esp_spp_cb_param_t *param) {
   if (! strncmp("zero",(char*) param->data_ind.data, param->data_ind.len)) {
     ESP_LOGI(TAG, "Zero");
+    return;
   }
   if (! strncmp("Test123",(char*) param->data_ind.data, param->data_ind.len)) {
     ESP_LOGI(TAG, "test");
+    return;
+  }
+  ESP_LOGI(TAG, "other");
+  char *rv = create_histogram_json();
+  if (rv != NULL) {
+    if (ESP_OK != 
+	esp_spp_write(param->srv_open.handle, strlen(rv), (uint8_t *)rv)) {
+
+           ESP_LOGE(TAG, "Result Generation Failed");
+    }
+  } else {
+     ESP_LOGE(TAG, "Histogram JSON creation failed");
   }
 }
 
 static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
 {
+
     switch (event) {
+
 
     case ESP_SPP_INIT_EVT:
       ESP_LOGI(TAG, "ESP_SPP_INIT_EVT");
@@ -86,6 +135,38 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
     }
 }
 
+
+void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param)
+{
+    switch (event) {
+#if (BT_SPP_INCLUDED)
+    case ESP_BT_GAP_AUTH_CMPL_EVT:{
+        if (param->auth_cmpl.stat == ESP_BT_STATUS_SUCCESS) {
+            ESP_LOGI(TAG, "authentication success: %s", param->auth_cmpl.device_name);
+            esp_log_buffer_hex(TAG, param->auth_cmpl.bda, ESP_BD_ADDR_LEN);
+        } else {
+            ESP_LOGE(TAG, "authentication failed, status:%d", param->auth_cmpl.stat);
+        }
+        break;
+    }
+    case ESP_BT_GAP_CFM_REQ_EVT:
+        ESP_LOGI(TAG, "ESP_BT_GAP_CFM_REQ_EVT Please compare the numeric value: %d", param->cfm_req.num_val);
+        esp_bt_gap_ssp_confirm_reply(param->cfm_req.bda, true);
+        break;
+    case ESP_BT_GAP_KEY_NOTIF_EVT:
+        ESP_LOGI(TAG, "ESP_BT_GAP_KEY_NOTIF_EVT passkey:%d", param->key_notif.passkey);
+        break;
+    case ESP_BT_GAP_KEY_REQ_EVT:
+        ESP_LOGI(TAG, "ESP_BT_GAP_KEY_REQ_EVT Please enter passkey!");
+        break;
+#endif ///BT_SPP_INCLUDED
+    default: 
+        ESP_LOGI(TAG, "event: %d", event);
+        break;    
+    }
+    return;
+}
+
 void bt_ctrl_init() {
   esp_err_t rc;
   
@@ -106,7 +187,10 @@ void bt_ctrl_init() {
     ESP_LOGE(TAG, "%s enable bluedroid failed: %s\n", __func__, esp_err_to_name(rc));
     return;
   }
-  
+  if ((rc = esp_bt_gap_register_callback(esp_bt_gap_cb)) != ESP_OK) {
+    ESP_LOGE(TAG, "%s gap register failed: %s\n", __func__, esp_err_to_name(rc));
+    return;
+  }
   if ((rc = esp_spp_register_callback(esp_spp_cb)) != ESP_OK) {
     ESP_LOGE(TAG, "%s spp register failed: %s\n", __func__, esp_err_to_name(rc));
     return;

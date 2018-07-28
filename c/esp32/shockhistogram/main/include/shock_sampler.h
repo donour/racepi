@@ -40,7 +40,7 @@ void zero_histogram();
 void populate_normalized_histogram();
 
 extern uint64_t             histogram[CORNER_COUNT][CONFIG_NUM_HISTOGRAM_BUCKETS];
-extern uint16_t  normalized_histogram[CORNER_COUNT][CONFIG_NUM_HISTOGRAM_BUCKETS];
+extern uint32_t  normalized_histogram[CORNER_COUNT][CONFIG_NUM_HISTOGRAM_BUCKETS];
 extern volatile bool recording_active;
 
 #endif // __SHOCK_SAMPLER_H__
