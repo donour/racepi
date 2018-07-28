@@ -24,12 +24,17 @@ import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.utils.ColorTemplate;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class HistogramLoader {
 
     private final List<BarChart> charts;
+    private final List<int[]> renderData = new ArrayList<>(4);
 
     HistogramLoader(final List<BarChart> charts) {
         this.charts = charts;
@@ -47,19 +52,48 @@ public class HistogramLoader {
             xAxis.setPosition(XAxis.XAxisPosition.BOTTOM_INSIDE);
             xAxis.setDrawGridLines(false);
         }
+        renderData.add(0, new int[1]);
+        renderData.add(1, new int[1]);
+        renderData.add(2, new int[1]);
+        renderData.add(3, new int[1]);
     }
 
+    /**
+     * Set data to be rendered
+     *
+     * @param jsonData input data from logger as a JSON string
+     * @throws JSONException
+     */
+    public void setData(final String jsonData) throws JSONException {
+        final List<JSONArray> jsonArrays = new ArrayList<>();
+        final JSONObject root = new JSONObject(jsonData);
+        System.out.println("name: " + root.getString("name"));
+        jsonArrays.add(root.getJSONArray("LF"));
+        jsonArrays.add(root.getJSONArray("RF"));
+        jsonArrays.add(root.getJSONArray("LR"));
+        jsonArrays.add(root.getJSONArray("RR"));
+
+        if (jsonArrays.size() == charts.size()) {
+            for (int i = 0; i < charts.size(); i++) {
+                int[] tempData = new int[jsonArrays.get(i).length()];
+                for (int j = 0; j < jsonArrays.get(i).length(); j++) {
+                    tempData[j] = (jsonArrays.get(i).getInt(j));
+                }
+                renderData.add(i, tempData);
+            }
+        }
+    }
+
+    /**
+     * Load bar data into plots and render. This must be called from the UI thread.
+     */
     public void loadData() {
-
-        final int[] testData = {
-          1,1,1,1,1,4,11,20,40,20,12,4,1,1,1,1,1
-        };
-
-        for (final BarChart chart : charts) {
-
+        for (int corner = 0; corner < charts.size(); corner++) {
+            final BarChart chart = charts.get(corner);
+            final int[] data = renderData.get(corner);
             final List<BarEntry> entries = new ArrayList<>();
-            for (int i = (-testData.length/2) ; i <= testData.length/2; i++) {
-                entries.add(new BarEntry(i, testData[i+testData.length/2]));
+            for (int i = (-data.length/2) ; i <= data.length/2; i++) {
+                entries.add(new BarEntry(i, data[i+data.length/2]));
             }
             final BarDataSet dataSet = new BarDataSet(entries, null);
             dataSet.setColors(ColorTemplate.COLORFUL_COLORS);

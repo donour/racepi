@@ -17,17 +17,85 @@
 */
 package net.racepi.shockhistogramviewer;
 
+import android.annotation.SuppressLint;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.Spinner;
 
 import com.github.mikephil.charting.charts.BarChart;
 
+import org.json.JSONException;
+
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final UUID SPP_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+    private final static int REQUEST_ENABLE_BT = 1;
+
     private HistogramLoader histogramLoader;
+
+    private class ConnectedThread extends Thread {
+
+        private final BluetoothDevice device;
+
+        ConnectedThread(final BluetoothDevice device) {
+            this.device = device;
+        }
+
+        public void run() {
+            try (final BluetoothSocket socket =
+                         device.createRfcommSocketToServiceRecord(SPP_UUID)) {
+                socket.connect();
+                final BufferedWriter writer = new BufferedWriter(
+                        new OutputStreamWriter(socket.getOutputStream(),
+                                Charset.forName("ascii")));
+                final InputStream is = socket.getInputStream();
+                writer.write("histogram");
+                writer.flush();
+                while (is.available() <= 0) {
+                    try {
+                        sleep(10);
+                    } catch (final InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+                // read all available
+                final StringBuilder sb = new StringBuilder();
+                while (is.available() > 0) {
+                    sb.append((char) is.read());
+                }
+                final String result = sb.toString();
+                histogramLoader.setData(result);
+            } catch (final IOException | JSONException e) {
+                e.printStackTrace();
+            } finally {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        histogramLoader.loadData();
+                        final Button loadButton = findViewById(R.id.loadButton);
+                        loadButton.setEnabled(true);
+                    }
+                });
+            }
+        }
+    }
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -40,6 +108,37 @@ public class MainActivity extends AppCompatActivity {
         charts.add((BarChart) findViewById(R.id.lr_chart));
         charts.add((BarChart) findViewById(R.id.rr_chart));
         histogramLoader = new HistogramLoader(charts);
-        histogramLoader.loadData();
+
+        final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (bluetoothAdapter == null) {
+            // TODO bluetooth not supported
+        }
+        if (!bluetoothAdapter.isEnabled()) {
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+        }
+
+        final Set<BluetoothDevice> bondedDevices = bluetoothAdapter.getBondedDevices();
+
+        final Spinner bondedDevicesSpinner = findViewById(R.id.bondedDevicesSpinner);
+        // Creating adapter for spinner
+        final ArrayAdapter<BluetoothDevice> dataAdapter =
+                new ArrayAdapter<>(this,
+                        android.R.layout.simple_spinner_item,
+                        new ArrayList<>(bondedDevices));
+        dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        bondedDevicesSpinner.setAdapter(dataAdapter);
+
+        final Button loadButton = findViewById(R.id.loadButton);
+        loadButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(final View view) {
+                loadButton.setEnabled(false);
+                final BluetoothDevice device =
+                        (BluetoothDevice) bondedDevicesSpinner.getSelectedItem();
+                final ConnectedThread thr = new ConnectedThread(device);
+                thr.start();
+            }
+        });
     }
 }

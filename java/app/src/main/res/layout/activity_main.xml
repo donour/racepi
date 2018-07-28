@@ -19,9 +19,29 @@
         app:layout_constraintVertical_bias="0.477">
 
         <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+
+            <Button
+                android:id="@+id/loadButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Load" />
+
+            <Spinner
+                android:id="@+id/bondedDevicesSpinner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="8"
+                android:background="@android:color/holo_blue_dark" />
+        </TableRow>
+
+        <TableRow
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
-            android:layout_weight="1"
+            android:layout_weight="50"
             android:gravity="fill_vertical|fill_horizontal">
 
             <com.github.mikephil.charting.charts.BarChart
@@ -45,7 +65,7 @@
         <TableRow
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
-            android:layout_weight="1">
+            android:layout_weight="50">
 
             <com.github.mikephil.charting.charts.BarChart
                 android:id="@+id/lr_chart"
