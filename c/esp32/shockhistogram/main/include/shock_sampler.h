@@ -36,6 +36,7 @@
 
 void shock_histogram_init();
 void sample_front_channels();
+void sample_rear_channels();
 void zero_histogram();
 void populate_normalized_histogram();
 

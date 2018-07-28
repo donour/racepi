@@ -50,12 +50,19 @@ static int32_t last_shock_position[CORNER_COUNT];
 static int64_t last_shock_time[CORNER_COUNT];
 static uint32_t sample_delay_ticks = TICKS_PER_SHOCK_SAMPLE;
 
-static const adc_channel_t adc_channels[] = {
+static const adc_channel_t adc1_channels[] = {
   ADC1_CHANNEL_6,
   ADC1_CHANNEL_3,
-  ADC1_CHANNEL_0,
-  ADC1_CHANNEL_5,
-};  
+  ADC1_CHANNEL_0, // unused
+  ADC1_CHANNEL_5, // unused
+};
+
+static const adc2_channel_t adc2_channels[] = {
+  ADC2_CHANNEL_0, // unused
+  ADC2_CHANNEL_1, // unused
+  ADC2_CHANNEL_8,  /*!< ADC2 channel 8 is GPIO25 */
+  ADC2_CHANNEL_9  /*!< ADC2 channel 9 is GPIO26 */  
+};
 
 void zero_histogram() {
   memset(histogram, 0, (sizeof(uint64_t))*CORNER_COUNT*CONFIG_NUM_HISTOGRAM_BUCKETS);
@@ -81,9 +88,11 @@ void populate_normalized_histogram() {
 void shock_histogram_init() {
   //Configure ADC
   adc1_config_width(ADC_WIDTH_BIT);
-  for (uint16_t i = 0; i < CORNER_COUNT; i++) { 
-    adc1_config_channel_atten(adc_channels[i], atten);
-  }
+  adc1_config_channel_atten(adc1_channels[0], atten);
+  adc1_config_channel_atten(adc1_channels[1], atten);
+  adc2_config_channel_atten(adc2_channels[0], atten);
+  adc2_config_channel_atten(adc2_channels[1], atten);
+
   zero_histogram();    
 
   if (sample_delay_ticks <= 0 ) {
@@ -101,6 +110,21 @@ static int32_t get_bucket_from_rate(int32_t rate) {
   return bucket;
 }
 
+int32_t get_adc_value(uint16_t channel, bool adc2) {
+
+  if (adc2) {
+    // ADC shares hardware with the wifi and using a different read code path.
+    int read_raw;
+    esp_err_t r = adc2_get_raw(adc2_channels[channel], ADC_WIDTH_12Bit, &read_raw);
+    if (r == ESP_ERR_TIMEOUT) {
+      ESP_LOGE(LOGGER_TAG,"ADC2 used by Wi-Fi.\n");
+    }
+    return read_raw;
+  } else {
+    return adc1_get_raw((adc1_channel_t)adc1_channels[channel]);
+  }
+}
+
 void sample_corner(uint16_t corner) {
   struct timeval tv;
   int32_t shock_velocity;
@@ -108,7 +132,7 @@ void sample_corner(uint16_t corner) {
   
   // Read and timestamp the channel		    
   for (uint16_t sample_count = 0; sample_count < ADC_MULTISAMPLE_COUNT; sample_count++) {
-    adc_val += adc1_get_raw((adc1_channel_t)adc_channels[corner]);
+    adc_val += get_adc_value(corner, corner > 1);  // adc1_get_raw((adc1_channel_t)adc_channels[corner]);
     esp_task_wdt_reset();
   }
   adc_val /= ADC_MULTISAMPLE_COUNT;
@@ -143,7 +167,7 @@ void log_sample_rate(const char *tag) {
   }  
 }
 
-void sample_shock_channels(const uint8_t first_channel, const uint8_t last_channel) {
+void sample_shock_channels(const uint8_t first_channel, const uint8_t last_channel, char *tag) {
   // subscribe to watchdog and verify
   ESP_ERROR_CHECK(esp_task_wdt_add(NULL));
   ESP_ERROR_CHECK(esp_task_wdt_status(NULL));
@@ -163,7 +187,7 @@ void sample_shock_channels(const uint8_t first_channel, const uint8_t last_chann
 	sample_corner(i);
 	ESP_ERROR_CHECK(esp_task_wdt_reset());
       }
-      log_sample_rate("ADC1");
+      log_sample_rate(tag);
     } else {
       ESP_ERROR_CHECK(esp_task_wdt_reset());
       zero_next_iteration = true;
@@ -171,8 +195,11 @@ void sample_shock_channels(const uint8_t first_channel, const uint8_t last_chann
   }
 }
 
-// TODO: reading of rear channels on separate ADC is not yet supported
 void sample_front_channels() {
-  sample_shock_channels(0,3);
+  sample_shock_channels(0, 1, "[front]");
+}
+
+void sample_rear_channels() {
+  sample_shock_channels(2, 3, "[rear]");
 }
 
