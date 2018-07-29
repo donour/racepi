@@ -35,6 +35,7 @@ public class HistogramLoader {
 
     private final List<BarChart> charts;
     private final List<int[]> renderData = new ArrayList<>(4);
+    private int[] xAxis = new int[1];
 
     HistogramLoader(final List<BarChart> charts) {
         this.charts = charts;
@@ -73,6 +74,11 @@ public class HistogramLoader {
         jsonArrays.add(root.getJSONArray("LR"));
         jsonArrays.add(root.getJSONArray("RR"));
 
+        xAxis = new int[root.getJSONArray("x_axis").length()];
+        for (int j = 0; j <xAxis.length; j++) {
+            xAxis[j] = (root.getJSONArray("x_axis").getInt(j));
+        }
+
         if (jsonArrays.size() == charts.size()) {
             for (int i = 0; i < charts.size(); i++) {
                 int[] tempData = new int[jsonArrays.get(i).length()];
@@ -92,12 +98,14 @@ public class HistogramLoader {
             final BarChart chart = charts.get(corner);
             final int[] data = renderData.get(corner);
             final List<BarEntry> entries = new ArrayList<>();
-            for (int i = (-data.length/2) ; i <= data.length/2; i++) {
-                entries.add(new BarEntry(i, data[i+data.length/2]));
+            for (int i = 0 ; i < data.length ; i++) {
+                entries.add(new BarEntry(xAxis[i], data[i]));
             }
             final BarDataSet dataSet = new BarDataSet(entries, null);
             dataSet.setColors(ColorTemplate.COLORFUL_COLORS);
-            chart.setData(new BarData(dataSet));
+            final BarData barData = new BarData(dataSet);
+            barData.setBarWidth((xAxis[xAxis.length-1] - xAxis[0]) / xAxis.length);
+            chart.setData(barData);
             chart.invalidate();
         }
     }
