@@ -34,8 +34,7 @@ import java.util.List;
 public class HistogramLoader {
 
     private final List<BarChart> charts;
-    private final List<int[]> renderData = new ArrayList<>(4);
-    private int[] xAxis = new int[1];
+    private HistogramData data = null;
 
     HistogramLoader(final List<BarChart> charts) {
         this.charts = charts;
@@ -53,60 +52,38 @@ public class HistogramLoader {
             xAxis.setPosition(XAxis.XAxisPosition.BOTTOM_INSIDE);
             xAxis.setDrawGridLines(false);
         }
-        renderData.add(0, new int[1]);
-        renderData.add(1, new int[1]);
-        renderData.add(2, new int[1]);
-        renderData.add(3, new int[1]);
     }
 
-    /**
-     * Set data to be rendered
-     *
-     * @param jsonData input data from logger as a JSON string
-     * @throws JSONException
-     */
-    public void setData(final String jsonData) throws JSONException {
-        final List<JSONArray> jsonArrays = new ArrayList<>();
-        final JSONObject root = new JSONObject(jsonData);
-        System.out.println("name: " + root.getString("name"));
-        jsonArrays.add(root.getJSONArray("LF"));
-        jsonArrays.add(root.getJSONArray("RF"));
-        jsonArrays.add(root.getJSONArray("LR"));
-        jsonArrays.add(root.getJSONArray("RR"));
-
-        xAxis = new int[root.getJSONArray("x_axis").length()];
-        for (int j = 0; j <xAxis.length; j++) {
-            xAxis[j] = (root.getJSONArray("x_axis").getInt(j));
-        }
-
-        if (jsonArrays.size() == charts.size()) {
-            for (int i = 0; i < charts.size(); i++) {
-                int[] tempData = new int[jsonArrays.get(i).length()];
-                for (int j = 0; j < jsonArrays.get(i).length(); j++) {
-                    tempData[j] = (jsonArrays.get(i).getInt(j));
-                }
-                renderData.add(i, tempData);
-            }
-        }
+    public void setData(final HistogramData data) {
+        this.data = data;
     }
 
     /**
      * Load bar data into plots and render. This must be called from the UI thread.
      */
     public void loadData() {
+        if (data.getCornerData().size() < charts.size()){
+            return;
+        }
+
         for (int corner = 0; corner < charts.size(); corner++) {
             final BarChart chart = charts.get(corner);
-            final int[] data = renderData.get(corner);
-            final List<BarEntry> entries = new ArrayList<>();
-            for (int i = 0 ; i < data.length ; i++) {
-                entries.add(new BarEntry(xAxis[i], data[i]));
-            }
-            final BarDataSet dataSet = new BarDataSet(entries, null);
-            dataSet.setColors(ColorTemplate.COLORFUL_COLORS);
-            final BarData barData = new BarData(dataSet);
-            barData.setBarWidth((xAxis[xAxis.length-1] - xAxis[0]) / xAxis.length);
-            chart.setData(barData);
-            chart.invalidate();
+            final int[] cornerData = data.getCornerData().get(corner);
+
+            loadDataIntoChart(chart, cornerData, data.getxAxis());
         }
+    }
+
+    private void loadDataIntoChart(final BarChart chart, final int[] chartData, final int[] xAxis) {
+        final List<BarEntry> entries = new ArrayList<>();
+        for (int i = 0 ; i < chartData.length ; i++) {
+            entries.add(new BarEntry(data.getxAxis()[i], chartData[i]));
+        }
+        final BarDataSet dataSet = new BarDataSet(entries, null);
+        dataSet.setColors(ColorTemplate.COLORFUL_COLORS);
+        final BarData barData = new BarData(dataSet);
+        barData.setBarWidth((data.getxAxis()[data.getxAxis().length-1] - data.getxAxis()[0]) / data.getxAxis().length);
+        chart.setData(barData);
+        chart.invalidate();
     }
 }

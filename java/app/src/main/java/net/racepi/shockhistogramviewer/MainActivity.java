@@ -17,7 +17,6 @@
 */
 package net.racepi.shockhistogramviewer;
 
-import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
@@ -81,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
                     sb.append((char) is.read());
                 }
                 final String result = sb.toString();
-                histogramLoader.setData(result);
+                histogramLoader.setData(new HistogramData(result));
             } catch (final IOException | JSONException e) {
                 e.printStackTrace();
             } finally {
