@@ -39,8 +39,10 @@ static const esp_spp_role_t role_slave   = ESP_SPP_ROLE_SLAVE;
 
 static char* create_histogram_json() {
   int x_axis[CONFIG_NUM_HISTOGRAM_BUCKETS];
+  int shock_positions_mm[CORNER_COUNT];
   
   populate_normalized_histogram();
+  get_current_shock_positions_mm(shock_positions_mm);
   cJSON *root = cJSON_CreateObject();
   cJSON_AddItemToObject(root, "name", cJSON_CreateString("RacePi Shock Histogram"));
 
@@ -72,6 +74,9 @@ static char* create_histogram_json() {
   } 
   cJSON_AddItemToObject(root, "x_axis",
 			cJSON_CreateIntArray(x_axis,CONFIG_NUM_HISTOGRAM_BUCKETS));    
+
+  cJSON_AddItemToObject(root, "current_positions_mm",
+			cJSON_CreateIntArray(shock_positions_mm, CORNER_COUNT));    
   
   char *rv = cJSON_Print(root);
   cJSON_Delete(root);

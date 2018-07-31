@@ -204,6 +204,12 @@ void sample_shock_channels(const uint8_t first_channel, const uint8_t last_chann
   }
 }
 
+void get_current_shock_positions_mm(int32_t *positions) {
+  for (int corner = 0 ; corner < CORNER_COUNT ; corner++) {
+    positions[corner] = ADC_TO_MM(last_shock_position[corner]);
+  }
+}
+
 void sample_front_channels() {
   sample_shock_channels(0, 1, "[front]");
 }
