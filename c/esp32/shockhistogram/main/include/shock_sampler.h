@@ -39,6 +39,7 @@ void sample_front_channels();
 void sample_rear_channels();
 void zero_histogram();
 void populate_normalized_histogram();
+void get_current_shock_positions_mm(int32_t *positions);
 
 extern uint64_t             histogram[CORNER_COUNT][CONFIG_NUM_HISTOGRAM_BUCKETS];
 extern uint32_t  normalized_histogram[CORNER_COUNT][CONFIG_NUM_HISTOGRAM_BUCKETS];

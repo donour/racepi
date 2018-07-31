@@ -26,7 +26,6 @@
 #include "driver/adc.h"
 #include "shock_sampler.h"
 
-
 // This code calculates histogram for shock (suspension damper) velocities by
 // reading four (4) ADC channels. It samples around ~1 khz, so a large number of
 // samples are collected per lap/run/session. We care about the distribution of 
@@ -46,7 +45,7 @@ static const char *LOGGER_TAG = "[shock sampler]";
 
 static const adc_atten_t atten = ADC_ATTEN_DB_11; // full 3.9v range
 static const adc_unit_t   unit = ADC_UNIT_1;
-static int32_t last_shock_position[CORNER_COUNT];
+static volatile int32_t last_shock_position[CORNER_COUNT];
 static int64_t last_shock_time[CORNER_COUNT];
 static uint32_t sample_delay_ticks = TICKS_PER_SHOCK_SAMPLE;
 
@@ -132,7 +131,12 @@ void sample_corner(uint16_t corner) {
   
   // Read and timestamp the channel		    
   for (uint16_t sample_count = 0; sample_count < ADC_MULTISAMPLE_COUNT; sample_count++) {
-    adc_val += get_adc_value(corner, corner > 1);  // adc1_get_raw((adc1_channel_t)adc_channels[corner]);
+    int32_t adc_raw = get_adc_value(corner, corner > 1);
+#ifdef LOG_ADC_RAW
+    gettimeofday(&tv, 0);
+    printf("%d, %ld, %ld, %d\n", corner, tv.tv_sec, tv.tv_usec, adc_raw);
+#endif
+    adc_val += adc_raw;
     esp_task_wdt_reset();
   }
   adc_val /= ADC_MULTISAMPLE_COUNT;
@@ -141,27 +145,34 @@ void sample_corner(uint16_t corner) {
     ESP_LOGE(LOGGER_TAG, "Failed to read system time, aborting");
     return;
   }
-  int64_t timestamp = (int64_t) tv.tv_usec + ((int64_t) tv.tv_sec) * 1e6;
+  int64_t timestamp_us = (int64_t) tv.tv_usec + ((int64_t) tv.tv_sec) * 1e6;
   
   // calculate the channel rate
-  int32_t count_per_second = ((adc_val - last_shock_position[corner])*1e6) / (timestamp - last_shock_time[corner]);
+  int32_t count_per_second = ((adc_val - last_shock_position[corner])*1e6) / (timestamp_us - last_shock_time[corner]);
   shock_velocity = ADC_TO_MM(count_per_second);
   histogram[corner][get_bucket_from_rate(shock_velocity)]++;
   // save current readings
   last_shock_position[corner] = adc_val;
-  last_shock_time[corner] = timestamp;
+  last_shock_time[corner] = timestamp_us;
 }
 
-struct timeval tv, last_tv;
-uint32_t sample_count = 0;
-
 void log_sample_rate(const char *tag) {
+  static struct timeval tv, last_tv;
+  static uint32_t sample_count = 0;
   struct timeval time_diff;
-  if (++sample_count > 100) {
+  
+  if (++sample_count > 1024) {
     gettimeofday(&tv, 0);
     time_diff.tv_sec  = tv.tv_sec  - last_tv.tv_sec;
     time_diff.tv_usec = tv.tv_usec - last_tv.tv_usec;
-    ESP_LOGI(tag, "Shock sample rate: %3.1f hz", (float)sample_count / (time_diff.tv_sec + time_diff.tv_usec * 1e-6));
+    float rate = (float)sample_count / (time_diff.tv_sec + time_diff.tv_usec * 1e-6);
+    printf("rate(hz): %3.1f", rate);
+    printf(" positions(mm): [");
+    for (int i = 0 ; i < CORNER_COUNT; i++) {
+      printf("% 3d", ADC_TO_MM(last_shock_position[i]));
+    }
+    printf("]\n");
+
     last_tv = tv;
     sample_count = 0;	
   }  
@@ -172,9 +183,7 @@ void sample_shock_channels(const uint8_t first_channel, const uint8_t last_chann
   ESP_ERROR_CHECK(esp_task_wdt_add(NULL));
   ESP_ERROR_CHECK(esp_task_wdt_status(NULL));
 
-  gettimeofday(&last_tv, 0);
-  bool zero_next_iteration = false;
-  
+  bool zero_next_iteration = false;  
   while (true) {    
     vTaskDelay(sample_delay_ticks);
     if (recording_active) {
@@ -192,6 +201,12 @@ void sample_shock_channels(const uint8_t first_channel, const uint8_t last_chann
       ESP_ERROR_CHECK(esp_task_wdt_reset());
       zero_next_iteration = true;
     }
+  }
+}
+
+void get_current_shock_positions_mm(int32_t *positions) {
+  for (int corner = 0 ; corner < CORNER_COUNT ; corner++) {
+    positions[corner] = ADC_TO_MM(last_shock_position[corner]);
   }
 }
 
