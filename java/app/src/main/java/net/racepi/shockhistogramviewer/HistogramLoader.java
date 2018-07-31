@@ -17,6 +17,8 @@
 */
 package net.racepi.shockhistogramviewer;
 
+import android.widget.TextView;
+
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.data.BarData;
@@ -28,16 +30,19 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
 public class HistogramLoader {
 
     private final List<BarChart> charts;
+    private final List<TextView> currentPositionTextViews;
     private HistogramData data = null;
 
-    HistogramLoader(final List<BarChart> charts) {
+    HistogramLoader(final List<BarChart> charts, final List<TextView> currentPositionTextViews) {
         this.charts = charts;
+        this.currentPositionTextViews = currentPositionTextViews;
         for (final BarChart chart : charts) {
             chart.setDragEnabled(false);
             chart.setPinchZoom(false);
@@ -69,8 +74,16 @@ public class HistogramLoader {
         for (int corner = 0; corner < charts.size(); corner++) {
             final BarChart chart = charts.get(corner);
             final int[] cornerData = data.getCornerData().get(corner);
-
             loadDataIntoChart(chart, cornerData, data.getxAxis());
+        }
+        if (data.getCurrentPositions() != null &&
+                data.getCurrentPositions().length == currentPositionTextViews.size())
+        {
+            for(int i = 0; i < data.getCurrentPositions().length; i++) {
+                currentPositionTextViews.get(i).setText(
+                        String.format("%3d",
+                                data.getCurrentPositions()[i], Charset.defaultCharset()));
+            }
         }
     }
 
@@ -85,5 +98,6 @@ public class HistogramLoader {
         barData.setBarWidth((data.getxAxis()[data.getxAxis().length-1] - data.getxAxis()[0]) / data.getxAxis().length);
         chart.setData(barData);
         chart.invalidate();
+
     }
 }

@@ -27,21 +27,87 @@
                 android:id="@+id/loadButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
+                android:layout_weight="5"
                 android:text="Load" />
 
             <Spinner
                 android:id="@+id/bondedDevicesSpinner"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="8"
+                android:layout_weight="50"
                 android:background="@android:color/holo_blue_dark" />
+
+            <Space
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+
+            <TableLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="5">
+
+                <TableRow
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <TextView
+                        android:id="@+id/positionLabel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Current Position (mm)"
+                        android:textAlignment="center" />
+                </TableRow>
+
+                <TableRow
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1">
+
+                    <TextView
+                        android:id="@+id/positionTextViewLF"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="LF" />
+
+                    <TextView
+                        android:id="@+id/positionTextViewRF"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="RF" />
+                </TableRow>
+
+                <TableRow
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1">
+
+                    <TextView
+                        android:id="@+id/positionTextViewLR"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="LR" />
+
+                    <TextView
+                        android:id="@+id/positionTextViewRR"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="RR" />
+
+                </TableRow>
+
+            </TableLayout>
+
         </TableRow>
 
         <TableRow
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
-            android:layout_weight="50"
+            android:layout_weight="100"
             android:gravity="fill_vertical|fill_horizontal">
 
             <com.github.mikephil.charting.charts.BarChart
@@ -65,7 +131,7 @@
         <TableRow
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
-            android:layout_weight="50">
+            android:layout_weight="100">
 
             <com.github.mikephil.charting.charts.BarChart
                 android:id="@+id/lr_chart"

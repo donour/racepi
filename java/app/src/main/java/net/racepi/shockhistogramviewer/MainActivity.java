@@ -27,6 +27,7 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 import com.github.mikephil.charting.charts.BarChart;
 
@@ -106,7 +107,13 @@ public class MainActivity extends AppCompatActivity {
         charts.add((BarChart) findViewById(R.id.rf_chart));
         charts.add((BarChart) findViewById(R.id.lr_chart));
         charts.add((BarChart) findViewById(R.id.rr_chart));
-        histogramLoader = new HistogramLoader(charts);
+        final List<TextView> currentPositionTextViews = new ArrayList<>();
+        currentPositionTextViews.add((TextView) findViewById(R.id.positionTextViewLF));
+        currentPositionTextViews.add((TextView) findViewById(R.id.positionTextViewRF));
+        currentPositionTextViews.add((TextView) findViewById(R.id.positionTextViewLR));
+        currentPositionTextViews.add((TextView) findViewById(R.id.positionTextViewRR));
+
+        histogramLoader = new HistogramLoader(charts, currentPositionTextViews);
 
         final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (bluetoothAdapter == null) {
