@@ -124,8 +124,6 @@ int32_t get_adc_value(uint16_t channel, bool adc2) {
   }
 }
 
-#define LOG_ADC_RAW
-
 void sample_corner(uint16_t corner) {
   struct timeval tv;
   int32_t shock_velocity;
@@ -211,6 +209,6 @@ void sample_front_channels() {
 }
 
 void sample_rear_channels() {
-  sample_shock_channels(3, 3, "[rear]");
+  sample_shock_channels(2, 3, "[rear]");
 }
 
