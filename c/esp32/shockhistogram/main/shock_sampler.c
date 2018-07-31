@@ -46,7 +46,7 @@ static const char *LOGGER_TAG = "[shock sampler]";
 
 static const adc_atten_t atten = ADC_ATTEN_DB_11; // full 3.9v range
 static const adc_unit_t   unit = ADC_UNIT_1;
-static int32_t last_shock_position[CORNER_COUNT];
+static volatile int32_t last_shock_position[CORNER_COUNT];
 static int64_t last_shock_time[CORNER_COUNT];
 static uint32_t sample_delay_ticks = TICKS_PER_SHOCK_SAMPLE;
 
@@ -141,27 +141,34 @@ void sample_corner(uint16_t corner) {
     ESP_LOGE(LOGGER_TAG, "Failed to read system time, aborting");
     return;
   }
-  int64_t timestamp = (int64_t) tv.tv_usec + ((int64_t) tv.tv_sec) * 1e6;
+  int64_t timestamp_us = (int64_t) tv.tv_usec + ((int64_t) tv.tv_sec) * 1e6;
   
   // calculate the channel rate
-  int32_t count_per_second = ((adc_val - last_shock_position[corner])*1e6) / (timestamp - last_shock_time[corner]);
+  int32_t count_per_second = ((adc_val - last_shock_position[corner])*1e6) / (timestamp_us - last_shock_time[corner]);
   shock_velocity = ADC_TO_MM(count_per_second);
   histogram[corner][get_bucket_from_rate(shock_velocity)]++;
   // save current readings
   last_shock_position[corner] = adc_val;
-  last_shock_time[corner] = timestamp;
+  last_shock_time[corner] = timestamp_us;
 }
 
-struct timeval tv, last_tv;
-uint32_t sample_count = 0;
-
 void log_sample_rate(const char *tag) {
+  static struct timeval tv, last_tv;
+  static uint32_t sample_count = 0;
   struct timeval time_diff;
-  if (++sample_count > 100) {
+  
+  if (++sample_count > 1024) {
     gettimeofday(&tv, 0);
     time_diff.tv_sec  = tv.tv_sec  - last_tv.tv_sec;
     time_diff.tv_usec = tv.tv_usec - last_tv.tv_usec;
-    ESP_LOGI(tag, "Shock sample rate: %3.1f hz", (float)sample_count / (time_diff.tv_sec + time_diff.tv_usec * 1e-6));
+    float rate = (float)sample_count / (time_diff.tv_sec + time_diff.tv_usec * 1e-6);
+    printf("rate(hz): %3.1f", rate);
+    printf(" positions(mm): [");
+    for (int i = 0 ; i < CORNER_COUNT; i++) {
+      printf("% 3d", ADC_TO_MM(last_shock_position[i]));
+    }
+    printf("]\n");
+
     last_tv = tv;
     sample_count = 0;	
   }  
@@ -172,9 +179,7 @@ void sample_shock_channels(const uint8_t first_channel, const uint8_t last_chann
   ESP_ERROR_CHECK(esp_task_wdt_add(NULL));
   ESP_ERROR_CHECK(esp_task_wdt_status(NULL));
 
-  gettimeofday(&last_tv, 0);
-  bool zero_next_iteration = false;
-  
+  bool zero_next_iteration = false;  
   while (true) {    
     vTaskDelay(sample_delay_ticks);
     if (recording_active) {
@@ -200,6 +205,6 @@ void sample_front_channels() {
 }
 
 void sample_rear_channels() {
-  sample_shock_channels(2, 3, "[rear]");
+  sample_shock_channels(3, 3, "[rear]");
 }
 
