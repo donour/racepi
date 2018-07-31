@@ -26,7 +26,6 @@
 #include "driver/adc.h"
 #include "shock_sampler.h"
 
-
 // This code calculates histogram for shock (suspension damper) velocities by
 // reading four (4) ADC channels. It samples around ~1 khz, so a large number of
 // samples are collected per lap/run/session. We care about the distribution of 
@@ -125,6 +124,8 @@ int32_t get_adc_value(uint16_t channel, bool adc2) {
   }
 }
 
+#define LOG_ADC_RAW
+
 void sample_corner(uint16_t corner) {
   struct timeval tv;
   int32_t shock_velocity;
@@ -132,7 +133,12 @@ void sample_corner(uint16_t corner) {
   
   // Read and timestamp the channel		    
   for (uint16_t sample_count = 0; sample_count < ADC_MULTISAMPLE_COUNT; sample_count++) {
-    adc_val += get_adc_value(corner, corner > 1);  // adc1_get_raw((adc1_channel_t)adc_channels[corner]);
+    int32_t adc_raw = get_adc_value(corner, corner > 1);
+#ifdef LOG_ADC_RAW
+    gettimeofday(&tv, 0);
+    printf("%d, %ld, %ld, %d\n", corner, tv.tv_sec, tv.tv_usec, adc_raw);
+#endif
+    adc_val += adc_raw;
     esp_task_wdt_reset();
   }
   adc_val /= ADC_MULTISAMPLE_COUNT;
