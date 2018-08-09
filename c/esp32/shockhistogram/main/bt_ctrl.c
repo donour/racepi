@@ -85,15 +85,6 @@ static char* create_histogram_json() {
 
 
 static void handle_input(esp_spp_cb_param_t *param) {
-  if (! strncmp("zero",(char*) param->data_ind.data, param->data_ind.len)) {
-    ESP_LOGI(TAG, "Zero");
-    return;
-  }
-  if (! strncmp("Test123",(char*) param->data_ind.data, param->data_ind.len)) {
-    ESP_LOGI(TAG, "test");
-    return;
-  }
-  ESP_LOGI(TAG, "other");
   char *rv = create_histogram_json();
   if (rv != NULL) {
     if (ESP_OK != 
