@@ -18,8 +18,6 @@
 #ifndef __BT_CTRL_H__
 #define __BT_CTRL_H__
 
-#define BT_DEVICE_NAME "ShockHistogram"
-
 void bt_ctrl_init();
 
 #endif //__BT_CTRL_H__

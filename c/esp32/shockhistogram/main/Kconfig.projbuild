@@ -12,6 +12,12 @@ config LINEAR_POT_LEN_MM
     help
 	Length of each linear pot sensor in millimeters
 
+config ESP_BLUETOOTH_DEVICE_NAME
+    string "Bluetooth Device Name"
+    default "ShockHistogram"
+    help
+	Device name for bluetooth RFCOMM device
+
 config WEB_SERVER_PORT
     int "Controller Web Server Port (TCP)"
     default 80

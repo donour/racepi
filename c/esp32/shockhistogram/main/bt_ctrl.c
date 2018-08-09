@@ -89,23 +89,20 @@ static void handle_input(esp_spp_cb_param_t *param) {
   if (rv != NULL) {
     if (ESP_OK != 
 	esp_spp_write(param->srv_open.handle, strlen(rv), (uint8_t *)rv)) {
-           ESP_LOGE(TAG, "Result Generation Failed");
+      ESP_LOGE(TAG, "Result Generation Failed");
     }
     free(rv);
   } else {
-     ESP_LOGE(TAG, "Histogram JSON creation failed");
+    ESP_LOGE(TAG, "Histogram JSON creation failed");
   }
 }
 
 static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
 {
-
-    switch (event) {
-
-
+  switch (event) {
     case ESP_SPP_INIT_EVT:
       ESP_LOGI(TAG, "ESP_SPP_INIT_EVT");
-      esp_bt_dev_set_device_name(BT_DEVICE_NAME);
+      esp_bt_dev_set_device_name(CONFIG_ESP_BLUETOOTH_DEVICE_NAME);
       esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_CONNECTABLE_DISCOVERABLE);
       esp_spp_start_srv(sec_mask,role_slave, 0, SPP_SERVER_NAME);
       break;
@@ -138,13 +135,13 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
       break;
     default:
       break;
-    }
+  }
 }
 
 
 void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param)
 {
-    switch (event) {
+  switch (event) {
 #if (BT_SPP_INCLUDED)
     case ESP_BT_GAP_AUTH_CMPL_EVT:{
         if (param->auth_cmpl.stat == ESP_BT_STATUS_SUCCESS) {
@@ -169,8 +166,8 @@ void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param)
     default: 
         ESP_LOGI(TAG, "event: %d", event);
         break;    
-    }
-    return;
+  }
+  return;
 }
 
 void bt_ctrl_init() {
@@ -205,7 +202,7 @@ void bt_ctrl_init() {
     ESP_LOGE(TAG, "%s spp init failed: %s\n", __func__, esp_err_to_name(rc));
     return;
   }
-  #if (BT_SPP_INCLUDED)
+#if (BT_SPP_INCLUDED)
     esp_bt_sp_param_t param_type = ESP_BT_SP_IOCAP_MODE;
     esp_bt_io_cap_t iocap = ESP_BT_IO_CAP_IO;
     esp_bt_gap_set_security_param(param_type, &iocap, sizeof(uint8_t));
