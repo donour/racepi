@@ -72,7 +72,7 @@ void zero_histogram() {
 void populate_normalized_histogram() {
   // TODO: this should take the destination object as an argument
   for (uint16_t corner = 0; corner < CORNER_COUNT; corner++) {
-    // add extra sampel to avoid divide by zero
+    // add extra sample to avoid divide by zero
     uint64_t total_samples_count = 1;
     
     for (uint16_t bucket = 0; bucket < CONFIG_NUM_HISTOGRAM_BUCKETS; bucket++) {
