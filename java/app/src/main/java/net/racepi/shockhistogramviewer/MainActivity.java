@@ -21,9 +21,11 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Spinner;
@@ -44,10 +46,8 @@ import java.util.Set;
 import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
-
     private static final UUID SPP_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     private final static int REQUEST_ENABLE_BT = 1;
-
     private HistogramLoader histogramLoader;
 
     private class ConnectedThread extends Thread {
@@ -120,18 +120,36 @@ public class MainActivity extends AppCompatActivity {
             // TODO bluetooth not supported
         }
         if (!bluetoothAdapter.isEnabled()) {
+            // query user for enabling bl
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
 
         final Set<BluetoothDevice> bondedDevices = bluetoothAdapter.getBondedDevices();
-
         final Spinner bondedDevicesSpinner = findViewById(R.id.bondedDevicesSpinner);
         // Creating adapter for spinner
         final ArrayAdapter<BluetoothDevice> dataAdapter =
-                new ArrayAdapter<>(this,
-                        android.R.layout.simple_spinner_item,
-                        new ArrayList<>(bondedDevices));
+                new ArrayAdapter<BluetoothDevice>(this,
+                        android.R.layout.simple_spinner_item, new ArrayList<>(bondedDevices))
+        {
+            @NonNull
+            @Override
+            public View getView(int position, View convertView, @NonNull ViewGroup parent) {
+                final TextView view = (TextView) super.getView(position, convertView, parent);
+                // Replace text with my own
+                final BluetoothDevice device = getItem(position);
+                if (device == null) {
+                    view.setText("[unknown device]");
+                } else {
+                    view.setText(String.format("%s (%s)", device.getName(), device.getAddress()));
+                }
+                return view;
+            }
+            @Override
+            public View getDropDownView(int position, View convertView, @NonNull ViewGroup parent) {
+                return getView(position, convertView, parent);
+            }
+        };
         dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         bondedDevicesSpinner.setAdapter(dataAdapter);
 
