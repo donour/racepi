@@ -32,7 +32,10 @@ chmod +x "$LOCAL_FILE"
 source ~/miniconda3/bin/activate root
 conda update conda -y
 conda update pip -y
-conda install sqlalchemy pyserial bokeh -y
+conda install sqlalchemy -y
+#conda install anaconda-client -y
+#conda install pyserial, bokeh -y
+pip install --upgrade pip
 pip install gps3 pybluez
 
 source deactivate
