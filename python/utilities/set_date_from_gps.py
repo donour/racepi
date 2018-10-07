@@ -27,6 +27,7 @@ a RTC, like the Raspberry Pi.
 from gps3 import gps3
 import datetime
 import os
+import time
 
 ALLOWED_DELTA_SECONDS = 60*10
 
@@ -45,6 +46,7 @@ def get_time():
 
 t = None
 while t is None or t == "n/a":
+    time.sleep(0.25) # rate limit if GPS is not available
     t = get_time()
 
 st = datetime.datetime.now()
