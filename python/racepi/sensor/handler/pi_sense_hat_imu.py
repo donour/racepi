@@ -41,6 +41,9 @@ class RpiImuSensorHandler(SensorHandler):
         if not self.pipe_out:
             raise ValueError("Illegal argument, no queue specified")
 
+        if not RTIMU:
+            raise RuntimeError("No Pi HAT IMU modules available")
+        
         os.system("taskset -p 0xfe %d" % os.getpid())
         os.nice(30)
 
