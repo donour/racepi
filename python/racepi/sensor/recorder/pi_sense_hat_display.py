@@ -36,6 +36,9 @@ DISPLAY_UPDATE_TIME = 0.05  # 20 hz
 SENSOR_DISPLAY_TIMEOUT = 1.0
 TIRE_DISPLAY_TIMEOUT = 8.0
 
+class RacePiHatDisplayMissingError(RuntimeError):
+    """Failed to detect PiHat hardware"""
+    pass
 
 class RacePiStatusDisplay:
     """
@@ -51,8 +54,11 @@ class RacePiStatusDisplay:
 
         """
         if not sense_hat:
-            sense_hat = SenseHat()
-
+            try: 
+                sense_hat = SenseHat()
+            except OSError as ex:
+                raise RacePiHatDisplayMissingError from ex
+            
         self.sense = sense_hat
         self.__clear()
         self.sense.set_rotation(90)

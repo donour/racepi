@@ -29,7 +29,7 @@ from collections import defaultdict
 
 from racepi.sensor.data_utilities import merge_and_generate_ordered_log, safe_speed_to_float
 from racepi.racetech.writers import RaceTechnologyDL1FeedWriter
-from racepi.sensor.recorder.pi_sense_hat_display import RacePiStatusDisplay, SenseHat
+from racepi.sensor.recorder.pi_sense_hat_display import RacePiStatusDisplay, SenseHat, RacePiHatDisplayMissingError
 from racepi.sensor.recorder.data_buffer import DataBuffer
 
 ACTIVATE_RECORDING_M_PER_S = 9.5
@@ -73,8 +73,12 @@ class SensorLogger:
         self.data = DataBuffer()
         self.display = None
         if SenseHat:
-            self.display = RacePiStatusDisplay()        
-
+            try:
+                self.display = RacePiStatusDisplay()        
+            except RacePiHatDisplayMissingError as ex:
+                print("Failed to initialize display")
+                self.display = None
+            
         self.handlers = sensor_handlers
         self.db_handler = db_handler
         try:
