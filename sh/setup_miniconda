@@ -34,7 +34,7 @@ conda update conda -y
 conda update pip -y
 conda install sqlalchemy -y
 #conda install anaconda-client -y
-#conda install pyserial, bokeh -y
+#conda install bokeh -y
 pip install --upgrade pip
 pip install gps3 pybluez
 

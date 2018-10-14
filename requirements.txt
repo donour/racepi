@@ -6,3 +6,5 @@ gps3
 pybluez
 jupyter
 bokeh
+#python3-pip
+# sense-hat
