@@ -1,0 +1,6 @@
+[Unit]
+Description=Set system time from gps
+
+[Service]
+Type=simple
+ExecStart=/home/pi/git/racepi/python/utilities/set_date_from_gps.py

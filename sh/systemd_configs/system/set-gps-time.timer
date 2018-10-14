@@ -1,0 +1,10 @@
+[Unit]
+Description=Set system time from gps
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=10min
+Unit=set-gps-time.service
+
+[Install]
+WantedBy=multi-user.target
