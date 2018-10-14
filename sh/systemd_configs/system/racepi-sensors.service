@@ -1,0 +1,19 @@
+[Unit]
+Description=RacePi Sensor Data Logging Service
+After=network.target
+
+[Service]
+ExecStart=/home/pi/git/racepi/python/runsensorlogger.py
+Restart=always
+User=pi
+Group=pi
+StandardOutput=syslog+console
+StandardError=syslog+console
+CPUSchedulingPolicy=fifo
+CPUSchedulingPriority=15
+CPUSchedulingResetOnFork=true
+IOSchedulingClass=realtime
+IOSchedulingPriority=1
+
+[Install]
+WantedBy=default.target
