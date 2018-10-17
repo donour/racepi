@@ -59,7 +59,7 @@ class SensorLogger:
     done: logging is no longer possible
     """
 
-    def __init__(self, db_handler, sensor_handlers={}):
+    def __init__(self, db_handler, sensor_handlers={}, dbc_filename=None):
         """
         Create new logger instance with specified handlers. Input and output
         handlers are required.
@@ -89,7 +89,7 @@ class SensorLogger:
             self.db_handler = None
 
         self.session_id = None
-        self.racetech_feed_writer = RaceTechnologyDL1FeedWriter()
+        self.racetech_feed_writer = RaceTechnologyDL1FeedWriter(dbc_filename)
         self.state = LoggerState.initialized
 
     def get_new_data(self):

@@ -18,9 +18,6 @@ from racepi.can.data import CanFrameValueExtractor, CanFrame
 from math import pi
 import ctypes
 
-import cantools
-
-db = cantools.database.load_file()
 # Focus RS Mk3 CAN converters
 focus_rs_steering_angle_converter       = CanFrameValueExtractor(49, 15, a=(pi/0x1000))
 focus_rs_steering_direction_converter   = CanFrameValueExtractor(32, 1)
@@ -41,4 +38,13 @@ lotus_evora_s1_steering_angle_converter = CanFrameValueExtractor(0, 16, custom_t
 #lotus_evora_s1_rpm_converter
 
 if __name__ == "__main__":
-    print("foo")
+    import cantools
+
+    db = cantools.database.load_file("../../../dbc/evora.dbc")
+    a = db.decode_message(0x114, b'1122334455667788')
+    print(a.get("AcceleratorPosition"))
+    print(db)
+    try:
+        print(db.decode_message(0x301, b'1122334455667788'))
+    except KeyError as ke:
+        print("unknown id")

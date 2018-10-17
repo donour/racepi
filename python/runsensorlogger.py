@@ -59,5 +59,5 @@ if __name__ == "__main__":
     # TODO: look at opening DB as needed
     # to avoid corruption of tables
     db_handler = DbHandler(dbfile)
-    sl = SensorLogger(db_handler, handlers)
+    sl = SensorLogger(db_handler, handlers, "../../../dbc/evora.dbc")
     sl.start()

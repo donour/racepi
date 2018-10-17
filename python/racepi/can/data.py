@@ -105,4 +105,4 @@ class CanFrame:
             data = bytearray.fromhex(str(payload))
             return cid, data
         except ValueError as ve:
-            raise ValueError("(%s:%s)" % (arbitration_id, payload))
+            raise ValueError("(%s:%s)" % (arbitration_id, payload)) from ve

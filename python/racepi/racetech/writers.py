@@ -17,15 +17,10 @@
 
 import time
 import socket
-from math import pi
 from collections import defaultdict
 from threading import Event, Thread
+import cantools
 
-from racepi.can.data import CanFrame
-from racepi.can import \
-    focus_rs_tps_converter, focus_rs_rpm_converter, \
-    focus_rs_steering_angle_converter, focus_rs_steering_direction_converter, \
-    lotus_evora_s1_rpm_converter, lotus_evora_s1_steering_angle_converter, lotus_evora_s1_tps_converter
 from racepi.sensor.data_utilities import safe_speed_to_float
 from racepi.racetech.messages import *
 
@@ -44,7 +39,7 @@ last_sample_time = defaultdict(int)
 
 class RaceTechnologyDL1FeedWriter:
 
-    def __init__(self):
+    def __init__(self, dbc_filename):
         self.__socket_listener_done = Event()
         self.__active_connections = []
         self.pending_messages = []
@@ -57,6 +52,10 @@ class RaceTechnologyDL1FeedWriter:
         self.__socket_listener_thread.start()
 
         self.__earliest_time_seen = time.time()
+        if dbc_filename:
+            self.__candb = cantools.database.load_file(dbc_filename)
+        else:
+            self.__candb = None
 
     def close(self):
         self.__socket_listener_done.set()
@@ -227,46 +226,33 @@ class RaceTechnologyDL1FeedWriter:
         else:
             last_sample_time[arb_id] = timestamp
 
-        frame = CanFrame(arb_id, payload)
+        if self.__candb:
+            try:
+                can_signals = self.__candb.decode_message(arb_id, payload)
 
-        # Focus RS MK3 Messages
-        if arb_id == "010":
-            direction = focus_rs_steering_direction_converter.convert_frame(frame)
-            angle = focus_rs_steering_angle_converter.convert_frame(frame)
-            if direction > 0:
-                angle = -angle
-            angle *= 180.0 / pi  # radians -> degrees
-            self.send_timestamp(timestamp)
-            self.send_steering_angle(angle)
+                engine_speed   = can_signals.get("EngineSpeed")
+                accel_position = can_signals.get("AcceleratorPosition")
+                steering_angle = can_signals.get("SteeringAngle")
+                lateral_accel = can_signals.get("LateralAccel")
 
-        if arb_id == "080":
-            tps = focus_rs_tps_converter.convert_frame(frame)
-            self.send_timestamp(timestamp)
-            self.send_tps(tps)
+                if engine_speed:
+                    self.send_timestamp(timestamp)
+                    self.send_rpm(engine_speed)
 
-        if arb_id == "090":
-            rpm = focus_rs_rpm_converter.convert_frame(frame)
-            self.send_timestamp(timestamp)
-            self.send_rpm(rpm)
+                if steering_angle:
+                    self.send_timestamp(timestamp)
+                    self.send_steering_angle(steering_angle)
 
-        #  Brake pressure messages do not currently work
-        #  if arb_id == "213":
-        #    pressure = focus_rs_brake_pressure_converter.convert_frame(frame)
-        #    self.send_timestamp(timestamp)
-        #    self.send_brake_pressure(pressure)
+                if accel_position:
+                    self.send_timestamp(timestamp)
+                    self.send_tps(accel_position)
 
-        # Evora Messages
-        if arb_id == "085":
-            angle = lotus_evora_s1_steering_angle_converter.convert_frame(frame)
-            self.send_timestamp(timestamp)
-            self.send_steering_angle(angle)
+                if lateral_accel:
+                    self.send_timestamp(timestamp)
+                    self.send_xyz_accel(lateral_accel, 0, 0)
 
-        if arb_id == "114":
-            tps = lotus_evora_s1_tps_converter.convert_frame(frame)
-            self.send_timestamp(timestamp)
-            self.send_tps(tps)
+            except KeyError as ke:
+                pass  # skip
 
-        if arb_id == "400":
-            rpm = lotus_evora_s1_rpm_converter.convert_frame(frame)
-            self.send_timestamp(timestamp)
-            self.send_rpm(rpm)
+
+
