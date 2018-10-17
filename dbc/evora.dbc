@@ -47,7 +47,7 @@ BO_ 276 ECU: 8 Vector__XXX
  SG_ EngineSpeed : 0|16@1+ (0.25,0) [0|16383.75] "RPM" Vector__XXX
  SG_ AcceleratorPosition : 24|8@1+ (0.3984,0) [0|101.592] "%" Vector__XXX
 
-BO_ 2147483781 SteeringAngle: 1 Vector__XXX
+BO_ 2147483781 SteeringAngle: 8 Vector__XXX
  SG_ SteeringAngle : 0|16@1- (0.05,0) [-1638.4|1638.35] "degrees" Vector__XXX
 
 
