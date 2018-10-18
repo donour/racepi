@@ -16,7 +16,6 @@
 
 from racepi.can.data import CanFrameValueExtractor, CanFrame
 from math import pi
-import ctypes
 
 # Focus RS Mk3 CAN converters
 focus_rs_steering_angle_converter       = CanFrameValueExtractor(49, 15, a=(pi/0x1000))
@@ -30,21 +29,8 @@ focus_rs_wheelspeed3_converter          = CanFrameValueExtractor(33, 15, a=1/307
 focus_rs_wheelspeed4_converter          = CanFrameValueExtractor(49, 15, a=1/307.0)
 
 # Lotus Evora CAN converters
-lotus_evora_s1_rpm_converter            = CanFrameValueExtractor(4, 12)
-lotus_evora_s1_tps_converter            = CanFrameValueExtractor(24, 8, a=100.0/0xFB)
-lotus_evora_s1_steering_angle_converter = CanFrameValueExtractor(0, 16, custom_transform=lambda v:
-                                    ctypes.c_short(((v & 0xff) << 8) + ((v & 0xff00) >> 8)).value / 10.0)
-# TODO this seems like a really silly way to reverse byte order
-#lotus_evora_s1_rpm_converter
-
-if __name__ == "__main__":
-    import cantools
-
-    db = cantools.database.load_file("../../../dbc/evora.dbc")
-    a = db.decode_message(0x114, b'1122334455667788')
-    print(a.get("AcceleratorPosition"))
-    print(db)
-    try:
-        print(db.decode_message(0x301, b'1122334455667788'))
-    except KeyError as ke:
-        print("unknown id")
+# import ctypes
+# lotus_evora_s1_rpm_converter            = CanFrameValueExtractor(4, 12)
+# lotus_evora_s1_tps_converter            = CanFrameValueExtractor(24, 8, a=100.0/0xFB)
+# lotus_evora_s1_steering_angle_converter = CanFrameValueExtractor(0, 16, custom_transform=lambda v:
+#                                    ctypes.c_short(((v & 0xff) << 8) + ((v & 0xff00) >> 8)).value / 10.0)
