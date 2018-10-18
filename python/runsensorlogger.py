@@ -15,6 +15,9 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
+
+import os
+
 from racepi.sensor.data_utilities import uptime_helper
 from racepi.sensor.recorder.sensor_log import SensorLogger
 from racepi.database.db_handler import DbHandler
@@ -59,5 +62,5 @@ if __name__ == "__main__":
     # TODO: look at opening DB as needed
     # to avoid corruption of tables
     db_handler = DbHandler(dbfile)
-    sl = SensorLogger(db_handler, handlers, "../../../dbc/evora.dbc")
+    sl = SensorLogger(db_handler, handlers, os.environ['HOME']+"/git/racepi/dbc/evora.dbc")
     sl.start()
