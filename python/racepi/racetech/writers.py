@@ -220,7 +220,7 @@ class RaceTechnologyDL1FeedWriter:
 
         arb_id = data[:3]
         payload = data[3:]
-
+        
         if (timestamp - last_sample_time[arb_id]) < MIN_SAMPLE_INTERVAL:
             return  # skip, rate limit
         else:
@@ -228,8 +228,9 @@ class RaceTechnologyDL1FeedWriter:
 
         if self.__candb:
             try:
-                can_signals = self.__candb.decode_message(arb_id, payload)
-
+                can_signals = self.__candb.decode_message(int(arb_id, 16),
+                                                          bytearray.fromhex(payload))
+                print(can_signals)
                 engine_speed   = can_signals.get("EngineSpeed")
                 accel_position = can_signals.get("AcceleratorPosition")
                 steering_angle = can_signals.get("SteeringAngle")
@@ -252,7 +253,10 @@ class RaceTechnologyDL1FeedWriter:
                     self.send_xyz_accel(lateral_accel, 0, 0)
 
             except KeyError as ke:
+                print (ke)
                 pass  # skip
+            except Exception as e:
+                print (e)
 
 
 
