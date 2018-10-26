@@ -230,11 +230,11 @@ class RaceTechnologyDL1FeedWriter:
             try:
                 can_signals = self.__candb.decode_message(int(arb_id, 16),
                                                           bytearray.fromhex(payload))
-                print(can_signals)
                 engine_speed   = can_signals.get("EngineSpeed")
                 accel_position = can_signals.get("AcceleratorPosition")
                 steering_angle = can_signals.get("SteeringAngle")
-                lateral_accel = can_signals.get("LateralAccel")
+                lateral_accel  = can_signals.get("LateralAccel")
+                brake_pedal    = can_signals.get("BrakePedal")
 
                 if engine_speed:
                     self.send_timestamp(timestamp)
@@ -251,6 +251,10 @@ class RaceTechnologyDL1FeedWriter:
                 if lateral_accel:
                     self.send_timestamp(timestamp)
                     self.send_xyz_accel(lateral_accel, 0, 0)
+
+                if brake_pedal:
+                    self.send_timestamp(timestamp)
+                    self.send_brake_pressure(brake_pedal)
 
             except KeyError as ke:
                 print (ke)
