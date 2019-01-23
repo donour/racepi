@@ -31,6 +31,7 @@ DEFAULT_SQLITE_FILE = '/external/racepi_data/test.db'
 FORD_FOCUS_RS_CAN_IDS  = [0x010, 0x070, 0x080, 0x090, 0x190, 0x130, 0x213, 0x420]
 LOTUS_EVORA_S1_CAN_IDS = [0x085, 0x114, 0x400]
 ACTIVE_CAN_IDS = LOTUS_EVORA_S1_CAN_IDS
+DBC_FILENAME = os.environ['HOME'] + "/git/racepi/dbc/evora.dbc"
 ENDCOLOR  = '\033[0m'
 UNDERLINE = '\033[4m'
 
@@ -62,5 +63,5 @@ if __name__ == "__main__":
     # TODO: look at opening DB as needed
     # to avoid corruption of tables
     db_handler = DbHandler(dbfile)
-    sl = SensorLogger(db_handler, handlers, os.environ['HOME']+"/git/racepi/dbc/evora.dbc")
+    sl = SensorLogger(db_handler, handlers, DBC_FILENAME)
     sl.start()

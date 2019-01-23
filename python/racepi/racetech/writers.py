@@ -173,7 +173,8 @@ class RaceTechnologyDL1FeedWriter:
 
     def write_gps_sample(self, timestamp, data):
         """
-        
+        Write GPS-sourced data to clients. This includes coordinates + error as well as speed + accuracy.
+
         :param timestamp: 
         :param data: 
         :return: 
@@ -196,6 +197,7 @@ class RaceTechnologyDL1FeedWriter:
     def write_imu_sample(self, timestamp, data):
         """
         Write IMU data to Racetech data clients
+
         :param timestamp: 
         :param data: dictionary of accel and gyro data
         """
