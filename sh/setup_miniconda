@@ -37,7 +37,7 @@ conda install sqlalchemy -y
 #conda install bokeh -y
 pip install --upgrade pip
 pip install gps3 pybluez
-
+pip install cantools
 source deactivate
 
 echo "== RacePi Conda Environment Configuration Success =="
