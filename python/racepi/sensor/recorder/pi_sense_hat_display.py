@@ -36,9 +36,11 @@ DISPLAY_UPDATE_TIME = 0.05  # 20 hz
 SENSOR_DISPLAY_TIMEOUT = 1.0
 TIRE_DISPLAY_TIMEOUT = 8.0
 
+
 class RacePiHatDisplayMissingError(RuntimeError):
     """Failed to detect PiHat hardware"""
     pass
+
 
 class RacePiStatusDisplay:
     """
@@ -69,6 +71,7 @@ class RacePiStatusDisplay:
         self.set_col_lost(CAN_COL)
         self.last_heartbeat = time.time()
         self.heartbeat_active = False
+        self.undervolt = False
         self.update_time = time.time()
 
     def __shutdown_mesg(self):
@@ -117,7 +120,6 @@ class RacePiStatusDisplay:
         for i in range(8):
             self.sense.set_pixel(7, i, 0 if state else BRIGHTNESS, BRIGHTNESS if state else 0, 0)
 
-
     def set_tire_state(self, state):
         v = (0, BRIGHTNESS, 0) if state else (BRIGHTNESS, 0,0)
         self.sense.set_pixel(0, 6, v)
@@ -125,6 +127,18 @@ class RacePiStatusDisplay:
         self.sense.set_pixel(1, 6, v)
         self.sense.set_pixel(1, 7, v)
     
+    def draw_undervolt(self):
+        """ Draw undervolt indicator if set"""
+        if self.undervolt:
+            v = (BRIGHTNESS, 0, 0)
+            for i in range(8):
+                self.sense.set_pixel(i, i, v)
+                self.sense.set_pixel(8-i, i, v)
+
+    def set_undervolt(self):
+        """Set undervolt condition sticky bit. This cannot be unset."""
+        self.undervolt = True
+
     def heartbeat(self, frequency=0.5):
         now = time.time()
         if now - self.last_heartbeat > frequency:
@@ -164,9 +178,10 @@ class RacePiStatusDisplay:
 
                 self.update_time = now
                 self.set_recording_state(recording)
-
+                self.draw_undervolt()
                 self.heartbeat()
-        
+
+
 if __name__ == "__main__":
     if SenseHat:
         s = RacePiStatusDisplay(SenseHat())
