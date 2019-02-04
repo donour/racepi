@@ -133,7 +133,7 @@ class RacePiStatusDisplay:
             v = (BRIGHTNESS, 0, 0)
             for i in range(8):
                 self.sense.set_pixel(i, i, v)
-                self.sense.set_pixel(8-i, i, v)
+                self.sense.set_pixel(7-i, i, v)
 
     def set_undervolt(self):
         """Set undervolt condition sticky bit. This cannot be unset."""
