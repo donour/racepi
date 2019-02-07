@@ -1,4 +1,4 @@
-# Copyright 2017-8 Donour Sizemore
+# Copyright 2017-9 Donour Sizemore
 #
 # This file is part of RacePi
 #
@@ -24,6 +24,7 @@ import cantools
 from racepi.sensor.data_utilities import safe_speed_to_float
 from racepi.racetech.messages import *
 
+LOG_DECODING_FAILURES = False
 DL1_ANALOG_MAX_VOLTAGE = 5.0
 MAX_BRAKE_PRESSURE = float(1e-6)  # TODO determine proper unit
 
@@ -172,7 +173,8 @@ class RaceTechnologyDL1FeedWriter:
 
     def write_gps_sample(self, timestamp, data):
         """
-        
+        Write GPS-sourced data to clients. This includes coordinates + error as well as speed + accuracy.
+
         :param timestamp: 
         :param data: 
         :return: 
@@ -195,6 +197,7 @@ class RaceTechnologyDL1FeedWriter:
     def write_imu_sample(self, timestamp, data):
         """
         Write IMU data to Racetech data clients
+
         :param timestamp: 
         :param data: dictionary of accel and gyro data
         """
@@ -257,10 +260,11 @@ class RaceTechnologyDL1FeedWriter:
                     self.send_brake_pressure(brake_pedal)
 
             except KeyError as ke:
-                print (ke)
-                pass  # skip
+                if LOG_DECODING_FAILURES:
+                    print (ke)
             except Exception as e:
-                print (e)
+                if LOG_DECODING_FAILURES:
+                    print (e)
 
 
 

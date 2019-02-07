@@ -36,9 +36,11 @@ DISPLAY_UPDATE_TIME = 0.05  # 20 hz
 SENSOR_DISPLAY_TIMEOUT = 1.0
 TIRE_DISPLAY_TIMEOUT = 8.0
 
+
 class RacePiHatDisplayMissingError(RuntimeError):
     """Failed to detect PiHat hardware"""
     pass
+
 
 class RacePiStatusDisplay:
     """
@@ -69,6 +71,7 @@ class RacePiStatusDisplay:
         self.set_col_lost(CAN_COL)
         self.last_heartbeat = time.time()
         self.heartbeat_active = False
+        self.undervolt = False
         self.update_time = time.time()
 
     def __shutdown_mesg(self):
@@ -77,46 +80,48 @@ class RacePiStatusDisplay:
     def __clear(self):
         self.sense.clear()
 
-    def set_col_lost(self, colNumber):
+    def set_col_lost(self, col_number):
         """
         Set specified column to lost/disconnected
 
-        colNumber should be one of the globally specified 
-        column numbers.
+        :param col_number: one of the globally specified column numbers
+        :return: None
         """
-        self.sense.set_pixel(0, colNumber, BRIGHTNESS, 0, 0)
-        self.sense.set_pixel(1, colNumber, 0, 0, 0)
-        self.sense.set_pixel(2, colNumber, 0, 0, 0)
+        self.sense.set_pixel(0, col_number, BRIGHTNESS, 0, 0)
+        self.sense.set_pixel(1, col_number, 0, 0, 0)
+        self.sense.set_pixel(2, col_number, 0, 0, 0)
 
-    def set_col_init(self, colNumber):
+    def set_col_init(self, col_number):
         """
         Set specified column to initializing/setup
 
-        colNumber should be one of the globally specified 
-        column numbers.
+        :param col_number: one of the globally specified column numbers
+        :return: None
         """
-        self.sense.set_pixel(0, colNumber, int(BRIGHTNESS*0.8), int(BRIGHTNESS*0.85), 0)
-        self.sense.set_pixel(1, colNumber, int(BRIGHTNESS*0.8), int(BRIGHTNESS*0.85), 0)
-        self.sense.set_pixel(2, colNumber, 0, 0, 0)
+        self.sense.set_pixel(0, col_number, int(BRIGHTNESS*0.8), int(BRIGHTNESS*0.85), 0)
+        self.sense.set_pixel(1, col_number, int(BRIGHTNESS*0.8), int(BRIGHTNESS*0.85), 0)
+        self.sense.set_pixel(2, col_number, 0, 0, 0)
 
-    def set_col_ready(self, colNumber):
+    def set_col_ready(self, col_number):
         """
         Set specified column to ready/connected
 
-        colNumber should be one of the globally specified 
-        column numbers.
+        :param col_number: one of the globally specified column numbers
+        :return: None
         """
-        self.sense.set_pixel(0, colNumber, 0, BRIGHTNESS, 0)
-        self.sense.set_pixel(1, colNumber, 0, BRIGHTNESS, 0)
-        self.sense.set_pixel(2, colNumber, 0, BRIGHTNESS, 0)
+        self.sense.set_pixel(0, col_number, 0, BRIGHTNESS, 0)
+        self.sense.set_pixel(1, col_number, 0, BRIGHTNESS, 0)
+        self.sense.set_pixel(2, col_number, 0, BRIGHTNESS, 0)
 
     def set_recording_state(self, state):
         """
-        Set recording state, True/False
+        Set recording state
+
+        :param state: boolean
+        :return: None
         """
         for i in range(8):
             self.sense.set_pixel(7, i, 0 if state else BRIGHTNESS, BRIGHTNESS if state else 0, 0)
-
 
     def set_tire_state(self, state):
         v = (0, BRIGHTNESS, 0) if state else (BRIGHTNESS, 0,0)
@@ -125,8 +130,26 @@ class RacePiStatusDisplay:
         self.sense.set_pixel(1, 6, v)
         self.sense.set_pixel(1, 7, v)
     
-    def heartbeat(self, frequency=0.5):
-        now = time.time()
+    def draw_undervolt(self):
+        """Draw undervolt indicator if set"""
+        if self.undervolt:
+            v = (BRIGHTNESS, 0, 0)
+            for i in range(8):
+                self.sense.set_pixel(i, i, v)
+                self.sense.set_pixel(7-i, i, v)
+
+    def set_undervolt(self):
+        """Set undervolt condition sticky bit. This cannot be unset."""
+        self.undervolt = True
+
+    def heartbeat(self, now, frequency=0.5):
+        """
+        Draw heartbeat indicator if necessary
+
+        :param now: current time as float in seconds
+        :param frequency: frequency to heartbeat, in hz
+        :return: None
+        """
         if now - self.last_heartbeat > frequency:
             self.sense.set_pixel(6, 7,
                                  BRIGHTNESS if not self.heartbeat_active else 0,
@@ -136,9 +159,19 @@ class RacePiStatusDisplay:
             self.heartbeat_active = not self.heartbeat_active
 
     def refresh_display(self, db_time=0, gps_time=0, imu_time=0, can_time=0, tire_time=0, recording=False):
+        """
+        Refresh and redraw required display elements. All times floats in seconds.
 
+        :param db_time:   time since last database access
+        :param gps_time:  time since last gps sample
+        :param imu_time:  time since last imu sample
+        :param can_time:  time since last can bus sample
+        :param tire_time: time since last tire pressure sample
+        :param recording: boolean state of data recording
+        :return:
+        """
         now = time.time()
-        if now - self.update_time >  DISPLAY_UPDATE_TIME:
+        if now - self.update_time > DISPLAY_UPDATE_TIME:
 
                 if now - db_time > SENSOR_DISPLAY_TIMEOUT:
                     self.set_col_lost(DB_COL)
@@ -164,9 +197,10 @@ class RacePiStatusDisplay:
 
                 self.update_time = now
                 self.set_recording_state(recording)
+                self.draw_undervolt()
+                self.heartbeat(now)
 
-                self.heartbeat()
-        
+
 if __name__ == "__main__":
     if SenseHat:
         s = RacePiStatusDisplay(SenseHat())
@@ -177,4 +211,4 @@ if __name__ == "__main__":
         while True:
             time.sleep(1)
             s.set_recording_state(int(time.time()) % 2 == 0)
-            s.heartbeat(3)
+            s.heartbeat(time.time(), 3)

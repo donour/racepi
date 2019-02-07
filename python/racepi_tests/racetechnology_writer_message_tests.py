@@ -37,39 +37,40 @@ class RaceCaptureMessageTests(TestCase):
         self.assertEqual(0xef, msg[3])
 
     def test_gps_speed_message_header(self):
-        msg = get_gps_speed_message_bytes(0)
+        msg = get_gps_speed_message_bytes(0, 1000)
         self.assertEqual(GPS_SPEED_MESSAGE_ID, msg[0])
 
     def test_gps_speed_message_length(self):
-        msg = get_gps_speed_message_bytes(0)
+        msg = get_gps_speed_message_bytes(0, 1000)
         self.assertEqual(len(msg), 9)
 
     def test_gps_speed_message_contents(self):
-        value = 0xDEADBEEF
-        msg = get_gps_speed_message_bytes(value)
+        speed = 0xDEADBEEF
+        acc = 0xabcd
+        msg = get_gps_speed_message_bytes(speed, acc)
         self.assertEqual(0xde, msg[1])
         self.assertEqual(0xad, msg[2])
         self.assertEqual(0xbe, msg[3])
         self.assertEqual(0xef, msg[4])
         self.assertEqual(0, msg[5])
         self.assertEqual(0, msg[6])
-        self.assertEqual(0, msg[7])
-        self.assertEqual(0, msg[8])
+        self.assertEqual(0xab, msg[7])
+        self.assertEqual(0xcd, msg[8])
 
     def test_gps_pos_message_header(self):
-        msg = get_gps_pos_message_bytes(0, 0)
+        msg = get_gps_pos_message_bytes(0, 0, 0)
         self.assertEqual(GPS_POS_MESSAGE_ID, msg[0])
 
     def test_gps_pos_message_length(self):
-        msg = get_gps_pos_message_bytes(0, 0)
+        msg = get_gps_pos_message_bytes(0, 0, 0)
         self.assertEqual(len(msg), 13)
 
     def test_gps_pos_message_positive(self):
-        msg = get_gps_pos_message_bytes(89.9999, 179.999)
+        msg = get_gps_pos_message_bytes(89.9999, 179.999, 1000)
         self.assertEqual(len(msg), 13)
 
     def test_gps_pos_message_negative(self):
-        msg = get_gps_pos_message_bytes(-89.9999, -179.999)
+        msg = get_gps_pos_message_bytes(-89.9999, -179.999, 1000)
         self.assertEqual(len(msg), 13)
 
     def test_get_xy_accel_message_len(self):

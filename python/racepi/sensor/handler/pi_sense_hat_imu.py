@@ -53,24 +53,23 @@ class RpiImuSensorHandler(SensorHandler):
             print("Loading settings: " + SETTINGS_FILE)
         _settings = RTIMU.Settings(SETTINGS_FILE)
 
-        _IMU = RTIMU.RTIMU(_settings)
+        imu = RTIMU.RTIMU(_settings)
 
-        print("IMU Name: " + _IMU.IMUName())
+        print("IMU Name: " + imu.IMUName())
 
-        if not _IMU.IMUInit():
+        if not imu.IMUInit():
             raise IOError("IMU init failed")
 
-        _IMU.setSlerpPower(0.02)
-        _IMU.setGyroEnable(True)
-        _IMU.setAccelEnable(True)
-        _IMU.setCompassEnable(True)
-        _poll_interval = _IMU.IMUGetPollInterval()
-        print("Poll Interval: %d (ms)" % _poll_interval)
+        imu.setSlerpPower(0.02)
+        imu.setGyroEnable(True)
+        imu.setAccelEnable(True)
+        imu.setCompassEnable(True)
+        poll_interval_ms = imu.IMUGetPollInterval()
+        print("Poll Interval: %d (ms)" % poll_interval_ms)
         print("IMU Init Succeeded")
-
         while not self.doneEvent.is_set():
-            if _IMU.IMURead():
-                data = _IMU.getIMUData()
+            if imu.IMURead():
+                data = imu.getIMUData()
                 self.pipe_out.send((time.time(), data))
-                time.sleep(_poll_interval * 0.5/ 10000.0)
+                time.sleep(poll_interval_ms * 0.95 / 1000.0)
 

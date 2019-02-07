@@ -18,11 +18,13 @@ from unittest import TestCase, main
 
 from racepi.racetech.writers import *
 
+DBC_FILENAME = "dbc/evora.dbc"
+
 
 class RaceCaptureWriterTests(TestCase):
 
     def setUp(self):
-        self.writer = RaceTechnologyDL1FeedWriter()
+        self.writer = RaceTechnologyDL1FeedWriter(DBC_FILENAME)
         self.assertFalse(self.writer.pending_messages)
 
     def test_send_steering_angle_zero(self):
