@@ -71,9 +71,9 @@ def get_timestamp_message_bytes(time_millis):
 
 def __get_accel_bytes(accel_value):
     """
-    Encode a single accel value
+    Encode a single acceleration value
     :param accel_value: accelerometer value, in G
-    :return: two bytes of race-tech encoded accel data
+    :return: two bytes of race-tech encoded acceleration data
     """
     b1 = 0
 
