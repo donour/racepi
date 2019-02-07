@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright 2016-8 Donour Sizemore
+# Copyright 2016-9 Donour Sizemore
 #
 # This file is part of RacePi
 #
@@ -32,9 +32,12 @@ class STN11XXCanSensorHandler(SensorHandler):
 
     def __init__(self, can_ids=None):
         SensorHandler.__init__(self, self.__record_from_canbus)
+        self.can_ids = can_ids
+
+    def __connect_to_device(self):
         try:
             self.stn = STNHandler()
-            self.stn.set_monitor_ids(can_ids)
+            self.stn.set_monitor_ids(self.can_ids)
         except SerialException:
             print("Failed to initialize CAN device")
             self.stn = None
@@ -47,15 +50,17 @@ class STN11XXCanSensorHandler(SensorHandler):
         os.system("taskset -p 0xfe %d" % os.getpid())        
         os.nice(30)
 
+        self.__connect_to_device()
+
         print("Starting CAN reader")
         if self.stn:
             self.stn.start_monitor()
 
             while not self.doneEvent.is_set():
-                data = self.stn.readline()
-                if "CAN ERROR" not in data:
+                data_line = self.stn.readline()
+                if "CAN ERROR" not in data_line:
                     now = time.time()
-                    self.pipe_out.send((now, data))
+                    self.pipe_out.send((now, data_line))
                 
             # stop monitors
             self.stn.stop_monitor()
@@ -63,7 +68,7 @@ class STN11XXCanSensorHandler(SensorHandler):
 
 
 if __name__ == "__main__":
-    sh = STN11XXCanSensorHandler()
+    sh = STN11XXCanSensorHandler([0x400])
     sh.start()
     while True:
         data = sh.get_all_data()
