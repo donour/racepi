@@ -67,10 +67,9 @@ class RpiImuSensorHandler(SensorHandler):
         poll_interval_ms = imu.IMUGetPollInterval()
         print("Poll Interval: %d (ms)" % poll_interval_ms)
         print("IMU Init Succeeded")
-
         while not self.doneEvent.is_set():
             if imu.IMURead():
                 data = imu.getIMUData()
                 self.pipe_out.send((time.time(), data))
-                time.sleep(poll_interval_ms * 0.5 / 10000.0)
+                time.sleep(poll_interval_ms * 0.95 / 1000.0)
 
