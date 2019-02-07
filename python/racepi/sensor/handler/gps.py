@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright 2016 Donour Sizemore
+# Copyright 2016-2019 Donour Sizemore
 #
 # This file is part of RacePi
 #
@@ -23,6 +23,8 @@ from racepi.sensor.handler.sensor_handler import SensorHandler
 
 GPS_REQUIRED_FIELDS = ['time', 'lat', 'lon', 'speed', 'track', 'epx', 'epy', 'epv', 'alt']
 GPS_READ_TIMEOUT = 2.0
+RETRY = True  # retry connecting on data RX failure
+RETRY_RATE = 1.0  # Hz
 
 
 class GpsSensorHandler(SensorHandler):
@@ -31,28 +33,36 @@ class GpsSensorHandler(SensorHandler):
         SensorHandler.__init__(self, self.__record_from_gps)
 
     def __record_from_gps(self):
-        # TODO auto retry and reinit on hotplug
-
         if not self.pipe_out:
             raise ValueError("Illegal argument, no queue specified")
 
         os.system("taskset -p 0xfe %d" % os.getpid())        
-        os.nice(19);
+        os.nice(19)
 
         print("Starting GPS reader")
-        gps_socket = gps3.GPSDSocket()
-        data_stream = gps3.DataStream()
-        gps_socket.connect()
-        gps_socket.watch()
-        while not self.doneEvent.is_set():
-            newdata = gps_socket.next(timeout=GPS_READ_TIMEOUT)
-            now = time.time()
-            if newdata:
-                data_stream.unpack(newdata)
-                sample = data_stream.TPV
-                t = sample.get('time')
-                if t is not None and set(GPS_REQUIRED_FIELDS).issubset(set(sample.keys())):
-                    self.pipe_out.send((now, sample))
+        # TODO if the retry logic is well tested, the first attempt logic can be removed
+        attempt_connect = True  # always make a first attempt
+
+        while attempt_connect and not self.doneEvent.is_set():
+            attempt_connect = RETRY
+            try:
+                gps_socket = gps3.GPSDSocket()
+                data_stream = gps3.DataStream()
+                gps_socket.connect()
+                gps_socket.watch()
+                while not self.doneEvent.is_set():
+                    newdata = gps_socket.next(timeout=GPS_READ_TIMEOUT)
+                    now = time.time()
+                    if newdata:
+                        data_stream.unpack(newdata)
+                        sample = data_stream.TPV
+                        t = sample.get('time')
+                        if t is not None and set(GPS_REQUIRED_FIELDS).issubset(set(sample.keys())):
+                            self.pipe_out.send((now, sample))
+            except:  # TODO danger, danger, danger, we should only catch IO errors related to device loss
+                print("GPS device lost")
+                if RETRY:
+                    print("GPS device retry in {0} seconds".format(1.0/RETRY_RATE))
 
         print("GPS reader shutdown")
 
