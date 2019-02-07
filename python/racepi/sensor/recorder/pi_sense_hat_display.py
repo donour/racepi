@@ -211,4 +211,4 @@ if __name__ == "__main__":
         while True:
             time.sleep(1)
             s.set_recording_state(int(time.time()) % 2 == 0)
-            s.heartbeat(3)
+            s.heartbeat(time.time(), 3)
