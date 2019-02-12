@@ -29,7 +29,7 @@ from racepi.sensor.handler.stn11xx_can import STN11XXCanSensorHandler
 DEFAULT_SQLITE_FILE = '/external/racepi_data/test.db'
 # TODO: make recorded can ids configurable
 FORD_FOCUS_RS_CAN_IDS  = [0x010, 0x070, 0x080, 0x090, 0x190, 0x130, 0x213, 0x420]
-LOTUS_EVORA_S1_CAN_IDS = [0x085, 0x114, 0x303, 0x400]
+LOTUS_EVORA_S1_CAN_IDS = [0x085, 0x114, 0x400]
 ACTIVE_CAN_IDS = LOTUS_EVORA_S1_CAN_IDS
 DBC_FILENAME = os.environ['HOME'] + "/git/racepi/dbc/evora.dbc"
 ENDCOLOR  = '\033[0m'
