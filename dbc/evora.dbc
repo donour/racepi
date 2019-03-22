@@ -38,9 +38,9 @@ BU_:
 
 BO_ 1026 TPMS: 8 Vector__XXX
 
-BO_ 771 IMU: 4 Vector__XXX
- SG_ Yaw : 0|8@1- (10,0) [-1280|1270] "degrees/s" Vector__XXX
- SG_ LateralAccel : 24|8@1- (0.0313,0) [-4.0064|3.9751] "g" Vector__XXX
+BO_ 771 IMU: 8 Vector__XXX
+ SG_ LongAccel : 40|8@1- (0.032,0) [-4.096|4.064] "" Vector__XXX
+ SG_ LateralAccel : 32|8@1- (0.032,0) [-4.096|4.064] "g" Vector__XXX
 
 BO_ 276 ECU: 6 Vector__XXX
  SG_ BrakePedal : 40|1@1+ (100,0) [0|100] "position" Vector__XXX
@@ -48,7 +48,7 @@ BO_ 276 ECU: 6 Vector__XXX
  SG_ AcceleratorPosition : 24|8@1+ (0.3984,0) [0|101.592] "%" Vector__XXX
 
 BO_ 2147483781 SteeringAngle: 4 Vector__XXX
- SG_ SteeringAngle : 0|16@1- (0.10,0) [-1638.4|1638.35] "degrees" Vector__XXX
+ SG_ SteeringAngle : 0|16@1- (0.1,0) [-1638.4|1638.35] "degrees" Vector__XXX
 
 
 
