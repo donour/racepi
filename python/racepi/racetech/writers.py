@@ -223,7 +223,6 @@ class RaceTechnologyDL1FeedWriter:
 
         arb_id = data[:3]
         payload = data[3:]
-        
         if (timestamp - last_sample_time[arb_id]) < MIN_SAMPLE_INTERVAL:
             return  # skip, rate limit
         else:
@@ -237,6 +236,7 @@ class RaceTechnologyDL1FeedWriter:
                 accel_position = can_signals.get("AcceleratorPosition")
                 steering_angle = can_signals.get("SteeringAngle")
                 lateral_accel  = can_signals.get("LateralAccel")
+                long_accel     = can_signals.get("LongAccel")
                 brake_pedal    = can_signals.get("BrakePedal")
 
                 if engine_speed:
@@ -253,7 +253,7 @@ class RaceTechnologyDL1FeedWriter:
 
                 if lateral_accel:
                     self.send_timestamp(timestamp)
-                    self.send_xyz_accel(lateral_accel, 0, 0)
+                    self.send_xyz_accel(lateral_accel, long_accel, 0)
 
                 if brake_pedal:
                     self.send_timestamp(timestamp)
