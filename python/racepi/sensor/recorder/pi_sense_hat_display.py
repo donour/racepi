@@ -20,6 +20,8 @@ Abstraction of RacePi's LED display interface
 
 import atexit
 import time
+from colorsys import hsv_to_rgb
+from math import pi
 
 try:
     from sense_hat import SenseHat
@@ -73,9 +75,10 @@ class RacePiStatusDisplay:
         self.heartbeat_active = False
         self.undervolt = False
         self.update_time = time.time()
-
-    def __shutdown_mesg(self):
-        self.sense.show_message(".");
+        self.sense.show_message("PORSCHE", 0.005);
+        
+    def __shutdown_mesg(self) -> None:
+        self.sense.show_message("cayman!", 0.005);
         
     def __clear(self):
         self.sense.clear()
@@ -123,12 +126,6 @@ class RacePiStatusDisplay:
         for i in range(8):
             self.sense.set_pixel(7, i, 0 if state else BRIGHTNESS, BRIGHTNESS if state else 0, 0)
 
-    def set_tire_state(self, state):
-        v = (0, BRIGHTNESS, 0) if state else (BRIGHTNESS, 0,0)
-        self.sense.set_pixel(0, 6, v)
-        self.sense.set_pixel(0, 7, v)
-        self.sense.set_pixel(1, 6, v)
-        self.sense.set_pixel(1, 7, v)
     
     def draw_undervolt(self):
         """Draw undervolt indicator if set"""
@@ -142,6 +139,13 @@ class RacePiStatusDisplay:
         """Set undervolt condition sticky bit. This cannot be unset."""
         self.undervolt = True
 
+
+    def heartbeat_color(self) -> int:
+        i = 0
+        while True:
+            i = (i+1) % 255
+            yield i
+        
     def heartbeat(self, now, frequency=0.5):
         """
         Draw heartbeat indicator if necessary
@@ -150,15 +154,23 @@ class RacePiStatusDisplay:
         :param frequency: frequency to heartbeat, in hz
         :return: None
         """
-        if now - self.last_heartbeat > frequency:
-            self.sense.set_pixel(6, 7,
-                                 BRIGHTNESS if not self.heartbeat_active else 0,
-                                 BRIGHTNESS if self.heartbeat_active else 0,
-                                 0)
-            self.last_heartbeat = now
-            self.heartbeat_active = not self.heartbeat_active
 
-    def refresh_display(self, db_time=0, gps_time=0, imu_time=0, can_time=0, tire_time=0, recording=False):
+        interval = 2*pi / 32    
+        steps = 200/interval
+        offset = (now - now/steps)
+        
+        for i in range(0,4):
+            rgb1 = hsv_to_rgb(interval*i + offset, 1, BRIGHTNESS)
+            v = [int(x) for x in rgb1]
+            self.sense.set_pixel(6, i, v)
+            self.sense.set_pixel(6, 7-i, v)
+            self.sense.set_pixel(5, i, v)
+            self.sense.set_pixel(5, 7-i, v)
+            
+        self.last_heartbeat = now
+        self.heartbeat_active = not self.heartbeat_active
+
+    def refresh_display(self, db_time=0, gps_time=0, imu_time=0, can_time=0, recording=False):
         """
         Refresh and redraw required display elements. All times floats in seconds.
 
@@ -193,13 +205,10 @@ class RacePiStatusDisplay:
                 else:
                     self.set_col_ready(CAN_COL)
                     
-                self.set_tire_state( (now-tire_time) < TIRE_DISPLAY_TIMEOUT)
-
                 self.update_time = now
                 self.set_recording_state(recording)
-                self.draw_undervolt()
                 self.heartbeat(now)
-
+                self.draw_undervolt()
 
 if __name__ == "__main__":
     if SenseHat:
