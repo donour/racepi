@@ -29,10 +29,10 @@ except ImportError:
     print("No Pi Sense Hat hardware found")
     SenseHat = None
 
-DB_COL = 0
-IMU_COL = 1
-GPS_COL = 2
-CAN_COL = 3
+DB_COL  = 1
+IMU_COL = 2
+GPS_COL = 3
+CAN_COL = 4
 BRIGHTNESS = 80
 DISPLAY_UPDATE_TIME = 0.05  # 20 hz
 SENSOR_DISPLAY_TIMEOUT = 1.0
@@ -75,10 +75,10 @@ class RacePiStatusDisplay:
         self.heartbeat_active = False
         self.undervolt = False
         self.update_time = time.time()
-        self.sense.show_message("PORSCHE", 0.005);
+        self.sense.show_message("PORSCHE", 0.05);
         
     def __shutdown_mesg(self) -> None:
-        self.sense.show_message("cayman!", 0.005);
+        self.sense.show_message("X", 0.05);
         
     def __clear(self):
         self.sense.clear()
@@ -124,7 +124,10 @@ class RacePiStatusDisplay:
         :return: None
         """
         for i in range(8):
-            self.sense.set_pixel(7, i, 0 if state else BRIGHTNESS, BRIGHTNESS if state else 0, 0)
+            self.sense.set_pixel(7, i,
+                                 0,
+                                 BRIGHTNESS if state else 0,
+                                 0)
 
     
     def draw_undervolt(self):
