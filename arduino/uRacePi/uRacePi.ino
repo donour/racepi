@@ -17,6 +17,8 @@
 **************************************************************************/
 
 #include <string.h>
+#include <math.h> // TODO remove me
+#include <ACAN2515.h>
 #include "BluetoothSerial.h"
 #include "dl1.h"
 
@@ -27,36 +29,40 @@
 #define SERIAL_CONSOLE_BAUDRATE (115200)
 #define GPS_BAUDRATE            (115200)
 
-const char BLUETOOTH_DEVICE_BROADCAST_NAME[] = "evora";
+static const char BLUETOOTH_DEVICE_BROADCAST_NAME[] = "evora";
+static const uint32_t MCP2515_QUARTZ_FREQUENCY = 8e6;
+static const uint32_t CAN_BITRATE = 5e5;
 
+static const byte MCP2515_SCK  = 5;  
+static const byte MCP2515_MOSI = 18;  
+static const byte MCP2515_MISO = 19; 
+static const byte MCP2515_CS   = 21; 
+
+ACAN2515 can (MCP2515_CS, SPI, 255); // disabled interrupts
 BluetoothSerial SerialBT;
-
-long start_time;
-
-long uptime() {
-  return millis() - start_time;
-}
     
 void setup() {
   Serial.begin(SERIAL_CONSOLE_BAUDRATE);
   Serial1.begin(GPS_BAUDRATE);
   SerialBT.begin(BLUETOOTH_DEVICE_BROADCAST_NAME); 
+  SPI.begin (MCP2515_SCK, MCP2515_MISO, MCP2515_MOSI);
 
-  start_time = millis();
+  ACAN2515Settings settings (MCP2515_QUARTZ_FREQUENCY, CAN_BITRATE);
+
 }
 
 void test_sends() { 
   dl1_message_t dl1_message;
 
-  if ( ! get_timestamp_message(&dl1_message, uptime())) {
+  if ( ! get_timestamp_message(&dl1_message, millis())) {
     send_dl1_message(&dl1_message, &SerialBT);
   }
 
-  if ( ! get_speed_message(&dl1_message, millis() % 200, 10)) {
+  if ( ! get_speed_message(&dl1_message, (millis()/10) % 200, 10)) {
     send_dl1_message(&dl1_message, &SerialBT);
   }
 
-  if ( ! get_gps_pos_message(&dl1_message, 1000, 1000, 10)) {
+  if ( ! get_gps_pos_message(&dl1_message, 1000, 1000, 1200)) {
     send_dl1_message(&dl1_message, &SerialBT);
   }
 
@@ -64,7 +70,8 @@ void test_sends() {
     send_dl1_message(&dl1_message, &SerialBT);
   }
 
-  if ( ! get_rpm_message(&dl1_message, millis() % 10001)) {
+  uint16_t rpm = ((sin(millis()/3000.0) + 1.0)*5000.0);
+  if ( ! get_rpm_message(&dl1_message, rpm)) {
     send_dl1_message(&dl1_message, &SerialBT);
   }  
 }

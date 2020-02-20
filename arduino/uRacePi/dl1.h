@@ -16,37 +16,42 @@
     along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 **************************************************************************/
 
+#ifndef __DL1_
+#define __DL1_
+
 #include "BluetoothSerial.h"
 
-const char XYACCEL_MESSAGE_ID = 8;
-const char TIMESTAMP_MESSAGE_ID = 9;
-const char GPS_POS_MESSAGE_ID = 10;
-const char GPS_SPEED_MESSAGE_ID = 11;
-const char GPS_COURSE_MESSAGE_ID = 56;
-const char RPM_MESSAGE_ID = 18;
-const char TPS_MESSAGE_ID = 27;//  # Analog 1
-const char BRAKE_MESSAGE_ID = 25;//  # Analog 2
-const char STEERING_ANGLE_ID = 93;
-const char EXT_PRESSURE_MESSAGE_ID = 94;
-const char WHEEL_SPEED_LF_ID = 58;
-const char WHEEL_SPEED_RF_ID = 59;
-const char WHEEL_SPEED_LR_ID = 60;
-const char WHEEL_SPEED_RR_ID = 61;
-const char Z_ACCEL_MESSAGE_ID = 92;
+static const char XYACCEL_MESSAGE_ID = 8;
+static const char TIMESTAMP_MESSAGE_ID = 9;
+static const char GPS_POS_MESSAGE_ID = 10;
+static const char GPS_SPEED_MESSAGE_ID = 11;
+static const char GPS_COURSE_MESSAGE_ID = 56;
+static const char RPM_MESSAGE_ID = 18;
+static const char TPS_MESSAGE_ID = 27;//  # Analog 1
+static const char BRAKE_MESSAGE_ID = 25;//  # Analog 2
+static const char STEERING_ANGLE_ID = 93;
+static const char EXT_PRESSURE_MESSAGE_ID = 94;
+static const char WHEEL_SPEED_LF_ID = 58;
+static const char WHEEL_SPEED_RF_ID = 59;
+static const char WHEEL_SPEED_LR_ID = 60;
+static const char WHEEL_SPEED_RR_ID = 61;
+static const char Z_ACCEL_MESSAGE_ID = 92;
 
-const int DL1_PERIOD_CONSTANT = 6e6;
+static const int32_t DL1_PERIOD_CONSTANT = 6e6;
 
 typedef struct {
   unsigned char data[16];
-  short length;
+  int16_t length;
   unsigned char checksum;
 } dl1_message_t;
 
-int send_dl1_message(dl1_message_t *message, BluetoothSerial *port);
+int32_t send_dl1_message(dl1_message_t *message, BluetoothSerial *port);
 
-int get_timestamp_message(dl1_message_t *message, unsigned long timestamp);
-int get_rpm_message(dl1_message_t *message, unsigned short rpm);
-int get_speed_message(dl1_message_t *message, unsigned int speed_ms_x100, unsigned short accuracy_ms_x100);
-int get_gps_pos_message(dl1_message_t *message, int lat_x7, int long_x7, int error_x3);
-int get_tps_message(dl1_message_t *message, unsigned short tps);
-int get_steering_angle_message(dl1_message_t *message, short);
+int32_t get_timestamp_message(dl1_message_t *message, uint64_t timestamp);
+int32_t get_rpm_message(dl1_message_t *message, uint16_t rpm);
+int32_t get_speed_message(dl1_message_t *message, uint32_t speed_ms_x100, uint32_t accuracy_ms_x100);
+int32_t get_gps_pos_message(dl1_message_t *message, int32_t lat_x7, int32_t long_x7, int32_t error_x3);
+int32_t get_tps_message(dl1_message_t *message, uint16_t tps);
+int32_t get_steering_angle_message(dl1_message_t *message, int16_t angle_deg);
+
+#endif // __DL_1

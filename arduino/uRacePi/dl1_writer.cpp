@@ -21,7 +21,7 @@
 
 #define FAIL_ON_NULL(v) ({if(v == NULL) return -1;})
 
-unsigned char checksum(unsigned char *data, unsigned int length) {
+unsigned char checksum(unsigned char *data, uint32_t length) {
   unsigned char cs = 0;
   for (int i = 0; i < length; i++) {
     cs += data[i];
@@ -39,7 +39,7 @@ void set_checksum(dl1_message_t *message) {
 }
 
 
-int send_dl1_message(dl1_message_t *message, BluetoothSerial *port) {
+int32_t send_dl1_message(dl1_message_t *message, BluetoothSerial *port) {
   FAIL_ON_NULL(message);
   FAIL_ON_NULL(port);
 
@@ -55,12 +55,15 @@ int send_dl1_message(dl1_message_t *message, BluetoothSerial *port) {
 // Message construction helpers, byte stuffing these buffers is the 
 // simplest way to ensure that we get the byte ordering we want...strange
 // that several of the messages have an odd number of bytes per value.
+//
+// Message values are in network order (big endian), but my devices (esp32)
+// are little endian. TODO: add support for big endian host order
 
-int get_timestamp_message(dl1_message_t *message, unsigned long timestamp) {
+int32_t get_timestamp_message(dl1_message_t *message, uint64_t timestamp) {
   FAIL_ON_NULL(message);
 
   // DL1 time is in centiseconds, not millis
-  unsigned int t = timestamp / 10;
+  uint32_t t = timestamp / 10;
   
   message->data[0] = TIMESTAMP_MESSAGE_ID;
   message->data[1] = t>>16;
@@ -71,7 +74,7 @@ int get_timestamp_message(dl1_message_t *message, unsigned long timestamp) {
   return 0; 
 }
 
-int get_speed_message(dl1_message_t *message, unsigned int speed_ms_x100, unsigned short accuracy_ms_x100) {
+int32_t get_speed_message(dl1_message_t *message, uint32_t speed_ms_x100, uint32_t accuracy_ms_x100) {
   FAIL_ON_NULL(message);
 
   message->data[0] = GPS_SPEED_MESSAGE_ID;
@@ -89,7 +92,7 @@ int get_speed_message(dl1_message_t *message, unsigned int speed_ms_x100, unsign
 
 }
 
-int get_rpm_message(dl1_message_t *message, unsigned short rpm) {
+int32_t get_rpm_message(dl1_message_t *message, uint16_t rpm) {
   FAIL_ON_NULL(message);
   
   float val = (float)rpm/60.0;
@@ -107,22 +110,34 @@ int get_rpm_message(dl1_message_t *message, unsigned short rpm) {
   return 0;   
 }
 
-int get_gps_pos_message(dl1_message_t *message, int lat_xe7, int long_xe7, int error_xe3) {
+int32_t get_gps_pos_message(dl1_message_t *message, int32_t lat_xe7, int32_t long_xe7, int32_t error_xe3) {
   FAIL_ON_NULL(message);
 
   message->data[0] = GPS_POS_MESSAGE_ID;
-  *(int*)(&message->data[1]) = lat_xe7;
-  *(int*)(&message->data[5]) = long_xe7;
-  *(int*)(&message->data[9]) = error_xe3;
+  message->data[1] = lat_xe7 >> 24;
+  message->data[2] = lat_xe7 >> 16;
+  message->data[3] = lat_xe7 >> 8;
+  message->data[4] = lat_xe7;
+
+  message->data[5] = long_xe7 >> 24;
+  message->data[6] = long_xe7 >> 16;
+  message->data[7] = long_xe7 >> 8;
+  message->data[8] = long_xe7;
+
+  message->data[ 9] = error_xe3 >> 24;
+  message->data[10] = error_xe3 >> 16;
+  message->data[11] = error_xe3 >> 8;
+  message->data[12] = error_xe3;
+
   message->length = 13;
   set_checksum(message);
   return 0;     
 }
 
-int get_tps_message(dl1_message_t *message, unsigned short tps) {
+int32_t get_tps_message(dl1_message_t *message, uint16_t tps) {
   FAIL_ON_NULL(message);
 
-  unsigned short voltage_x1000 = tps*1000*5/100;
+  int16_t voltage_x1000 = tps*1000*5/100;
   message->data[0] = TPS_MESSAGE_ID;
   message->data[1] = voltage_x1000 >> 8;
   message->data[2] = voltage_x1000;
@@ -131,7 +146,7 @@ int get_tps_message(dl1_message_t *message, unsigned short tps) {
   return 0;     
 }
 
-int get_steering_angle_message(dl1_message_t *message, short angle_deg) {
+int32_t get_steering_angle_message(dl1_message_t *message, int16_t angle_deg) {
   FAIL_ON_NULL(message);
   
   angle_deg *= 10;  
@@ -142,3 +157,4 @@ int get_steering_angle_message(dl1_message_t *message, short angle_deg) {
   set_checksum(message);
   return 0;         
 }
+/////////////////////////////////////////////////////////////////////////////
