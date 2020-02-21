@@ -50,8 +50,8 @@ int32_t send_dl1_message(dl1_message_t *message, BluetoothSerial *port);
 int32_t get_timestamp_message(dl1_message_t *message, uint64_t timestamp);
 int32_t get_rpm_message(dl1_message_t *message, uint16_t rpm);
 int32_t get_speed_message(dl1_message_t *message, uint32_t speed_ms_x100, uint32_t accuracy_ms_x100);
-int32_t get_gps_pos_message(dl1_message_t *message, int32_t lat_x7, int32_t long_x7, int32_t error_x3);
+int32_t get_gps_pos_message(dl1_message_t *message, int32_t lat_xe7, int32_t long_xe7, int32_t error_xe3);
 int32_t get_tps_message(dl1_message_t *message, uint16_t tps);
 int32_t get_steering_angle_message(dl1_message_t *message, int16_t angle_deg);
-
+int32_t get_xy_accel_message(dl1_message_t *message, float x_accel, float y_accel);
 #endif // __DL_1

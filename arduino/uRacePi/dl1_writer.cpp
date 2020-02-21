@@ -149,12 +149,74 @@ int32_t get_tps_message(dl1_message_t *message, uint16_t tps) {
 int32_t get_steering_angle_message(dl1_message_t *message, int16_t angle_deg) {
   FAIL_ON_NULL(message);
   
+  unsigned char b2=0, b3=0;
   angle_deg *= 10;  
+  if (angle_deg < 0) {
+    angle_deg += 65536;      
+    b3 = 0x80;
+  }
+  b2 = angle_deg & 0xFF;
+  b3 |= ((angle_deg >> 8) & 0xFF);
+
   message->data[0] = STEERING_ANGLE_ID;
-  message->data[1] = angle_deg >> 8;
-  message->data[2] = angle_deg;
-  message->length = 3;
+  message->data[2] = 0x3;
+  message->data[2] = b2;
+  message->data[3] = b3;
+  message->length = 4;
   set_checksum(message);
   return 0;         
 }
+
+//void set_accel_bytes(unsigned char *b1, unsigned char *b2, float val){
+//  float tmp_accel = -val;
+//  *b1 = 0;
+//  *b2 = 0;
+//  
+//  if (val > 0.0) {
+//     *b1 = 0x80;
+//  } else {
+//    tmp_accel = -tmp_accel;    
+//  }
+//  *b1 |= (int32_t)val | 0x7F;
+//  *b2 = (int32_t)((tmp_accel - (float)*b1) * 0x100) & 0xFF;
+//}
+
+int32_t get_xy_accel_message(dl1_message_t *message, float x_accel, float y_accel) {
+  FAIL_ON_NULL(message);
+
+  float tmp_x = x_accel;
+  float tmp_y = y_accel;
+    
+  unsigned char x_b1 = 0;
+  unsigned char x_b2 = 0;
+  unsigned char y_b1 = 0;
+  unsigned char y_b2 = 0;
+
+  if (tmp_x > 0.0) { 
+      x_b1 = 0x80;    
+  } else {
+    tmp_x *= -1;
+  }
+
+  if (tmp_y > 0.0) { 
+      y_b1 = 0x80;    
+  } else {
+    tmp_y *= -1;
+  }
+
+  x_b1 |= (int)(tmp_x) & 0x7F;
+  x_b2 =  (int)((tmp_x - (float)x_b1) * 0x100) & 0xFF;
+  y_b1 |= (int)(tmp_y) & 0x7F;
+  y_b2 =  (int)((tmp_y - (float)y_b1) * 0x100) & 0xFF;
+    
+  message->data[0] = XYACCEL_MESSAGE_ID;
+  message->data[1] = x_b1; 
+  message->data[2] = x_b2;
+  message->data[3] = y_b1;
+  message->data[4] = y_b2;
+  message->length = 5;
+  set_checksum(message);
+  return 0;         
+}
+
 /////////////////////////////////////////////////////////////////////////////

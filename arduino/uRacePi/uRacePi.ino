@@ -66,7 +66,7 @@ void test_sends() {
     send_dl1_message(&dl1_message, &SerialBT);
   }
 
-  if ( ! get_tps_message(&dl1_message, (millis()/1000) % 101)) {
+  if ( ! get_tps_message(&dl1_message, (millis()/100) % 101)) {
     send_dl1_message(&dl1_message, &SerialBT);
   }
 
@@ -74,6 +74,15 @@ void test_sends() {
   if ( ! get_rpm_message(&dl1_message, rpm)) {
     send_dl1_message(&dl1_message, &SerialBT);
   }  
+
+  if ( ! get_steering_angle_message(&dl1_message, sin(millis()/3000.0)*200)){
+    send_dl1_message(&dl1_message, &SerialBT);
+  }  
+
+  if ( ! get_xy_accel_message(&dl1_message, sin(millis()/3000.0)/1.1, cos(millis()/3000.0)/1.1)) {
+    send_dl1_message(&dl1_message, &SerialBT);
+  }  
+
 }
 
 void loop() {
@@ -84,5 +93,5 @@ void loop() {
   
   // TODO: use serial event example to read GPS data from UART
 
-  delay(100);
+  delay(25);
 }
