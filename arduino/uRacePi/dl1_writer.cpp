@@ -167,20 +167,6 @@ int32_t get_steering_angle_message(dl1_message_t *message, int16_t angle_deg) {
   return 0;         
 }
 
-//void set_accel_bytes(unsigned char *b1, unsigned char *b2, float val){
-//  float tmp_accel = -val;
-//  *b1 = 0;
-//  *b2 = 0;
-//  
-//  if (val > 0.0) {
-//     *b1 = 0x80;
-//  } else {
-//    tmp_accel = -tmp_accel;    
-//  }
-//  *b1 |= (int32_t)val | 0x7F;
-//  *b2 = (int32_t)((tmp_accel - (float)*b1) * 0x100) & 0xFF;
-//}
-
 int32_t get_xy_accel_message(dl1_message_t *message, float x_accel, float y_accel) {
   FAIL_ON_NULL(message);
 
