@@ -30,6 +30,8 @@
 #include <ACAN2515.h>
 #include "BluetoothSerial.h"
 
+int16_t process_send_can_message(BluetoothSerial *port, CANMessage *frame);
+
 #if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
 #error Bluetooth Classic is not enabled for this build. 
 #endif
@@ -52,6 +54,7 @@ static gps_fix fix;
 
 ACAN2515 canbus (MCP2515_CS, SPI, 255); // disabled interrupts
 BluetoothSerial SerialBT;
+TaskHandle_t gnss_task, Task2;
 
 int16_t setup_mcp2515(ACAN2515 *can, HardwareSerial &debug_port) {
 
@@ -75,7 +78,10 @@ int16_t update_gnss() {
   
   while (gps.available(UBX_PORT)) {
     fix = gps.read();
-    trace_all(DEBUG_PORT, gps, fix );
+
+    // Uncomment this to trace GPS data
+    //trace_all(DEBUG_PORT, gps, fix);
+    
     if ( ! get_timestamp_message(&dl1_message, millis())) {
       send_dl1_message(&dl1_message, &SerialBT);
     }
@@ -89,23 +95,42 @@ int16_t update_gnss() {
   } 
   return -1;
 }
+
+void gnss_process(void *params) {
+  while (true) { 
+    update_gnss();
+  }
+}
     
 void setup() {
   Serial.begin(SERIAL_CONSOLE_BAUDRATE);
   SerialBT.begin(BLUETOOTH_DEVICE_BROADCAST_NAME); 
   SPI.begin(MCP2515_SCK, MCP2515_MISO, MCP2515_MOSI);
-
+  Serial.write(0); Serial.flush();
+  Serial1.write(0); Serial1.flush();
+  SerialBT.write(0); SerialBT.flush();
+  dl1_init();
+  
   int16_t mcp_rc = setup_mcp2515(&canbus, Serial); 
   if (mcp_rc != 0) {
-    // TODO handle mcp2515 setup errors
     Serial.printf("(MCP2515) setup error!\n");
   } else {
+    // TODO setup MCP2515 filters
     Serial.printf("(MCP2515) setup success!\n");    
   }
   int16_t gnss_rc = setup_ublox_gnss(UBX_PORT); 
   if (gnss_rc != 0) {
     // TODO handle gnss setup errors
     Serial.printf("(GNSS) setup error!\n");
+  } else {   
+    xTaskCreatePinnedToCore(
+      gnss_process,
+      "gnss_task",
+      1000,
+      NULL,
+      1,
+      &gnss_task,
+      0);
   }
 }
 
@@ -141,15 +166,20 @@ void test_sends() {
   }    
 }
 
+
+
 void loop() {
+  canbus.poll(); 
+
+  CANMessage frame;
   int rc = 0;
-  
-  rc |= update_gnss();
-  
-  // TODO: read canbus data from MCP2515 on SPI bus
-  test_sends();
-  if (rc != 0) {
-    delay(10);
-     // no work was done this cycle
+  if (canbus.available()) {
+    canbus.receive(frame);
+    process_send_can_message(&SerialBT, &frame);
+  } else {
+    // Uncomment to generat test data
+    test_sends();
+    
+    delay(5);    
   }
 }

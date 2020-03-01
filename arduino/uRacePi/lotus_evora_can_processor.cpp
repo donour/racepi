@@ -20,6 +20,7 @@
 #include "BluetoothSerial.h"
 #include "dl1.h"
 
+#define DEBUG Serial
 
 uint64_t latest_time = 0;
 
@@ -43,7 +44,8 @@ int16_t process_send_can_message(BluetoothSerial *port, CANMessage *frame) {
       // steering angle
       if (frame->len >=4) {
         int16_t val = frame->data16[0] / 10;
-         if ( ! get_steering_angle_message(&dl1_message, val)){
+        DEBUG.printf("steer = %d\n", val);
+        if ( ! get_steering_angle_message(&dl1_message, val)){
           send_dl1_message(&dl1_message, port);
          }  
       }
@@ -58,6 +60,7 @@ int16_t process_send_can_message(BluetoothSerial *port, CANMessage *frame) {
   
         // TPS
         uint8_t tps = (uint8_t)frame->data[3] * 100 / 255;
+        DEBUG.printf("tps = %d\n", tps);
         if ( ! get_tps_message(&dl1_message, tps)) {
           send_dl1_message(&dl1_message, port);
         }

@@ -21,6 +21,9 @@
 
 #define FAIL_ON_NULL(v) ({if(v == NULL) return -1;})
 
+static SemaphoreHandle_t message_write_lock;
+
+
 unsigned char checksum(unsigned char *data, uint32_t length) {
   unsigned char cs = 0;
   for (int i = 0; i < length; i++) {
@@ -38,16 +41,24 @@ void set_checksum(dl1_message_t *message) {
   }
 }
 
+int16_t dl1_init() {
+  message_write_lock = xSemaphoreCreateMutex();
+}
 
-int32_t send_dl1_message(dl1_message_t *message, BluetoothSerial *port) {
+
+int16_t send_dl1_message(dl1_message_t *message, BluetoothSerial *port) {
   FAIL_ON_NULL(message);
 
-  // TODO: This should be taskEnterCritical if using RTOS tasks
-  int rc1 = port->write(message->data, message->length);
-  if (rc1 < 0) return rc1;
-  int rc2 = port->write(message->checksum);
-  if (rc2 < 0) return rc2;
-  return rc1+rc2;          
+  if (xSemaphoreTake(message_write_lock, portMAX_DELAY) == 0) {
+    return -1;
+  }
+  int rc = port->write(message->data, message->length);
+  if (rc >=0) {
+    rc += port->write(message->checksum);
+  }
+  xSemaphoreGive(message_write_lock);
+  return rc;
+  
 }
 
 //////////////////////////////////////////////////////////////////////////
