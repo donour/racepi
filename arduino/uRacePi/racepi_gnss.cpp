@@ -18,8 +18,8 @@
 #include <string.h>
 #include "racepi_gnss.h"
 
-#define UART_RX_PIN (16)
-#define UART_TX_PIN (17)
+#define UART_RX_PIN (17)
+#define UART_TX_PIN (21)
 
 const unsigned char I2C_UBX[] PROGMEM = 
   {0x06,0x00,0x14,0x00,0x00,0x00,0x00,0x00,0x84,0x00,
@@ -61,11 +61,11 @@ int16_t setup_ublox_gnss(HardwareSerial &port) {
   delay(200);
   
   port.begin(115200, SERIAL_8N1, UART_RX_PIN, UART_TX_PIN);
-  delay(100);
+  delay(300);
   sendUBX(port, NAV_MODE, sizeof(NAV_MODE)); 
-  delay(100);
+  delay(300);
   sendUBX(port, I2C_UBX, sizeof(I2C_UBX));
-  delay(100);
+  delay(300);
   sendUBX(port, RATE_64MS, sizeof(RATE_64MS)); 
   return 0;
 }

@@ -136,7 +136,6 @@ int32_t get_gps_pos_message(dl1_message_t *message, int32_t lat_xe7, int32_t lon
 int32_t get_tps_message(dl1_message_t *message, uint16_t tps) {
   FAIL_ON_NULL(message);
 
-  Serial.printf("tps: %d\n", tps);
   int16_t voltage_x1000 = tps*1000*5/100;
   message->data[0] = TPS_MESSAGE_ID;
   message->data[1] = voltage_x1000 >> 8;

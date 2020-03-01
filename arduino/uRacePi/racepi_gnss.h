@@ -19,6 +19,10 @@
 #ifndef __RACEPI_GNSS_
 #define __RACEPI_GNSS_
 
+#define GPS_FIX_SPD_ERR
+#define GPS_FIX_LAT_ERR
+#define LAST_SENTENCE_IN_INTERVAL NMEAGPS::NMEA_GLL
+
 #include <HardwareSerial.h>
 #include <NMEAGPS.h>
 #include <Streamers.h>
@@ -27,4 +31,4 @@ static NMEAGPS gps;
 
 int16_t setup_ublox_gnss(HardwareSerial &port);
  
-#endif
+#endif //__RACEPI_GNSS_

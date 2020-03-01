@@ -54,4 +54,6 @@ int32_t get_gps_pos_message(dl1_message_t *message, int32_t lat_xe7, int32_t lon
 int32_t get_tps_message(dl1_message_t *message, uint16_t tps);
 int32_t get_steering_angle_message(dl1_message_t *message, int16_t angle_deg);
 int32_t get_xy_accel_message(dl1_message_t *message, float x_accel, float y_accel);
+
+
 #endif // __DL_1
