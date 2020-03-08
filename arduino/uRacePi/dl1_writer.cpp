@@ -215,4 +215,16 @@ int32_t get_xy_accel_message(dl1_message_t *message, float x_accel, float y_acce
   return 0;         
 }
 
+int32_t get_brake_pressure_message(dl1_message_t *message, uint16_t pressure_bar_x10) {
+  FAIL_ON_NULL(message);
+
+  int16_t voltage_x1000 = pressure_bar_x10 * 100 * 5 / MAX_BRAKE_PRESSURE_BAR;
+  message->data[0] = TPS_MESSAGE_ID;
+  message->data[1] = voltage_x1000 >> 8;
+  message->data[2] = voltage_x1000;
+  message->length = 3;
+  set_checksum(message);
+  return 0;       
+}
+
 /////////////////////////////////////////////////////////////////////////////
