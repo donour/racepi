@@ -38,6 +38,7 @@ static const char WHEEL_SPEED_RR_ID = 61;
 static const char Z_ACCEL_MESSAGE_ID = 92;
 
 static const int32_t DL1_PERIOD_CONSTANT = 6e6;
+static const int16_t MAX_BRAKE_PRESSURE_BAR = 200;
 
 typedef struct {
   unsigned char data[16];
@@ -56,6 +57,8 @@ int32_t get_gps_pos_message(dl1_message_t *message, int32_t lat_xe7, int32_t lon
 int32_t get_tps_message(dl1_message_t *message, uint16_t tps);
 int32_t get_steering_angle_message(dl1_message_t *message, int16_t angle_deg);
 int32_t get_xy_accel_message(dl1_message_t *message, float x_accel, float y_accel);
+int32_t get_brake_pressure_message(dl1_message_t *message, uint16_t pressure_bar_x10);
+
 
 
 #endif // __DL_1

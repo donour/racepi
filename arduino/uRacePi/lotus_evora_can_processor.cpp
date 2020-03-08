@@ -64,7 +64,12 @@ int16_t process_send_can_message(BluetoothSerial *port, CANMessage *frame) {
         if ( ! get_tps_message(&dl1_message, tps)) {
           send_dl1_message(&dl1_message, port);
         }
-        // TODO Brake position  
+        
+        // bit 40 is brake pedal switch, no pressure reading is provided.
+        uint16_t brake_pressure_x10 = (frame->data[5] && 0x80) == 1 ? MAX_BRAKE_PRESSURE_BAR*10 : 0;
+        if ( ! get_brake_pressure_message(&dl1_message, brake_pressure_x10)) {
+          send_dl1_message(&dl1_message, port);
+        }
       }
       break;
 
