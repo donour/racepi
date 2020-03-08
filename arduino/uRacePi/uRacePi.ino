@@ -45,10 +45,10 @@ static const char BLUETOOTH_DEVICE_BROADCAST_NAME[] = "evora";
 static const uint32_t MCP2515_QUARTZ_FREQUENCY = 8e6;
 static const uint32_t CAN_BITRATE = 5e5;
 
-static const byte MCP2515_SCK  = 23;  
-static const byte MCP2515_MOSI = 22;  
-static const byte MCP2515_MISO = 14; 
-static const byte MCP2515_CS   = 32; 
+static const byte MCP2515_SCK  = 23;
+static const byte MCP2515_MOSI = 22;
+static const byte MCP2515_MISO = 14;
+static const byte MCP2515_CS   = 32;
 
 static gps_fix fix;
 
@@ -81,7 +81,6 @@ int16_t update_gnss() {
 
     // Uncomment this to trace GPS data
     //trace_all(DEBUG_PORT, gps, fix);
-    
     if ( ! get_timestamp_message(&dl1_message, millis())) {
       send_dl1_message(&dl1_message, &SerialBT);
     }
@@ -98,12 +97,21 @@ int16_t update_gnss() {
 
 void gnss_process(void *params) {
   while (true) { 
-    update_gnss();
+    if( update_gnss() != 0) {
+      delay(1);
+    }
+  }
+}
+
+void callback(esp_spp_cb_event_t event, esp_spp_cb_param_t *param){
+  if(event == ESP_SPP_CLOSE_EVT ){
+    ESP.restart();
   }
 }
     
 void setup() {
   Serial.begin(SERIAL_CONSOLE_BAUDRATE);
+  SerialBT.register_callback(callback);
   SerialBT.begin(BLUETOOTH_DEVICE_BROADCAST_NAME); 
   SPI.begin(MCP2515_SCK, MCP2515_MISO, MCP2515_MOSI);
   Serial.write(0); Serial.flush();
@@ -126,7 +134,7 @@ void setup() {
     xTaskCreatePinnedToCore(
       gnss_process,
       "gnss_task",
-      1000,
+      2048,
       NULL,
       1,
       &gnss_task,
@@ -165,8 +173,6 @@ void test_sends() {
     send_dl1_message(&dl1_message, &SerialBT);
   }    
 }
-
-
 
 void loop() {
   canbus.poll(); 
