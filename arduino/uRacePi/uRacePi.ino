@@ -67,7 +67,7 @@ int16_t setup_mcp2515(ACAN2515 *can, HardwareSerial &debug_port) {
     debug_port.printf("(MCP2515) setup errr: %x", rc);
     return rc;
   }
-  debug_port.printf("(MCP2515) bit rate: %d", settings.actualBitRate ());
+  debug_port.printf("(MCP2515) bit rate: %d\n", settings.actualBitRate ());
   return 0;
 }
 
@@ -78,9 +78,9 @@ int16_t update_gnss() {
   
   while (gps.available(UBX_PORT)) {
     fix = gps.read();
-
+    
     // Uncomment this to trace GPS data
-    //trace_all(DEBUG_PORT, gps, fix);
+    trace_all(DEBUG_PORT, gps, fix);
     if ( ! get_timestamp_message(&dl1_message, millis())) {
       send_dl1_message(&dl1_message, &SerialBT);
     }
@@ -139,6 +139,9 @@ void setup() {
       1,
       &gnss_task,
       0);
+
+     Serial.printf("(GNSS) setup success!\n");
+
   }
 }
 
