@@ -43,7 +43,9 @@ int16_t process_send_can_message(BluetoothSerial *port, CANMessage *frame) {
     case 0x085: 
       // steering angle
       if (frame->len >=4) {
-        int16_t val = frame->data16[0] / 10;
+        int16_t val = ((int16_t)frame->data16[0]) << 1;
+        val >>= 1;
+        val /= 10;
         DEBUG.printf("steer = %d\n", val);
         if ( ! get_steering_angle_message(&dl1_message, val)){
           send_dl1_message(&dl1_message, port);
@@ -60,7 +62,7 @@ int16_t process_send_can_message(BluetoothSerial *port, CANMessage *frame) {
   
         // TPS
         uint8_t tps = (uint8_t)frame->data[3] * 100 / 255;
-        DEBUG.printf("tps = %d\n", tps);
+        //DEBUG.printf("tps = %d\n", tps);
         if ( ! get_tps_message(&dl1_message, tps)) {
           send_dl1_message(&dl1_message, port);
         }
