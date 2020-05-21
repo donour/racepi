@@ -18,8 +18,8 @@
 #include <string.h>
 #include "racepi_gnss.h"
 
-#define UART_RX_PIN (17)
-#define UART_TX_PIN (21)
+#define UART_RX_PIN (21)
+#define UART_TX_PIN (17)
 
 const unsigned char I2C_UBX[] PROGMEM = 
   {0x06,0x00,0x14,0x00,0x00,0x00,0x00,0x00,0x84,0x00,
@@ -58,7 +58,7 @@ int16_t setup_ublox_gnss(HardwareSerial &port) {
   // attempt slow startup for devices that default to factory baudrates
   port.begin(9600, SERIAL_8N1, UART_RX_PIN, UART_TX_PIN);
   sendUBX(port, UART1_115200, sizeof(UART1_115200));
-  delay(200);
+  delay(300);
   
   port.begin(115200, SERIAL_8N1, UART_RX_PIN, UART_TX_PIN);
   delay(300);

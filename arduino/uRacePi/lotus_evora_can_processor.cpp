@@ -46,7 +46,7 @@ int16_t process_send_can_message(BluetoothSerial *port, CANMessage *frame) {
         int16_t val = ((int16_t)frame->data16[0]) << 1;
         val >>= 1;
         val /= 10;
-        DEBUG.printf("steer = %d\n", val);
+        //DEBUG.printf("steer = %d\n", val);
         if ( ! get_steering_angle_message(&dl1_message, val)){
           send_dl1_message(&dl1_message, port);
          }  
@@ -54,24 +54,23 @@ int16_t process_send_can_message(BluetoothSerial *port, CANMessage *frame) {
       break;
     case 0x114:
       if (frame->len >= 6){
+        // TPS
+        uint16_t tps = (uint8_t)frame->data[3] * 100 / 255;
+        if ( ! get_tps_message(&dl1_message, tps)) {
+          send_dl1_message(&dl1_message, port);         
+        }
+        
         // RPM
         uint16_t rpm = frame->data16[0] / 4;
         if ( ! get_rpm_message(&dl1_message, rpm)) {
           send_dl1_message(&dl1_message, port);
         }  
-  
-        // TPS
-        uint8_t tps = (uint8_t)frame->data[3] * 100 / 255;
-        //DEBUG.printf("tps = %d\n", tps);
-        if ( ! get_tps_message(&dl1_message, tps)) {
-          send_dl1_message(&dl1_message, port);
-        }
-        
+
         // bit 40 is brake pedal switch, no pressure reading is provided.
-        uint16_t brake_pressure_x10 = (frame->data[5] && 0x80) == 1 ? MAX_BRAKE_PRESSURE_BAR*10 : 0;
-        if ( ! get_brake_pressure_message(&dl1_message, brake_pressure_x10)) {
-          send_dl1_message(&dl1_message, port);
-        }
+//        uint16_t brake_pressure_x10 = (frame->data[5] && 0x80) == 1 ? MAX_BRAKE_PRESSURE_BAR*10 : 0;
+//        if ( ! get_brake_pressure_message(&dl1_message, brake_pressure_x10)) {
+//          send_dl1_message(&dl1_message, port);
+//        }
       }
       break;
 
@@ -81,12 +80,14 @@ int16_t process_send_can_message(BluetoothSerial *port, CANMessage *frame) {
         float long_accel= (float)frame->data[5] / 32.0;
         float lat_accel= (float)frame->data[4] / 32.0;
         if ( ! get_xy_accel_message(&dl1_message, lat_accel, long_accel)) {
-          send_dl1_message(&dl1_message, port);
+          //DEBUG.printf("%1.2f, %1.2f\n", lat_accel, long_accel);
+          //send_dl1_message(&dl1_message, port);
         }    
       }
       break;
     default: 
       break; // ignore
   }
+  
   return 0;
 }

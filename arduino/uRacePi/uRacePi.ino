@@ -37,6 +37,8 @@ int16_t process_send_can_message(BluetoothSerial *port, CANMessage *frame);
 #endif
 
 #define SERIAL_CONSOLE_BAUDRATE (115200)
+#define GPS_MOVEMENT_THRESHOLD (3.0)
+#define SHUTDOWN_IDLE_TIME_MILLIS (3.6e6) // 1 hour
 
 #define DEBUG_PORT Serial
 #define UBX_PORT   Serial1
@@ -51,6 +53,10 @@ static const byte MCP2515_MISO = 14;
 static const byte MCP2515_CS   = 32;
 
 static gps_fix fix;
+
+// used to indicate that we have timed out all data
+// and should shutdown
+volatile long last_data_rx_millis = millis();
 
 ACAN2515 canbus (MCP2515_CS, SPI, 255); // disabled interrupts
 BluetoothSerial SerialBT;
@@ -73,14 +79,15 @@ int16_t setup_mcp2515(ACAN2515 *can, HardwareSerial &debug_port) {
 
 // check for any received GPS data and send to clients it exists
 // return 0 if data was sent, non zero on failure
+bool gnss_rx_status = false;
 int16_t update_gnss() {
   dl1_message_t dl1_message;
-  
   while (gps.available(UBX_PORT)) {
     fix = gps.read();
-    
+
     // Uncomment this to trace GPS data
-    trace_all(DEBUG_PORT, gps, fix);
+    //trace_all(DEBUG_PORT, gps, fix);
+
     if ( ! get_timestamp_message(&dl1_message, millis())) {
       send_dl1_message(&dl1_message, &SerialBT);
     }
@@ -89,6 +96,9 @@ int16_t update_gnss() {
     }
     if ( ! get_gps_pos_message(&dl1_message, fix.latitudeL(), fix.longitudeL(), fix.lat_err_cm*10)) {
       send_dl1_message(&dl1_message, &SerialBT);
+    }
+    if (fix.speed() > GPS_MOVEMENT_THRESHOLD) {
+      last_data_rx_millis = millis();
     }
     return 0;
   } 
@@ -110,6 +120,10 @@ void callback(esp_spp_cb_event_t event, esp_spp_cb_param_t *param){
 }
     
 void setup() {
+  
+  // TODO, reduce clock freq, this may require manually adjusting timing measurement
+  //rtc_clk_cpu_freq_set(RTC_CPU_FREQ_80M);
+  
   Serial.begin(SERIAL_CONSOLE_BAUDRATE);
   SerialBT.register_callback(callback);
   SerialBT.begin(BLUETOOTH_DEVICE_BROADCAST_NAME); 
@@ -139,9 +153,8 @@ void setup() {
       1,
       &gnss_task,
       0);
-
+     pinMode(LED_BUILTIN, OUTPUT);
      Serial.printf("(GNSS) setup success!\n");
-
   }
 }
 
@@ -160,7 +173,8 @@ void test_sends() {
 //    send_dl1_message(&dl1_message, &SerialBT);
 //  }
 
-  if ( ! get_tps_message(&dl1_message, (millis()/100) % 101)) {
+  //if ( ! get_tps_message(&dl1_message, (millis()/100) % 101)) {
+  if ( ! get_tps_message(&dl1_message, 63)) {
     send_dl1_message(&dl1_message, &SerialBT);
   }
 
@@ -177,6 +191,14 @@ void test_sends() {
   }    
 }
 
+void check_shutdown_timer() {
+  // TODO: this logic is untested
+  // TODO: would also need to be wired up to control power on accessories in order to be effective
+    if ((millis() - last_data_rx_millis) > SHUTDOWN_IDLE_TIME_MILLIS) {
+      esp_deep_sleep_start();
+    }  
+}
+
 void loop() {
   canbus.poll(); 
 
@@ -185,10 +207,11 @@ void loop() {
   if (canbus.available()) {
     canbus.receive(frame);
     process_send_can_message(&SerialBT, &frame);
+    last_data_rx_millis = millis();
   } else {
     // Uncomment to generat test data
-    test_sends();
-    
+    //test_sends();
+    check_shutdown_timer();
     delay(5);    
   }
 }

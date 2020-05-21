@@ -219,7 +219,7 @@ int32_t get_brake_pressure_message(dl1_message_t *message, uint16_t pressure_bar
   FAIL_ON_NULL(message);
 
   int16_t voltage_x1000 = pressure_bar_x10 * 100 * 5 / MAX_BRAKE_PRESSURE_BAR;
-  message->data[0] = TPS_MESSAGE_ID;
+  message->data[0] = BRAKE_MESSAGE_ID;
   message->data[1] = voltage_x1000 >> 8;
   message->data[2] = voltage_x1000;
   message->length = 3;
