@@ -60,5 +60,4 @@ int32_t get_xy_accel_message(dl1_message_t *message, float x_accel, float y_acce
 int32_t get_brake_pressure_message(dl1_message_t *message, uint16_t pressure_bar_x10);
 
 
-
 #endif // __DL_1

@@ -21,7 +21,7 @@
 
 #define GPS_FIX_SPD_ERR
 #define GPS_FIX_LAT_ERR
-#define LAST_SENTENCE_IN_INTERVAL NMEAGPS::NMEA_GLL
+//#define LAST_SENTENCE_IN_INTERVAL NMEAGPS::NMEA_GLL
 
 #include <HardwareSerial.h>
 #include <NMEAGPS.h>

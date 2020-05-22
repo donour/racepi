@@ -19,7 +19,7 @@
 #define GPS_FIX_LAT_ERR
 #define NMEAGPS_PARSE_GLL
 #define NMEAGPS_PARSE_GSA
-#define LAST_SENTENCE_IN_INTERVAL NMEAGPS::NMEA_GLL
+//#define LAST_SENTENCE_IN_INTERVAL NMEAGPS::NMEA_GLL
 
 #include "racepi_gnss.h"
 #include "dl1.h"
@@ -84,14 +84,15 @@ int16_t update_gnss() {
   dl1_message_t dl1_message;
   while (gps.available(UBX_PORT)) {
     fix = gps.read();
-
     // Uncomment this to trace GPS data
     //trace_all(DEBUG_PORT, gps, fix);
+
+    float speed_ms_x100 = fix.speed_metersps() * 100;
 
     if ( ! get_timestamp_message(&dl1_message, millis())) {
       send_dl1_message(&dl1_message, &SerialBT);
     }
-    if ( ! get_speed_message(&dl1_message, fix.speed() * 100, fix.spd_err_mmps/10)) {
+    if ( ! get_speed_message(&dl1_message, speed_ms_x100, fix.spd_err_mmps/10)) {
       send_dl1_message(&dl1_message, &SerialBT);
     }
     if ( ! get_gps_pos_message(&dl1_message, fix.latitudeL(), fix.longitudeL(), fix.lat_err_cm*10)) {
