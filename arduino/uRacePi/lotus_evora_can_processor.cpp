@@ -83,8 +83,8 @@ int16_t process_send_can_message(BluetoothSerial *port, CANMessage *frame) {
       // IMU
       if (frame->len >= 6){
         send_timestamp(port);
-        float lat_accel = (uint8_t)frame->data[4] - 128.0;
-        float long_accel = (int8_t)frame->data[6];
+        float lat_accel = ((uint8_t)frame->data[4] - 128.0) / 32.0;
+        float long_accel = ((int8_t)frame->data[6]) / 32.0;
                        
         if ( ! get_xy_accel_message(&dl1_message, lat_accel, long_accel)) {
           //DEBUG.printf("%1.2f, %1.2f\n", lat_accel, long_accel);

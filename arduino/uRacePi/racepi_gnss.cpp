@@ -67,5 +67,7 @@ int16_t setup_ublox_gnss(HardwareSerial &port) {
   sendUBX(port, I2C_UBX, sizeof(I2C_UBX));
   delay(300);
   sendUBX(port, RATE_64MS, sizeof(RATE_64MS)); 
+
+  port.setRxBufferSize(1024);
   return 0;
 }

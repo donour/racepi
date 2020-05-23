@@ -109,7 +109,7 @@ int16_t update_gnss() {
 void gnss_process(void *params) {
   while (true) { 
     if( update_gnss() != 0) {
-      delay(1);
+      delayMicroseconds(100);
     }
   }
 }
@@ -153,7 +153,7 @@ void setup() {
       NULL,
       1,
       &gnss_task,
-      0);
+      tskNO_AFFINITY);
      pinMode(LED_BUILTIN, OUTPUT);
      Serial.printf("(GNSS) setup success!\n");
   }
@@ -213,6 +213,6 @@ void loop() {
     // Uncomment to generat test data
     //test_sends();
     check_shutdown_timer();
-    delay(1);    
+    yield();
   }
 }
