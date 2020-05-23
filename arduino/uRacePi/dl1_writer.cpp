@@ -124,15 +124,15 @@ int32_t get_gps_pos_message(dl1_message_t *message, int32_t lat_xe7, int32_t lon
   FAIL_ON_NULL(message);
 
   message->data[0] = GPS_POS_MESSAGE_ID;
-  message->data[1] = lat_xe7 >> 24;
-  message->data[2] = lat_xe7 >> 16;
-  message->data[3] = lat_xe7 >> 8;
-  message->data[4] = lat_xe7;
+  message->data[1] = long_xe7 >> 24;
+  message->data[2] = long_xe7 >> 16;
+  message->data[3] = long_xe7 >> 8;
+  message->data[4] = long_xe7;
 
-  message->data[5] = long_xe7 >> 24;
-  message->data[6] = long_xe7 >> 16;
-  message->data[7] = long_xe7 >> 8;
-  message->data[8] = long_xe7;
+  message->data[5] = lat_xe7 >> 24;
+  message->data[6] = lat_xe7 >> 16;
+  message->data[7] = lat_xe7 >> 8;
+  message->data[8] = lat_xe7;
 
   message->data[ 9] = error_xe3 >> 24;
   message->data[10] = error_xe3 >> 16;
