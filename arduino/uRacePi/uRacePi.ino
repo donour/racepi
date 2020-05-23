@@ -98,7 +98,7 @@ int16_t update_gnss() {
     if ( ! get_gps_pos_message(&dl1_message, fix.latitudeL(), fix.longitudeL(), fix.lat_err_cm*10)) {
       send_dl1_message(&dl1_message, &SerialBT);
     }
-    if (fix.speed() > GPS_MOVEMENT_THRESHOLD) {
+    if (speed_ms_x100 > GPS_MOVEMENT_THRESHOLD*100) {
       last_data_rx_millis = millis();
     }
     return 0;
@@ -213,6 +213,6 @@ void loop() {
     // Uncomment to generat test data
     //test_sends();
     check_shutdown_timer();
-    delay(5);    
+    delay(1);    
   }
 }
