@@ -86,6 +86,7 @@ int16_t update_gnss() {
     fix = gps.read();
     // Uncomment this to trace GPS data
     //trace_all(DEBUG_PORT, gps, fix);
+    //DEBUG_PORT.printf("gps: error/ok = %d/% 5d\n",  gps.statistics.errors, gps.statistics.ok);
 
     float speed_ms_x100 = fix.speed_metersps() * 100;
 
