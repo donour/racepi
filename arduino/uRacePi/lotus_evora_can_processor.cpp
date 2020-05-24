@@ -22,6 +22,8 @@
 
 #define DEBUG Serial
 
+#define ACCEL_DIVISOR (38.0)
+
 uint64_t latest_time = 0;
 // TODO: should this be up to the caller?
 void send_timestamp(BluetoothSerial *port) {
@@ -83,8 +85,8 @@ int16_t process_send_can_message(BluetoothSerial *port, CANMessage *frame) {
       // IMU
       if (frame->len >= 6){
         send_timestamp(port);
-        float lat_accel = ((uint8_t)frame->data[4] - 128.0) / 32.0;
-        float long_accel = ((int8_t)frame->data[6]) / 32.0;
+        float lat_accel = ((uint8_t)frame->data[4] - 128.0) / ACCEL_DIVISOR;
+        float long_accel = ((int8_t)frame->data[2]) / ACCEL_DIVISOR;
                        
         if ( ! get_xy_accel_message(&dl1_message, lat_accel, long_accel)) {
           //DEBUG.printf("%1.2f, %1.2f\n", lat_accel, long_accel);
