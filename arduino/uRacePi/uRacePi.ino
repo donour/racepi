@@ -29,6 +29,7 @@
 #include "racepi_gnss.h"
 #include <ACAN2515.h>
 #include "BluetoothSerial.h"
+#include "tests.h"
 
 int16_t process_send_can_message(BluetoothSerial *port, CANMessage *frame);
 
@@ -157,35 +158,6 @@ void setup() {
   }
 }
 
-void test_sends() { 
-  dl1_message_t dl1_message;
-
-
-//  if ( ! get_speed_message(&dl1_message, (millis()/10) % 200, 10)) {
-//    send_dl1_message(&dl1_message, &SerialBT, true);
-//  }
-//
-//  if ( ! get_gps_pos_message(&dl1_message, 41000000, 3400000, 1200)) {
-//    send_dl1_message(&dl1_message, &SerialBT, true);
-//  }
-
-  //if ( ! get_tps_message(&dl1_message, (millis()/100) % 101)) {
-  if ( ! get_tps_message(&dl1_message, 63)) {
-    send_dl1_message(&dl1_message, &SerialBT, true);
-  }
-
-  if ( ! get_rpm_message(&dl1_message,  sin(millis()/3000.0)*4500 + 4500)) {
-    send_dl1_message(&dl1_message, &SerialBT, true);
-  }  
-
-  if ( ! get_steering_angle_message(&dl1_message, sin(millis()/3000.0)*200)){
-    send_dl1_message(&dl1_message, &SerialBT, true);
-  }  
-
-  if ( ! get_xy_accel_message(&dl1_message, sin(millis()/3000.0)/1.1, cos(millis()/3000.0)/1.1)) {
-    send_dl1_message(&dl1_message, &SerialBT, true);
-  }    
-}
 
 void check_shutdown_timer() {
   // TODO: this logic is untested
@@ -206,7 +178,7 @@ void loop() {
     last_data_rx_millis = millis();
   } else {
     // Uncomment to generat test data
-    //test_sends();
+    //test_sends(&SerialBT);
     check_shutdown_timer();
     yield();
   }
