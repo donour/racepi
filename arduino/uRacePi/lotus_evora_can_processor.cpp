@@ -61,11 +61,13 @@ int16_t process_send_can_message(BluetoothSerial *port, CANMessage *frame) {
         }
 
         // bit 40 is brake pedal switch, no pressure reading is provided.
+        /*
+        // FIXME: this is disabled until client code is fixed
         uint16_t brake_pressure_x10 = (frame->data[5] & 0x1) == 0 ? 0 : MAX_BRAKE_PRESSURE_BAR*10;
         if ( ! get_brake_pressure_message(&dl1_message, brake_pressure_x10)) {
           //DEBUG.printf("brake: %d\n", brake_pressure_x10);
           send_dl1_message(&dl1_message, port, false);
-        }
+        }*/
       }
       break;
 
