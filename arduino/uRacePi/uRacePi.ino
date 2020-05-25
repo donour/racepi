@@ -90,14 +90,11 @@ int16_t update_gnss() {
 
     float speed_ms_x100 = fix.speed_metersps() * 100;
 
-    if ( ! get_timestamp_message(&dl1_message, millis())) {
-      send_dl1_message(&dl1_message, &SerialBT);
-    }
     if ( ! get_speed_message(&dl1_message, speed_ms_x100, fix.spd_err_mmps/10)) {
-      send_dl1_message(&dl1_message, &SerialBT);
+      send_dl1_message(&dl1_message, &SerialBT, true);
     }
     if ( ! get_gps_pos_message(&dl1_message, fix.latitudeL(), fix.longitudeL(), fix.lat_err_cm*10)) {
-      send_dl1_message(&dl1_message, &SerialBT);
+      send_dl1_message(&dl1_message, &SerialBT, false);
     }
     if (speed_ms_x100 > GPS_MOVEMENT_THRESHOLD*100) {
       last_data_rx_millis = millis();
@@ -163,33 +160,30 @@ void setup() {
 void test_sends() { 
   dl1_message_t dl1_message;
 
-  if ( ! get_timestamp_message(&dl1_message, millis())) {
-    send_dl1_message(&dl1_message, &SerialBT);
-  }
 
 //  if ( ! get_speed_message(&dl1_message, (millis()/10) % 200, 10)) {
-//    send_dl1_message(&dl1_message, &SerialBT);
+//    send_dl1_message(&dl1_message, &SerialBT, true);
 //  }
 //
 //  if ( ! get_gps_pos_message(&dl1_message, 41000000, 3400000, 1200)) {
-//    send_dl1_message(&dl1_message, &SerialBT);
+//    send_dl1_message(&dl1_message, &SerialBT, true);
 //  }
 
   //if ( ! get_tps_message(&dl1_message, (millis()/100) % 101)) {
   if ( ! get_tps_message(&dl1_message, 63)) {
-    send_dl1_message(&dl1_message, &SerialBT);
+    send_dl1_message(&dl1_message, &SerialBT, true);
   }
 
   if ( ! get_rpm_message(&dl1_message,  sin(millis()/3000.0)*4500 + 4500)) {
-    send_dl1_message(&dl1_message, &SerialBT);
+    send_dl1_message(&dl1_message, &SerialBT, true);
   }  
 
   if ( ! get_steering_angle_message(&dl1_message, sin(millis()/3000.0)*200)){
-    send_dl1_message(&dl1_message, &SerialBT);
+    send_dl1_message(&dl1_message, &SerialBT, true);
   }  
 
   if ( ! get_xy_accel_message(&dl1_message, sin(millis()/3000.0)/1.1, cos(millis()/3000.0)/1.1)) {
-    send_dl1_message(&dl1_message, &SerialBT);
+    send_dl1_message(&dl1_message, &SerialBT, true);
   }    
 }
 

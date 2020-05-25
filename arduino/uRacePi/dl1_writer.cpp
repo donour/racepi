@@ -45,17 +45,29 @@ int16_t dl1_init() {
   message_write_lock = xSemaphoreCreateMutex();
 }
 
-
-int16_t send_dl1_message(dl1_message_t *message, BluetoothSerial *port) {
-  FAIL_ON_NULL(message);
-
-  if (xSemaphoreTake(message_write_lock, portMAX_DELAY) == 0) {
-    return -1;
-  }
+uint16_t write_message_to_port(dl1_message_t *message, BluetoothSerial *port) {
   int rc = port->write(message->data, message->length);
   if (rc >=0) {
     rc += port->write(message->checksum);
   }
+  return rc;
+}
+
+dl1_message_t timestamp_message;
+
+int16_t send_dl1_message(dl1_message_t *message, BluetoothSerial *port, const bool write_timestamp) {
+  FAIL_ON_NULL(message);
+  uint16_t rc = 0;
+
+  if (xSemaphoreTake(message_write_lock, portMAX_DELAY) == 0) {
+    return -1;
+  }
+  if (write_timestamp) {
+    if ( ! get_timestamp_message(&timestamp_message, millis())) {
+      rc += write_message_to_port(&timestamp_message, port);
+    }
+  }
+  rc += write_message_to_port(message, port);
   xSemaphoreGive(message_write_lock);
   return rc;
   

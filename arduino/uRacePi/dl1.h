@@ -48,7 +48,7 @@ typedef struct {
 
 int16_t dl1_init();
 
-int16_t send_dl1_message(dl1_message_t *message, BluetoothSerial *port);
+int16_t send_dl1_message(dl1_message_t *message, BluetoothSerial *port, const bool write_timestamp);
 
 int32_t get_timestamp_message(dl1_message_t *message, uint64_t timestamp);
 int32_t get_rpm_message(dl1_message_t *message, uint16_t rpm);
