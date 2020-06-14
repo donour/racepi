@@ -28,27 +28,31 @@ void test_sends(BluetoothSerial *port) {
   }
 
   if ( ! get_gps_pos_message(&dl1_message, 41000000, 3400000, 1200)) {
-    send_dl1_message(&dl1_message, port, true);
+    send_dl1_message(&dl1_message, port, false);
+  }
+
+  if ( ! get_gps_altitude_message(&dl1_message, millis() % 2000, 123)) {
+    send_dl1_message(&dl1_message, port, false);
   }
 
   if ( ! get_tps_message(&dl1_message, (millis()/100) % 101)) {
-    send_dl1_message(&dl1_message, port, true);
+    send_dl1_message(&dl1_message, port, false);
   }
 
-  uint16_t brake_pressure_x10 = 1<< (((millis()/10)/15) % 16);
+  uint16_t brake_pressure_x10 = millis() % 10000;//1<< (((millis()/10)/15) % 16);
   if ( ! get_brake_pressure_message(&dl1_message, brake_pressure_x10)) {
-    send_dl1_message(&dl1_message, port, true);
+    send_dl1_message(&dl1_message, port, false);
   }
 
   if ( ! get_rpm_message(&dl1_message,  sin(millis()/3000.0)*4500 + 4500)) {
-    send_dl1_message(&dl1_message, port, true);
+    send_dl1_message(&dl1_message, port, false);
   }  
 
   if ( ! get_steering_angle_message(&dl1_message, sin(millis()/3000.0)*200)){
-    send_dl1_message(&dl1_message, port, true);
+    send_dl1_message(&dl1_message, port, false);
   }  
 
   if ( ! get_xy_accel_message(&dl1_message, sin(millis()/3000.0)/1.1, cos(millis()/3000.0)/1.1)) {
-    send_dl1_message(&dl1_message, port, true);
+    send_dl1_message(&dl1_message, port, false);
   }    
 }
