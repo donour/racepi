@@ -97,6 +97,12 @@ int16_t update_gnss() {
     if ( ! get_gps_pos_message(&dl1_message, fix.latitudeL(), fix.longitudeL(), fix.lat_err_cm*10)) {
       send_dl1_message(&dl1_message, &SerialBT, false);
     }
+
+    // We don't generally use altitude, so we don't send it
+    //    if ( ! get_gps_altitude_message(&dl1_message, fix.altitude_cm() * 10, 1)) {
+    //      send_dl1_message(&dl1_message, port, true);
+    //    }
+
     if (speed_ms_x100 > GPS_MOVEMENT_THRESHOLD*100) {
       last_data_rx_millis = millis();
     }
@@ -180,6 +186,6 @@ void loop() {
     // Uncomment to generat test data
     //test_sends(&SerialBT);
     check_shutdown_timer();
-    yield();
+    delay(1);
   }
 }
