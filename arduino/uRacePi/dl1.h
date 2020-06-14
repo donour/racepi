@@ -26,6 +26,7 @@ static const char TIMESTAMP_MESSAGE_ID = 9;
 static const char GPS_POS_MESSAGE_ID = 10;
 static const char GPS_SPEED_MESSAGE_ID = 11;
 static const char GPS_COURSE_MESSAGE_ID = 56;
+static const char GPS_ALTITUDE_MESSAGE_ID = 57;
 static const char RPM_MESSAGE_ID = 18;
 static const char TPS_MESSAGE_ID = 27;//  # Analog 1
 static const char BRAKE_MESSAGE_ID = 25;//  # Analog 2
@@ -54,6 +55,7 @@ int32_t get_timestamp_message(dl1_message_t *message, uint64_t timestamp);
 int32_t get_rpm_message(dl1_message_t *message, uint16_t rpm);
 int32_t get_speed_message(dl1_message_t *message, uint32_t speed_ms_x100, uint32_t accuracy_ms_x100);
 int32_t get_gps_pos_message(dl1_message_t *message, int32_t lat_xe7, int32_t long_xe7, int32_t error_xe3);
+int32_t get_gps_altitude_message(dl1_message_t *message, int32_t altitude_x1000, int32_t accuracy_x1000);
 int32_t get_tps_message(dl1_message_t *message, uint16_t tps);
 int32_t get_steering_angle_message(dl1_message_t *message, int16_t angle_deg);
 int32_t get_xy_accel_message(dl1_message_t *message, float x_accel, float y_accel);

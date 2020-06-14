@@ -156,6 +156,25 @@ int32_t get_gps_pos_message(dl1_message_t *message, int32_t lat_xe7, int32_t lon
   return 0;     
 }
 
+int32_t get_gps_altitude_message(dl1_message_t *message, int32_t altitude_x1000, int32_t accuracy_x1000) {
+  FAIL_ON_NULL(message);
+
+  message->data[0] = GPS_ALTITUDE_MESSAGE_ID;
+  message->data[1] = altitude_x1000 >> 24;
+  message->data[2] = altitude_x1000 >> 16;
+  message->data[3] = altitude_x1000 >> 8;
+  message->data[4] = altitude_x1000;
+
+  message->data[5] = accuracy_x1000 >> 24;
+  message->data[6] = accuracy_x1000 >> 16;
+  message->data[7] = accuracy_x1000 >> 8;
+  message->data[8] = accuracy_x1000;
+
+  message->length = 9;
+  set_checksum(message);
+  return 0;
+}
+
 int32_t get_tps_message(dl1_message_t *message, uint16_t tps) {
   FAIL_ON_NULL(message);
 
