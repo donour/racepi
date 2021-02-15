@@ -1,5 +1,5 @@
 /**************************************************************************
-    Copyright 2020 Donour Sizemore
+    Copyright 2020, 2021 Donour Sizemore
 
     This file is part of RacePi
 
@@ -15,21 +15,33 @@
     You should have received a copy of the GNU General Public License
     along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 **************************************************************************/
+
+#define USE_SPARKFUN_UBX
+//#define USE_UART_NEOGPS
+
 #define GPS_FIX_SPD_ERR
 #define GPS_FIX_LAT_ERR
 #define NMEAGPS_PARSE_GLL
 #define NMEAGPS_PARSE_GSA
-//#define LAST_SENTENCE_IN_INTERVAL NMEAGPS::NMEA_GLL
 
-#include "racepi_gnss.h"
-#include "dl1.h"
-#include <string.h>
-#include <math.h> // TODO remove me
-#include <NMEAGPS.h>
-#include "racepi_gnss.h"
 #include <ACAN2515.h>
+#include <string.h>
+#include "dl1.h"
 #include "BluetoothSerial.h"
 #include "tests.h"
+
+#ifdef USE_UART_NEOGPS
+#include "racepi_gnss.h"
+#include <NMEAGPS.h>
+static gps_fix fix;
+#endif
+
+#ifdef  USE_SPARKFUN_UBX
+#include <Wire.h>
+#include <SparkFun_u-blox_GNSS_Arduino_Library.h>
+SFE_UBLOX_GNSS myGNSS;
+#define UBX_PORT   Serial1
+#endif
 
 int16_t process_send_can_message(BluetoothSerial *port, CANMessage *frame);
 
@@ -40,20 +52,22 @@ int16_t process_send_can_message(BluetoothSerial *port, CANMessage *frame);
 #define SERIAL_CONSOLE_BAUDRATE (115200)
 #define GPS_MOVEMENT_THRESHOLD (3.0)
 #define SHUTDOWN_IDLE_TIME_MILLIS (3.6e6) // 1 hour
+#define SPARKFUN_UBX_REFRESH_RATE_HZ (25)
 
 #define DEBUG_PORT Serial
-#define UBX_PORT   Serial1
 
 static const char BLUETOOTH_DEVICE_BROADCAST_NAME[] = "evora";
 static const uint32_t MCP2515_QUARTZ_FREQUENCY = 8e6;
 static const uint32_t CAN_BITRATE = 5e5;
 
-static const byte MCP2515_SCK  = 23;
-static const byte MCP2515_MOSI = 22;
+static const byte MCP2515_SCK  = 22;
+static const byte MCP2515_MOSI = 32;
 static const byte MCP2515_MISO = 14;
-static const byte MCP2515_CS   = 32;
+static const byte MCP2515_CS   = 15;
 
-static gps_fix fix;
+static const byte UBX_SDA_PIN = 21;
+static const byte UBX_SCL_PIN = 17;
+
 
 // used to indicate that we have timed out all data
 // and should shutdown
@@ -78,6 +92,42 @@ int16_t setup_mcp2515(ACAN2515 *can, HardwareSerial &debug_port) {
   return 0;
 }
 
+void write_gnss_messages(
+  uint32_t speed_ms_x100, 
+  uint32_t accuracy_ms_x100, 
+  int32_t lat_xe7, 
+  int32_t long_xe7, 
+  int32_t error_xe3) {
+    dl1_message_t dl1_message;
+
+    if ( ! get_speed_message(&dl1_message, speed_ms_x100, accuracy_ms_x100)) {
+      send_dl1_message(&dl1_message, &SerialBT, true);
+    }
+    if ( ! get_gps_pos_message(&dl1_message, lat_xe7, long_xe7, error_xe3)) {
+      send_dl1_message(&dl1_message, &SerialBT, false);
+    }
+    if (speed_ms_x100 > GPS_MOVEMENT_THRESHOLD*100) {
+      last_data_rx_millis = millis();
+    }
+
+}
+
+void sparkfun_ubx_pvt_callback(UBX_NAV_PVT_data_t pvt) {
+  uint32_t speed_ms_x100 = pvt.gSpeed / 10; 
+  uint32_t accuracy_ms_x100 = pvt.sAcc/ 10;
+  int32_t lat_xe7 = pvt.lat;
+  int32_t long_xe7 = pvt.lon;
+  int32_t error_xe3 = pvt.hAcc;
+
+  write_gnss_messages(
+    speed_ms_x100, 
+    accuracy_ms_x100, 
+    lat_xe7, 
+    long_xe7, 
+    error_xe3);
+}
+
+#ifdef USE_UART_NEOGPS
 // check for any received GPS data and send to clients it exists
 // return 0 if data was sent, non zero on failure
 bool gnss_rx_status = false;
@@ -89,23 +139,13 @@ int16_t update_gnss() {
     //trace_all(DEBUG_PORT, gps, fix);
     //DEBUG_PORT.printf("gps: error/ok = %d/% 5d\n",  gps.statistics.errors, gps.statistics.ok);
 
-    float speed_ms_x100 = fix.speed_metersps() * 100;
-
-    if ( ! get_speed_message(&dl1_message, speed_ms_x100, fix.spd_err_mmps/10)) {
-      send_dl1_message(&dl1_message, &SerialBT, true);
-    }
-    if ( ! get_gps_pos_message(&dl1_message, fix.latitudeL(), fix.longitudeL(), fix.lat_err_cm*10)) {
-      send_dl1_message(&dl1_message, &SerialBT, false);
-    }
-
-    // We don't generally use altitude, so we don't send it
-    //    if ( ! get_gps_altitude_message(&dl1_message, fix.altitude_cm() * 10, 1)) {
-    //      send_dl1_message(&dl1_message, port, true);
-    //    }
-
-    if (speed_ms_x100 > GPS_MOVEMENT_THRESHOLD*100) {
-      last_data_rx_millis = millis();
-    }
+    float speed_ms_x100 = 0.0; // fix.speed_metersps() * 100;
+    write_gnss_messages(
+      speed_ms_x100, 
+      fix.spd_err_mmps/10, 
+      fix.latitudeL(), 
+      fix.longitudeL(), 
+      fix.lat_err_cm*10); 
     return 0;
   } 
   return -1;
@@ -118,6 +158,7 @@ void gnss_process(void *params) {
     }
   }
 }
+#endif
 
 void callback(esp_spp_cb_event_t event, esp_spp_cb_param_t *param){
   if(event == ESP_SPP_CLOSE_EVT ){
@@ -135,7 +176,6 @@ void setup() {
   SerialBT.begin(BLUETOOTH_DEVICE_BROADCAST_NAME); 
   SPI.begin(MCP2515_SCK, MCP2515_MISO, MCP2515_MOSI);
   Serial.write(0); Serial.flush();
-  Serial1.write(0); Serial1.flush();
   SerialBT.write(0); SerialBT.flush();
   dl1_init();
   
@@ -146,22 +186,50 @@ void setup() {
     // TODO setup MCP2515 filters
     Serial.printf("(MCP2515) setup success!\n");    
   }
-  int16_t gnss_rc = setup_ublox_gnss(UBX_PORT); 
-  if (gnss_rc != 0) {
-    // TODO handle gnss setup errors
-    Serial.printf("(GNSS) setup error!\n");
-  } else {   
-    xTaskCreatePinnedToCore(
-      gnss_process,
-      "gnss_task",
-      2048,
-      NULL,
-      1,
-      &gnss_task,
-      tskNO_AFFINITY);
-     pinMode(LED_BUILTIN, OUTPUT);
-     Serial.printf("(GNSS) setup success!\n");
+
+#ifdef  USE_SPARKFUN_UBX
+  Wire.begin(UBX_SDA_PIN, UBX_SCL_PIN);
+  if (myGNSS.begin()) {
+
+    // Optional library debugging, printed to Serial(1)
+    //myGNSS.enableDebugging()
+    
+    // Disable non-UBX to save bandwidth and reduce latency on the i2c 
+    // link. RTCM is not that expensive, but NMEA is verbose.
+    myGNSS.setI2COutput(COM_TYPE_UBX);
+    
+    // This will optionally persist the settings to NVM on the 
+    // GNSS device. 
+    myGNSS.saveConfigSelective(VAL_CFG_SUBSEC_IOPORT);
+    myGNSS.setNavigationFrequency(SPARKFUN_UBX_REFRESH_RATE_HZ); 
+    myGNSS.setAutoPVTcallback(&sparkfun_ubx_pvt_callback);
+    Serial.printf("(GNSS) setup success!\n");
+  } else {
+    Serial.printf("(GNSS) setup error!\n");    
   }
+#endif
+
+
+//#ifdef USE_UART_NEOGPS
+////  Serial1.write(0); Serial1.flush();
+////  int16_t gnss_rc = setup_ublox_gnss(UBX_PORT); 
+////  if (gnss_rc != 0) {
+////    // TODO handle gnss setup errors
+////    Serial.printf("(GNSS) setup error!\n");
+////  } else {   
+////    xTaskCreatePinnedToCore(
+////      gnss_process,
+////      "gnss_task",
+////      2048,
+////      NULL,
+////      1,
+////      &gnss_task,
+////      tskNO_AFFINITY);
+////     pinMode(LED_BUILTIN, OUTPUT);
+////     Serial.printf("(GNSS) setup success!\n");
+////  }
+//#endif
+
 }
 
 
@@ -174,8 +242,13 @@ void check_shutdown_timer() {
 }
 
 void loop() {
-  canbus.poll(); 
 
+#ifdef  USE_SPARKFUN_UBX
+  myGNSS.checkUblox();
+  myGNSS.checkCallbacks();
+#endif  
+
+  canbus.poll(); 
   CANMessage frame;
   int rc = 0;
   if (canbus.available()) {
