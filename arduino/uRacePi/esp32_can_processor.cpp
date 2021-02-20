@@ -51,16 +51,3 @@ int16_t setup_can_driver(uint8_t tx_gpio, uint8_t rx_gpio) {
 
     return 0;
 }
-
-//    can_message_t rx_frame;
-//    if (can_receive(&rx_frame, pdMS_TO_TICKS(1000)) == ESP_OK)
-//    {
-//    //do whatever you need with your received CAN messages here
-//    // follow the can_message_t struct to learn how to decode/process the received frame.
-//    }
-//    
-//     if (millis() - previousMillis > interval)  // send out your CAN frame once every second
-//        { 
-//            previousMillis = millis();
-//            can_transmit(&myMessageToSend, pdMS_TO_TICKS(1000));
-//      }
