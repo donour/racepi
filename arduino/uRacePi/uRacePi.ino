@@ -19,18 +19,31 @@
 #define USE_SPARKFUN_UBX
 //#define USE_UART_NEOGPS
 
-#define GPS_FIX_SPD_ERR
-#define GPS_FIX_LAT_ERR
-#define NMEAGPS_PARSE_GLL
-#define NMEAGPS_PARSE_GSA
+#define USE_ESP32_CAN
+//#define USE_ACAN_SPI
 
-#include <ACAN2515.h>
 #include <string.h>
 #include "dl1.h"
 #include "BluetoothSerial.h"
 #include "tests.h"
 
+#ifdef USE_ESP32_CAN
+#include <driver/can.h>
+#include "esp32_can_processor.h"
+int16_t process_send_can_message_esp32(BluetoothSerial *port, can_message_t *frame);
+#endif
+
+#ifdef USE_ACAN_SPI
+#include <ACAN2515.h>
+int16_t process_send_can_message(BluetoothSerial *port, CANMessage *frame);
+ACAN2515 canbus (MCP2515_CS, SPI, 255); // disabled interrupts
+#endif
+
 #ifdef USE_UART_NEOGPS
+#define GPS_FIX_SPD_ERR
+#define GPS_FIX_LAT_ERR
+#define NMEAGPS_PARSE_GLL
+#define NMEAGPS_PARSE_GSA
 #include "racepi_gnss.h"
 #include <NMEAGPS.h>
 static gps_fix fix;
@@ -41,9 +54,8 @@ static gps_fix fix;
 #include <SparkFun_u-blox_GNSS_Arduino_Library.h>
 SFE_UBLOX_GNSS myGNSS;
 #define UBX_PORT   Serial1
+TaskHandle_t gnss_task, Task2;
 #endif
-
-int16_t process_send_can_message(BluetoothSerial *port, CANMessage *frame);
 
 #if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
 #error Bluetooth Classic is not enabled for this build. 
@@ -68,15 +80,16 @@ static const byte MCP2515_CS   = 15;
 static const byte UBX_SDA_PIN = 21;
 static const byte UBX_SCL_PIN = 17;
 
+static const byte ESPCAN_TX_PIN = 22;
+static const byte ESPCAN_RX_PIN = 23;
 
 // used to indicate that we have timed out all data
 // and should shutdown
 volatile long last_data_rx_millis = millis();
 
-ACAN2515 canbus (MCP2515_CS, SPI, 255); // disabled interrupts
 BluetoothSerial SerialBT;
-TaskHandle_t gnss_task, Task2;
 
+#ifdef USE_ACAN_SPI
 int16_t setup_mcp2515(ACAN2515 *can, HardwareSerial &debug_port) {
 
   ACAN2515Settings settings(MCP2515_QUARTZ_FREQUENCY, CAN_BITRATE);
@@ -91,6 +104,7 @@ int16_t setup_mcp2515(ACAN2515 *can, HardwareSerial &debug_port) {
   debug_port.printf("(MCP2515) bit rate: %d\n", settings.actualBitRate ());
   return 0;
 }
+#endif 
 
 void write_gnss_messages(
   uint32_t speed_ms_x100, 
@@ -135,11 +149,7 @@ int16_t update_gnss() {
   dl1_message_t dl1_message;
   while (gps.available(UBX_PORT)) {
     fix = gps.read();
-    // Uncomment this to trace GPS data
-    //trace_all(DEBUG_PORT, gps, fix);
-    //DEBUG_PORT.printf("gps: error/ok = %d/% 5d\n",  gps.statistics.errors, gps.statistics.ok);
-
-    float speed_ms_x100 = 0.0; // fix.speed_metersps() * 100;
+    float speed_ms_x100 = fix.speed_metersps() * 100;
     write_gnss_messages(
       speed_ms_x100, 
       fix.spd_err_mmps/10, 
@@ -160,25 +170,25 @@ void gnss_process(void *params) {
 }
 #endif
 
-void callback(esp_spp_cb_event_t event, esp_spp_cb_param_t *param){
+void bt_callback(esp_spp_cb_event_t event, esp_spp_cb_param_t *param){
   if(event == ESP_SPP_CLOSE_EVT ){
+    // This is a little heavy handed, but I've had trouble
+    // initiating subsequent connections after SPP close, so
+    // I just reboot the module.
     ESP.restart();
   }
 }
     
-void setup() {
-  
-  // TODO, reduce clock freq, this may require manually adjusting timing measurement
-  //rtc_clk_cpu_freq_set(RTC_CPU_FREQ_80M);
-  
+void setup() {    
   Serial.begin(SERIAL_CONSOLE_BAUDRATE);
-  SerialBT.register_callback(callback);
+  SerialBT.register_callback(bt_callback);
   SerialBT.begin(BLUETOOTH_DEVICE_BROADCAST_NAME); 
-  SPI.begin(MCP2515_SCK, MCP2515_MISO, MCP2515_MOSI);
   Serial.write(0); Serial.flush();
   SerialBT.write(0); SerialBT.flush();
   dl1_init();
-  
+
+#ifdef USE_ACAN_SPI
+  SPI.begin(MCP2515_SCK, MCP2515_MISO, MCP2515_MOSI);
   int16_t mcp_rc = setup_mcp2515(&canbus, Serial); 
   if (mcp_rc != 0) {
     Serial.printf("(MCP2515) setup error!\n");
@@ -186,6 +196,24 @@ void setup() {
     // TODO setup MCP2515 filters
     Serial.printf("(MCP2515) setup success!\n");    
   }
+#endif 
+
+#ifdef USE_ESP32_CAN
+  int16_t espcan_rc = setup_can_driver(ESPCAN_TX_PIN, ESPCAN_RX_PIN);
+  switch (espcan_rc) {
+     case 0:
+      Serial.printf("(CAN) success!\n");    
+      break;
+    case -1:
+      Serial.printf("(CAN) install failure!\n");        
+      break;
+    case -2:
+      Serial.printf("(CAN) setup failure!\n");        
+      break;
+    default:
+      Serial.printf("(CAN) unknown failure: %d\n", espcan_rc);        
+  }
+#endif
 
 #ifdef  USE_SPARKFUN_UBX
   Wire.begin(UBX_SDA_PIN, UBX_SCL_PIN);
@@ -242,12 +270,23 @@ void check_shutdown_timer() {
 }
 
 void loop() {
-
+  
 #ifdef  USE_SPARKFUN_UBX
   myGNSS.checkUblox();
   myGNSS.checkCallbacks();
 #endif  
 
+#ifdef USE_ESP32_CAN
+  can_message_t msg;
+  if (can_receive(&msg, pdMS_TO_TICKS(1)) == ESP_OK) {
+    process_send_can_message_esp32(&SerialBT, &msg);
+    last_data_rx_millis = millis();
+  } else {
+    check_shutdown_timer();
+  }
+#endif
+
+#ifdef USE_ACAN_SPI
   canbus.poll(); 
   CANMessage frame;
   int rc = 0;
@@ -261,4 +300,5 @@ void loop() {
     check_shutdown_timer();
     delay(1);
   }
+#endif USE_ACAN_SPI
 }

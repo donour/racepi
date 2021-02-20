@@ -19,14 +19,29 @@
 #include <ACAN2515.h>
 #include "BluetoothSerial.h"
 #include "dl1.h"
+#include <driver/can.h>
 
 #define DEBUG Serial
 
 #define ACCEL_DIVISOR (38.0)
 
+
+class common_can_message {
+  public : uint32_t id = 0;  
+  public : uint8_t idx = 0;  
+  public : uint8_t len = 0;  
+  public : union {
+    uint64_t data64; 
+    uint32_t data32 [2]; 
+    uint16_t data16 [4]; 
+    float    dataFloat [2];
+    uint8_t  data   [8] = {0, 0, 0, 0, 0, 0, 0, 0};
+  };
+};
+
 uint64_t latest_time = 0;
 
-int16_t process_send_can_message(BluetoothSerial *port, CANMessage *frame) {
+int16_t private_send(BluetoothSerial *port, common_can_message *frame) {
   if (port == NULL || frame == NULL) {
     return -1;
   }
@@ -74,9 +89,13 @@ int16_t process_send_can_message(BluetoothSerial *port, CANMessage *frame) {
     case 0x303:
       // IMU
       if (frame->len >= 6){
+        // Reference value from Bosch manual
+        //float lat_accel = (int16_t)((frame->data16[2]+(0x8000))) * 0.0001274; // g
+        //float long_accel = 0;
+        //float yaw1 = ((int16_t)(frame->data16[0]+(0x8000))) * 0.005 ; // deg/s^2
+
         float lat_accel = ((uint8_t)frame->data[4] - 128.0) / ACCEL_DIVISOR;
         float long_accel = ((int8_t)frame->data[2]) / ACCEL_DIVISOR;
-                       
         if ( ! get_xy_accel_message(&dl1_message, lat_accel, long_accel)) {
           //DEBUG.printf("%1.2f, %1.2f\n", lat_accel, long_accel);
           send_dl1_message(&dl1_message, port, true);
@@ -88,4 +107,23 @@ int16_t process_send_can_message(BluetoothSerial *port, CANMessage *frame) {
   }
   
   return 0;
+}
+
+int16_t process_send_can_message(BluetoothSerial *port, CANMessage *frame) {
+  if (frame == 0) return -1;
+  common_can_message msg;
+  msg.id  = frame->id;
+  msg.idx = frame->idx;
+  msg.len = frame->len;
+  msg.data64 = frame->data64;
+  return private_send(port, &msg);
+}
+
+int16_t process_send_can_message_esp32(BluetoothSerial *port, can_message_t *frame) {
+  if (frame == 0) return -1;
+  common_can_message msg;
+  msg.id  = frame->identifier;
+  msg.len = frame->data_length_code;
+  memcpy(&msg.data, &frame->data, 8);
+  return private_send(port, &msg);
 }
