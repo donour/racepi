@@ -41,6 +41,27 @@ class common_can_message {
 
 uint64_t latest_time = 0;
 
+// used for calculating oversteer
+#define STEER_RATIO (1.0/15.0)
+float latest_steering_angle = 0;
+float ackermann_yaw(const float steering_angle, const float wheelbase, const float velocity) {
+
+  // TODO finish
+  const float wheel_angle = steering_angle * STEER_RATIO;
+  return velocity*tan(wheel_angle) / wheelbase;
+}
+
+float yaw_intended(const float steering_angle, const float wheelbase, const float velocity) {
+  // TODO finish
+  const float wheel_angle = steering_angle * STEER_RATIO;
+  return velocity * wheel_angle / (2 * wheelbase);  
+}
+
+float surface_limit(const float lat_accel, float velocity) {
+  return lat_accel / velocity;
+}
+
+
 int16_t private_send(BluetoothSerial *port, common_can_message *frame) {
   if (port == NULL || frame == NULL) {
     return -1;
@@ -59,6 +80,7 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame) {
         if ( ! get_steering_angle_message(&dl1_message, val)){
           send_dl1_message(&dl1_message, port, true);
          }  
+        latest_steering_angle;
       }
       break;
     case 0x114:
@@ -103,6 +125,7 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame) {
       }
       break;
     default: 
+      //DEBUG.printf("(CAN) ignored message: %x\n", frame->id);
       break; // ignore
   }
   

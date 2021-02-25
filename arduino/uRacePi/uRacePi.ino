@@ -80,8 +80,8 @@ static const byte MCP2515_CS   = 15;
 static const byte UBX_SDA_PIN = 21;
 static const byte UBX_SCL_PIN = 17;
 
-static const byte ESPCAN_TX_PIN = 22;
-static const byte ESPCAN_RX_PIN = 23;
+static const byte ESPCAN_RX_PIN = 22;
+static const byte ESPCAN_TX_PIN = 23;
 
 // used to indicate that we have timed out all data
 // and should shutdown
