@@ -236,6 +236,8 @@ void setup() {
 
     // Optional library debugging, printed to Serial(1)
     //myGNSS.enableDebugging()
+
+    myGNSS.setDynamicModel(DYN_MODEL_AUTOMOTIVE);
     
     // Disable non-UBX to save bandwidth and reduce latency on the i2c 
     // link. RTCM is not that expensive, but NMEA is verbose.
@@ -246,7 +248,6 @@ void setup() {
     myGNSS.saveConfigSelective(VAL_CFG_SUBSEC_IOPORT);
     myGNSS.setNavigationFrequency(SPARKFUN_UBX_REFRESH_RATE_HZ); 
     myGNSS.setAutoPVTcallback(&sparkfun_ubx_pvt_callback);
-    digitalWrite(GNSS_LED, HIGH);
     Serial.printf("(GNSS) setup success!\n");
   } else {
     Serial.printf("(GNSS) setup error!\n");    
@@ -274,7 +275,7 @@ void setup() {
 ////    digitalWrite(GNSS_LED, HIGH);
 ////  }
 //#endif
-
+  
 }
 
 
@@ -282,6 +283,9 @@ void check_shutdown_timer() {
   // TODO: this logic is untested
   // TODO: would also need to be wired up to control power on accessories in order to be effective
     if ((millis() - last_data_rx_millis) > SHUTDOWN_IDLE_TIME_MILLIS) {
+#ifdef  USE_SPARKFUN_UBX
+      myGNSS.powerOff(0x0FFFFFFF, 0xEFFF);
+#endif
       esp_deep_sleep_start();
     }  
 }
