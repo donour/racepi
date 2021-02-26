@@ -125,7 +125,7 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame) {
       }
       break;
     default: 
-      //DEBUG.printf("(CAN) ignored message: %x\n", frame->id);
+      //DEBUG.printf(".", frame->id);
       break; // ignore
   }
   

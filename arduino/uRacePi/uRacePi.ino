@@ -65,11 +65,10 @@ TaskHandle_t gnss_task, Task2;
 #define GPS_MOVEMENT_THRESHOLD (3.0)
 #define SHUTDOWN_IDLE_TIME_MILLIS (3.6e6) // 1 hour
 #define SPARKFUN_UBX_REFRESH_RATE_HZ (25)
-
+#define GNSS_LED (13)
 #define DEBUG_PORT Serial
 
 static const char BLUETOOTH_DEVICE_BROADCAST_NAME[] = "evora";
-static const uint32_t MCP2515_QUARTZ_FREQUENCY = 8e6;
 static const uint32_t CAN_BITRATE = 5e5;
 
 static const byte MCP2515_SCK  = 22;
@@ -90,6 +89,7 @@ volatile long last_data_rx_millis = millis();
 BluetoothSerial SerialBT;
 
 #ifdef USE_ACAN_SPI
+static const uint32_t MCP2515_QUARTZ_FREQUENCY = 8e6;
 int16_t setup_mcp2515(ACAN2515 *can, HardwareSerial &debug_port) {
 
   ACAN2515Settings settings(MCP2515_QUARTZ_FREQUENCY, CAN_BITRATE);
@@ -111,7 +111,9 @@ void write_gnss_messages(
   uint32_t accuracy_ms_x100, 
   int32_t lat_xe7, 
   int32_t long_xe7, 
-  int32_t error_xe3) {
+  int32_t error_xe3,
+  int32_t elevation_m_xe3,
+  int32_t elevation_m_acc_xe3) {
     dl1_message_t dl1_message;
 
     if ( ! get_speed_message(&dl1_message, speed_ms_x100, accuracy_ms_x100)) {
@@ -120,6 +122,10 @@ void write_gnss_messages(
     if ( ! get_gps_pos_message(&dl1_message, lat_xe7, long_xe7, error_xe3)) {
       send_dl1_message(&dl1_message, &SerialBT, false);
     }
+    if ( ! get_gps_altitude_message(&dl1_message, elevation_m_xe3, elevation_m_acc_xe3)) {
+      send_dl1_message(&dl1_message, &SerialBT, false);
+    }
+    
     if (speed_ms_x100 > GPS_MOVEMENT_THRESHOLD*100) {
       last_data_rx_millis = millis();
     }
@@ -132,13 +138,18 @@ void sparkfun_ubx_pvt_callback(UBX_NAV_PVT_data_t pvt) {
   int32_t lat_xe7 = pvt.lat;
   int32_t long_xe7 = pvt.lon;
   int32_t error_xe3 = pvt.hAcc;
-
+  int32_t elevation_m_xe3 = pvt.hMSL;
+  int32_t elevation_m_acc_xe3 = pvt.vAcc;
+  
+  // Serial.printf(" %d, %d\n", lat_xe7, long_xe7);
   write_gnss_messages(
     speed_ms_x100, 
     accuracy_ms_x100, 
     lat_xe7, 
     long_xe7, 
-    error_xe3);
+    error_xe3,
+    elevation_m_xe3,
+    elevation_m_acc_xe3);
 }
 
 #ifdef USE_UART_NEOGPS
@@ -155,7 +166,9 @@ int16_t update_gnss() {
       fix.spd_err_mmps/10, 
       fix.latitudeL(), 
       fix.longitudeL(), 
-      fix.lat_err_cm*10); 
+      fix.lat_err_cm*10,
+      0,
+      1000); 
     return 0;
   } 
   return -1;
@@ -185,6 +198,8 @@ void setup() {
   SerialBT.begin(BLUETOOTH_DEVICE_BROADCAST_NAME); 
   Serial.write(0); Serial.flush();
   SerialBT.write(0); SerialBT.flush();
+  pinMode(GNSS_LED, OUTPUT);
+  digitalWrite(GNSS_LED, LOW);
   dl1_init();
 
 #ifdef USE_ACAN_SPI
@@ -231,6 +246,7 @@ void setup() {
     myGNSS.saveConfigSelective(VAL_CFG_SUBSEC_IOPORT);
     myGNSS.setNavigationFrequency(SPARKFUN_UBX_REFRESH_RATE_HZ); 
     myGNSS.setAutoPVTcallback(&sparkfun_ubx_pvt_callback);
+    digitalWrite(GNSS_LED, HIGH);
     Serial.printf("(GNSS) setup success!\n");
   } else {
     Serial.printf("(GNSS) setup error!\n");    
@@ -255,6 +271,7 @@ void setup() {
 ////      tskNO_AFFINITY);
 ////     pinMode(LED_BUILTIN, OUTPUT);
 ////     Serial.printf("(GNSS) setup success!\n");
+////    digitalWrite(GNSS_LED, HIGH);
 ////  }
 //#endif
 
