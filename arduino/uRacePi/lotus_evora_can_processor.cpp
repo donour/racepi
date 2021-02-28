@@ -119,13 +119,13 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame) {
         float lat_accel = ((uint8_t)frame->data[4] - 128.0) / ACCEL_DIVISOR;
         float long_accel = ((int8_t)frame->data[2]) / ACCEL_DIVISOR;
         if ( ! get_xy_accel_message(&dl1_message, lat_accel, long_accel)) {
-          //DEBUG.printf("%1.2f, %1.2f\n", lat_accel, long_accel);
+          DEBUG.printf("%1.2f, %1.2f\n", lat_accel, long_accel);
           send_dl1_message(&dl1_message, port, true);
         }    
       }
       break;
     default: 
-      //DEBUG.printf(".", frame->id);
+      //DEBUG.printf("%x\n", frame->id);
       break; // ignore
   }
   
