@@ -31,7 +31,7 @@
 #ifdef USE_ESP32_CAN
 #include <driver/can.h>
 #include "esp32_can_processor.h"
-int16_t process_send_can_message_esp32(BluetoothSerial *port, can_message_t *frame);
+int16_t process_send_can_message_esp32(BluetoothSerial *port, can_message_t *frame, float power_w);
 #endif
 
 #ifdef USE_ACAN_SPI
@@ -68,6 +68,17 @@ TaskHandle_t gnss_task, Task2;
 #define SPARKFUN_UBX_REFRESH_RATE_HZ (25)
 #define GNSS_LED (13)
 #define DEBUG_PORT Serial
+
+float calculate_power_from_speed(
+  int16_t speed_x1000, 
+  int16_t last_speed_x1000,
+  uint32_t gps_time_x1000,
+  uint32_t last_gps_time_x1000,
+  int16_t elevation);
+
+static int16_t last_speed_x1000 = 0;
+static uint32_t last_gps_time_x1000 = 0;
+static float calc_power_watts = 0.0;
 
 static const char BLUETOOTH_DEVICE_BROADCAST_NAME[] = "evora";
 static const uint32_t CAN_BITRATE = 5e5;
@@ -139,6 +150,7 @@ void write_gnss_messages(
 }
 
 void sparkfun_ubx_pvt_callback(UBX_NAV_PVT_data_t pvt) {
+  uint32_t speed_ms_x1000 = pvt.gSpeed; 
   uint32_t speed_ms_x100 = pvt.gSpeed / 10; 
   uint32_t accuracy_ms_x100 = pvt.sAcc/ 10;
   int32_t lat_xe7 = pvt.lat;
@@ -146,8 +158,18 @@ void sparkfun_ubx_pvt_callback(UBX_NAV_PVT_data_t pvt) {
   int32_t error_xe3 = pvt.hAcc;
   int32_t elevation_m_xe3 = pvt.hMSL;
   int32_t elevation_m_acc_xe3 = pvt.vAcc;
-  
-  // Serial.printf(" %d, %d\n", lat_xe7, long_xe7);
+  int32_t time_of_week = pvt.iTOW;
+
+//  calc_power_watts = calculate_power_from_speed(
+//    speed_ms_x1000,
+//    last_speed_x1000,
+//    time_of_week,
+//    last_gps_time_x1000,
+//    elevation_m_xe3);
+//  last_gps_time_x1000 = time_of_week;
+//  last_speed_x1000 = speed_ms_x1000;
+    
+  Serial.printf("%d:  %d, %d\n", time_of_week, lat_xe7, long_xe7);
   write_gnss_messages(
     speed_ms_x100, 
     accuracy_ms_x100, 
@@ -155,7 +177,9 @@ void sparkfun_ubx_pvt_callback(UBX_NAV_PVT_data_t pvt) {
     long_xe7, 
     error_xe3,
     elevation_m_xe3,
-    elevation_m_acc_xe3);
+    elevation_m_acc_xe3);    
+
+  
 }
 
 #ifdef USE_UART_NEOGPS
@@ -296,6 +320,7 @@ void check_shutdown_timer() {
   // TODO: this logic is untested
   // TODO: would also need to be wired up to control power on accessories in order to be effective
     if ((millis() - last_data_rx_millis) > SHUTDOWN_IDLE_TIME_MILLIS) {
+      Serial.printf("Powering off...\n"); 
 #ifdef  USE_SPARKFUN_UBX
       myGNSS.powerOff(0x0FFFFFFF, 0xEFFF);
 #endif
@@ -314,7 +339,7 @@ void loop() {
 #ifdef USE_ESP32_CAN
   can_message_t msg;
   if (can_receive(&msg, pdMS_TO_TICKS(1)) == ESP_OK) {
-    process_send_can_message_esp32(&SerialBT, &msg);
+    process_send_can_message_esp32(&SerialBT, &msg, calc_power_watts);
     last_data_rx_millis = millis();
   } else {
     check_shutdown_timer();

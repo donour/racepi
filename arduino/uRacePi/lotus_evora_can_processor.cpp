@@ -62,7 +62,7 @@ float surface_limit(const float lat_accel, float velocity) {
 }
 
 
-int16_t private_send(BluetoothSerial *port, common_can_message *frame) {
+int16_t private_send(BluetoothSerial *port, common_can_message *frame, float power_w) {
   if (port == NULL || frame == NULL) {
     return -1;
   }
@@ -117,9 +117,10 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame) {
         //float yaw1 = ((int16_t)(frame->data16[0]+(0x8000))) * 0.005 ; // deg/s^2
 
         float lat_accel = ((uint8_t)frame->data[4] - 128.0) / ACCEL_DIVISOR;
-        float long_accel = ((int8_t)frame->data[2]) / ACCEL_DIVISOR;
+        float long_accel = power_w * 0.0000134102 ; // hp * 10^-2
+        //float long_accel = ((int8_t)frame->data[2]) / ACCEL_DIVISOR;
         if ( ! get_xy_accel_message(&dl1_message, lat_accel, long_accel)) {
-          DEBUG.printf("%1.2f, %1.2f\n", lat_accel, long_accel);
+          //DEBUG.printf("%1.2f, %1.2f\n", lat_accel, long_accel);
           send_dl1_message(&dl1_message, port, true);
         }    
       }
@@ -139,14 +140,14 @@ int16_t process_send_can_message(BluetoothSerial *port, CANMessage *frame) {
   msg.idx = frame->idx;
   msg.len = frame->len;
   msg.data64 = frame->data64;
-  return private_send(port, &msg);
+  return private_send(port, &msg, 0.0);
 }
 
-int16_t process_send_can_message_esp32(BluetoothSerial *port, can_message_t *frame) {
+int16_t process_send_can_message_esp32(BluetoothSerial *port, can_message_t *frame, float power_w) {
   if (frame == 0) return -1;
   common_can_message msg;
   msg.id  = frame->identifier;
   msg.len = frame->data_length_code;
   memcpy(&msg.data, &frame->data, 8);
-  return private_send(port, &msg);
+  return private_send(port, &msg, power_w);
 }
