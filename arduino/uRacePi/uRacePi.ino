@@ -26,7 +26,6 @@
 #include "dl1.h"
 #include "BluetoothSerial.h"
 #include "tests.h"
-#include "icm20600.h"
 
 #ifdef USE_ESP32_CAN
 #include <driver/can.h>
@@ -94,15 +93,10 @@ static const byte UBX_SCL_PIN = 17;
 static const byte ESPCAN_RX_PIN = 22;
 static const byte ESPCAN_TX_PIN = 23;
 
-static const byte ICM_SDA_PIN = 15;
-static const byte ICM_SCL_PIN = 32;
-
 // used to indicate that we have timed out all data
 // and should shutdown
 volatile long last_data_rx_millis = millis();
 
-TwoWire icm_i2c = TwoWire(1);
-ICM20600 icm = ICM20600();
 BluetoothSerial SerialBT;
 
 #ifdef USE_ACAN_SPI
@@ -232,13 +226,6 @@ void setup() {
   digitalWrite(GNSS_LED, LOW);
   dl1_init();
 
-  icm_i2c.begin(ICM_SDA_PIN, ICM_SCL_PIN);
-  if (icm.init(&icm_i2c)) {
-    Serial.printf("(ICM20600) setup error!\n");
-  } {
-    Serial.printf("(ICM20600) setup success!\n");    
-  }
-
 #ifdef USE_ACAN_SPI
   SPI.begin(MCP2515_SCK, MCP2515_MISO, MCP2515_MOSI);
   int16_t mcp_rc = setup_mcp2515(&canbus, Serial); 
@@ -328,9 +315,8 @@ void check_shutdown_timer() {
     }  
 }
 
-
 void loop() {
- 
+  
 #ifdef  USE_SPARKFUN_UBX
   myGNSS.checkUblox();
   myGNSS.checkCallbacks();
