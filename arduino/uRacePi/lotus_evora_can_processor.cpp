@@ -126,7 +126,7 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
       }
       break;
     default: 
-      //DEBUG.printf(".", frame->id);
+      //DEBUG.printf("%x\n", frame->id);
       break; // ignore
   }
   
