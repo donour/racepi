@@ -149,6 +149,37 @@ void write_gnss_messages(
 
 }
 
+
+void sparkfun_gnss_process(
+   uint32_t speed_ms_x1000, 
+  uint32_t speed_ms_x100,
+  uint32_t accuracy_ms_x100,
+  int32_t lat_xe7,
+  int32_t long_xe7,
+  int32_t error_xe3,
+  int32_t elevation_m_xe3,
+  int32_t elevation_m_acc_xe3,
+  int32_t time_of_week) {
+
+  calc_power_watts = calculate_power_from_speed(
+    speed_ms_x1000,
+    last_speed_x1000,
+    time_of_week,
+    last_gps_time_x1000,
+    elevation_m_xe3);
+  last_gps_time_x1000 = time_of_week;
+  last_speed_x1000 = speed_ms_x1000;
+
+  write_gnss_messages(
+    speed_ms_x100, 
+    accuracy_ms_x100, 
+    lat_xe7, 
+    long_xe7, 
+    error_xe3,
+    elevation_m_xe3,
+    elevation_m_acc_xe3);    
+}
+
 void sparkfun_ubx_pvt_callback(UBX_NAV_PVT_data_t pvt) {
   uint32_t speed_ms_x1000 = pvt.gSpeed; 
   uint32_t speed_ms_x100 = pvt.gSpeed / 10; 
@@ -160,16 +191,6 @@ void sparkfun_ubx_pvt_callback(UBX_NAV_PVT_data_t pvt) {
   int32_t elevation_m_acc_xe3 = pvt.vAcc;
   int32_t time_of_week = pvt.iTOW;
 
-//  calc_power_watts = calculate_power_from_speed(
-//    speed_ms_x1000,
-//    last_speed_x1000,
-//    time_of_week,
-//    last_gps_time_x1000,
-//    elevation_m_xe3);
-//  last_gps_time_x1000 = time_of_week;
-//  last_speed_x1000 = speed_ms_x1000;
-    
-  Serial.printf("%d:  %d, %d\n", time_of_week, lat_xe7, long_xe7);
   write_gnss_messages(
     speed_ms_x100, 
     accuracy_ms_x100, 
@@ -178,8 +199,6 @@ void sparkfun_ubx_pvt_callback(UBX_NAV_PVT_data_t pvt) {
     error_xe3,
     elevation_m_xe3,
     elevation_m_acc_xe3);    
-
-  
 }
 
 #ifdef USE_UART_NEOGPS
@@ -280,11 +299,12 @@ void setup() {
     // link. RTCM is not that expensive, but NMEA is verbose.
     myGNSS.setI2COutput(COM_TYPE_UBX);
     
+    myGNSS.setNavigationFrequency(SPARKFUN_UBX_REFRESH_RATE_HZ); 
+    myGNSS.setAutoPVT(true);
     // This will optionally persist the settings to NVM on the 
     // GNSS device. 
-    myGNSS.saveConfigSelective(VAL_CFG_SUBSEC_IOPORT);
-    myGNSS.setNavigationFrequency(SPARKFUN_UBX_REFRESH_RATE_HZ); 
-    myGNSS.setAutoPVTcallback(&sparkfun_ubx_pvt_callback);
+    //myGNSS.saveConfigSelective(VAL_CFG_SUBSEC_IOPORT);
+    //myGNSS.setAutoPVTcallback(&sparkfun_ubx_pvt_callback);
     Serial.printf("(GNSS) setup success!\n");
   } else {
     Serial.printf("(GNSS) setup error!\n");    
@@ -315,7 +335,6 @@ void setup() {
   
 }
 
-
 void check_shutdown_timer() {
   // TODO: this logic is untested
   // TODO: would also need to be wired up to control power on accessories in order to be effective
@@ -332,8 +351,33 @@ void check_shutdown_timer() {
 void loop() {
  
 #ifdef  USE_SPARKFUN_UBX
-  myGNSS.checkUblox();
-  myGNSS.checkCallbacks();
+//  myGNSS.checkUblox();
+//  myGNSS.checkCallbacks();
+  if (myGNSS.getPVT() && (myGNSS.getInvalidLlh() == false))
+  {
+    uint32_t speed_ms_x1000 = myGNSS.getGroundSpeed();
+    uint32_t speed_ms_x100 = myGNSS.getGroundSpeed()/10;
+    uint32_t accuracy_ms_x100 = myGNSS.getHorizontalAccEst()/10.0;
+    int32_t lat_xe7 = myGNSS.getLatitude();
+    int32_t long_xe7 = myGNSS.getLongitude();
+    int32_t error_xe3 = myGNSS.getHorizontalAccEst();
+    int32_t elevation_m_xe3 = myGNSS.getAltitudeMSL();
+    int32_t elevation_m_acc_xe3 = myGNSS.getVerticalAccEst();
+    int32_t time_of_week = myGNSS.getTimeOfWeek();
+
+    Serial.printf("%d:  %d, %d\n", time_of_week, lat_xe7, long_xe7);
+        
+    sparkfun_gnss_process(
+      speed_ms_x1000, 
+      speed_ms_x100,
+      accuracy_ms_x100,
+      lat_xe7,
+      long_xe7,
+      error_xe3,
+      elevation_m_xe3,
+      elevation_m_acc_xe3,
+      time_of_week);
+  }
 #endif  
 
 #ifdef USE_ESP32_CAN
