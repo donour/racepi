@@ -349,23 +349,23 @@ void check_shutdown_timer() {
 
 
 void loop() {
- 
+
 #ifdef  USE_SPARKFUN_UBX
 //  myGNSS.checkUblox();
 //  myGNSS.checkCallbacks();
   if (myGNSS.getPVT() && (myGNSS.getInvalidLlh() == false))
   {
     uint32_t speed_ms_x1000 = myGNSS.getGroundSpeed();
-    uint32_t speed_ms_x100 = myGNSS.getGroundSpeed()/10;
-    uint32_t accuracy_ms_x100 = myGNSS.getHorizontalAccEst()/10.0;
+    uint32_t speed_ms_x100 = speed_ms_x1000/10;
+    int32_t error_xe3 = myGNSS.getHorizontalAccEst();
+    uint32_t accuracy_ms_x100 = error_xe3/10.0;
     int32_t lat_xe7 = myGNSS.getLatitude();
     int32_t long_xe7 = myGNSS.getLongitude();
-    int32_t error_xe3 = myGNSS.getHorizontalAccEst();
     int32_t elevation_m_xe3 = myGNSS.getAltitudeMSL();
     int32_t elevation_m_acc_xe3 = myGNSS.getVerticalAccEst();
     int32_t time_of_week = myGNSS.getTimeOfWeek();
 
-    Serial.printf("%d:  %d, %d\n", time_of_week, lat_xe7, long_xe7);
+    //Serial.printf("%d:  %d, %d\n", time_of_week, lat_xe7, long_xe7);
         
     sparkfun_gnss_process(
       speed_ms_x1000, 
