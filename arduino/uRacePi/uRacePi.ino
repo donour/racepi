@@ -305,6 +305,13 @@ void setup() {
     // GNSS device. 
     //myGNSS.saveConfigSelective(VAL_CFG_SUBSEC_IOPORT);
     //myGNSS.setAutoPVTcallback(&sparkfun_ubx_pvt_callback);
+    xTaskCreate(
+      sparkfun_ubx_task,
+      "GNSSTask",
+      2048,
+      NULL,
+      2,            
+      NULL);
     Serial.printf("(GNSS) setup success!\n");
   } else {
     Serial.printf("(GNSS) setup error!\n");    
@@ -347,46 +354,51 @@ void check_shutdown_timer() {
     }  
 }
 
-
-void loop() {
-
 #ifdef  USE_SPARKFUN_UBX
-//  myGNSS.checkUblox();
-//  myGNSS.checkCallbacks();
-  if (myGNSS.getPVT() && (myGNSS.getInvalidLlh() == false))
-  {
-    uint32_t speed_ms_x1000 = myGNSS.getGroundSpeed();
-    uint32_t speed_ms_x100 = speed_ms_x1000/10;
-    int32_t error_xe3 = myGNSS.getHorizontalAccEst();
-    uint32_t accuracy_ms_x100 = error_xe3/10.0;
-    int32_t lat_xe7 = myGNSS.getLatitude();
-    int32_t long_xe7 = myGNSS.getLongitude();
-    int32_t elevation_m_xe3 = myGNSS.getAltitudeMSL();
-    int32_t elevation_m_acc_xe3 = myGNSS.getVerticalAccEst();
-    int32_t time_of_week = myGNSS.getTimeOfWeek();
-
-    //Serial.printf("%d:  %d, %d\n", time_of_week, lat_xe7, long_xe7);
-        
-    sparkfun_gnss_process(
-      speed_ms_x1000, 
-      speed_ms_x100,
-      accuracy_ms_x100,
-      lat_xe7,
-      long_xe7,
-      error_xe3,
-      elevation_m_xe3,
-      elevation_m_acc_xe3,
-      time_of_week);
+void sparkfun_ubx_task(void *arg) {
+  while (true) {
+    if (myGNSS.getPVT() && (myGNSS.getInvalidLlh() == false))
+    {
+      uint32_t speed_ms_x1000 = myGNSS.getGroundSpeed();
+      uint32_t speed_ms_x100 = speed_ms_x1000/10;
+      int32_t error_xe3 = myGNSS.getHorizontalAccEst();
+      uint32_t accuracy_ms_x100 = error_xe3/10.0;
+      int32_t lat_xe7 = myGNSS.getLatitude();
+      int32_t long_xe7 = myGNSS.getLongitude();
+      int32_t elevation_m_xe3 = myGNSS.getAltitudeMSL();
+      int32_t elevation_m_acc_xe3 = myGNSS.getVerticalAccEst();
+      int32_t time_of_week = myGNSS.getTimeOfWeek();
+  
+      //Serial.printf("%d:  %d, %d\n", time_of_week, lat_xe7, long_xe7);
+          
+      sparkfun_gnss_process(
+        speed_ms_x1000, 
+        speed_ms_x100,
+        accuracy_ms_x100,
+        lat_xe7,
+        long_xe7,
+        error_xe3,
+        elevation_m_xe3,
+        elevation_m_acc_xe3,
+        time_of_week);
+    } else {
+      delay(1);
+    }
+    
   }
+}
 #endif  
 
+void loop() {
 #ifdef USE_ESP32_CAN
   can_message_t msg;
   if (can_receive(&msg, pdMS_TO_TICKS(1)) == ESP_OK) {
     process_send_can_message_esp32(&SerialBT, &msg, calc_power_watts);
+    //Serial.printf("Canmesg: %d(hz)\n", 1000/((millis()+1) - last_data_rx_millis));
     last_data_rx_millis = millis();
   } else {
     check_shutdown_timer();
+    delay(1);
   }
 #endif
 
