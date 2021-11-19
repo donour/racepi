@@ -25,6 +25,8 @@
 
 #define ACCEL_DIVISOR (38.0)
 
+#define ENABLE_LOTUS_EVORA
+#define ENABLE_BRZ_FRS
 
 class common_can_message {
   public : uint32_t id = 0;  
@@ -69,7 +71,7 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
   dl1_message_t dl1_message;
 
   switch(frame->id) { 
-
+#ifdef ENABLE_LOTUS_EVORA
     case 0x085: 
       // steering angle
       if (frame->len >=4) {
@@ -80,7 +82,7 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
         if ( ! get_steering_angle_message(&dl1_message, val)){
           send_dl1_message(&dl1_message, port, true);
          }  
-        latest_steering_angle;
+        latest_steering_angle = val;
       }
       break;
     case 0x114:
@@ -125,6 +127,34 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
         }    
       }
       break;
+#endif // ENABLE_LOTUS_EVORA
+
+#ifdef ENABLE_BRZ_FRS
+    case 0xD0:
+      // Steering able
+      if (frame->len >= 4) {
+        // TODO: Why am I doing these shifts??
+        int16_t val = ((int16_t)frame->data16[0]) << 1;
+        val >>= 1;
+        val /= 10;
+        if ( ! get_steering_angle_message(&dl1_message, val)){
+          send_dl1_message(&dl1_message, port, true);
+         }          
+      }
+      break;
+    case 0x140:
+      if (frame->len >=8) {
+        uint16_t tps = (uint8_t)frame->data[0] * 100 / 255;
+        if ( ! get_tps_message(&dl1_message, tps)) {
+          send_dl1_message(&dl1_message, port, true);
+        }
+        uint16_t rpm = frame->data16[2] / 4;
+        if ( ! get_rpm_message(&dl1_message, rpm)) {
+          send_dl1_message(&dl1_message, port, false);
+        }
+      }
+      break;      
+#endif //ENABLE_BRZ_FRS
     default: 
       //DEBUG.printf("%x\n", frame->id);
       break; // ignore
