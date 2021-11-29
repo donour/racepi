@@ -22,6 +22,8 @@
 #define USE_ESP32_CAN
 //#define USE_ACAN_SPI
 
+//#define USE_ICM20600
+
 #include <string.h>
 #include "dl1.h"
 #include "BluetoothSerial.h"
@@ -80,7 +82,7 @@ static int16_t last_speed_x1000 = 0;
 static uint32_t last_gps_time_x1000 = 0;
 static float calc_power_watts = 0.0;
 
-static const char BLUETOOTH_DEVICE_BROADCAST_NAME[] = "evora";
+static const char BLUETOOTH_DEVICE_BROADCAST_NAME[] = "brz";
 static const uint32_t CAN_BITRATE = 5e5;
 
 static const byte MCP2515_SCK  = 22;
@@ -251,12 +253,14 @@ void setup() {
   digitalWrite(GNSS_LED, LOW);
   dl1_init();
 
+#ifdef USE_ICM20600
   icm_i2c.begin(ICM_SDA_PIN, ICM_SCL_PIN);
   if (icm.init(&icm_i2c)) {
     Serial.printf("(ICM20600) setup error!\n");
   } {
     Serial.printf("(ICM20600) setup success!\n");    
   }
+#endif //USE_ICM20600
 
 #ifdef USE_ACAN_SPI
   SPI.begin(MCP2515_SCK, MCP2515_MISO, MCP2515_MOSI);
@@ -398,7 +402,9 @@ void loop() {
     last_data_rx_millis = millis();
   } else {
     check_shutdown_timer();
-    delay(1);
+    test_dl1_sends(&SerialBT);
+    Serial.printf("test sent\n");
+    delay(100);
   }
 #endif
 
@@ -412,7 +418,7 @@ void loop() {
     last_data_rx_millis = millis();
   } else {
     // Uncomment to generat test data
-    //test_sends(&SerialBT);
+    //test_dl1_sends(&SerialBT);
     check_shutdown_timer();
     delay(1);
   }

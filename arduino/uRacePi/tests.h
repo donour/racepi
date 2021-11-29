@@ -19,6 +19,6 @@
 #ifndef __RACEPI_TESTS_
 #define __RACEPI_TESTS_
 
-void test_sends(BluetoothSerial *port);
+void test_dl1_sends(BluetoothSerial *port);
 
 #endif //__RACEPI_TESTS_

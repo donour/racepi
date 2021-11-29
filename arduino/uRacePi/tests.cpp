@@ -19,8 +19,23 @@
 #include "dl1.h"
 #include "tests.h"
 
-void test_sends(BluetoothSerial *port) { 
+void test_dl1_sends(BluetoothSerial *port) { 
+  char buf[2048];
   dl1_message_t dl1_message;
+
+//  sprintf(buf, "{\"Speed\": %d}", (millis()/10) % 200);
+//  port->write((const uint8_t*)buf, strlen(buf));
+//  sprintf(buf, "{\"Latitude\": 41000000}");
+//  port->write((const uint8_t*)buf, strlen(buf));
+//  sprintf(buf, "{\"Longitude\": 3400000}");
+//  port->write((const uint8_t*)buf, strlen(buf));
+//
+//  //sprintf(buf, "{\"s\": {\"t\":%d, \"Speed\": %d, \"Latitude\": 41000000, \"Longitude\": 3400000}}", millis(),(millis()/10) % 200 );
+//  sprintf(buf, "{\"meta\":[{\"nm\":\"Speed\",\"ut\":\"mps\",\"sr\":1},{\"nm\":\"Latitude\",\"ut\":\"Deg\",\"sr\":1},{\"nm\":\"Longitude\",\"ut\":\"Deg\",\"sr\":1}]}\r\n");
+//  port->write((const uint8_t*)buf, strlen(buf));
+//
+//  sprintf(buf, "{\"s\":{\"t\":%d,\"d\":[1.1,41.123,36.123]}}\r\n", millis());
+//  port->write((const uint8_t*)buf, strlen(buf));
 
 
   if ( ! get_speed_message(&dl1_message, (millis()/10) % 200, 10)) {
@@ -39,10 +54,10 @@ void test_sends(BluetoothSerial *port) {
     send_dl1_message(&dl1_message, port, false);
   }
 
-  uint16_t brake_pressure_x10 = millis() % 10000;//1<< (((millis()/10)/15) % 16);
-  if ( ! get_brake_pressure_message(&dl1_message, brake_pressure_x10)) {
-    send_dl1_message(&dl1_message, port, false);
-  }
+//  uint16_t brake_pressure_x10 = millis() % 10000;//1<< (((millis()/10)/15) % 16);
+//  if ( ! get_brake_pressure_message(&dl1_message, brake_pressure_x10)) {
+//    send_dl1_message(&dl1_message, port, false);
+//  }
 
   if ( ! get_rpm_message(&dl1_message,  sin(millis()/3000.0)*4500 + 4500)) {
     send_dl1_message(&dl1_message, port, false);
@@ -54,5 +69,5 @@ void test_sends(BluetoothSerial *port) {
 
   if ( ! get_xy_accel_message(&dl1_message, sin(millis()/3000.0)/1.1, cos(millis()/3000.0)/1.1)) {
     send_dl1_message(&dl1_message, port, false);
-  }    
+  } 
 }
