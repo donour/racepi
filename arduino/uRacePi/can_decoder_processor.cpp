@@ -142,18 +142,20 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
          }          
       }
       break;
+    case 0xD1:
+      if (frame->len >=3) {
+        uint8_t brake_pressure = (uint8_t)frame->data[2];
+        //DEBUG.printf("BrakePressure: %x\n", brake_pressure);
+      }
+      break;
     case 0x140:
       if (frame->len >=8) {
         uint16_t tps = (uint8_t)frame->data[0] * 100 / 255;
         if ( ! get_tps_message(&dl1_message, tps)) {
           send_dl1_message(&dl1_message, port, true);
         }
-        uint16_t rpm = frame->data16[2] / 4;
-        if ( ! get_rpm_message(&dl1_message, rpm)) {
-          send_dl1_message(&dl1_message, port, false);
-        }
       }
-      break;      
+      break;            
 #endif //ENABLE_BRZ_FRS
     default: 
       //DEBUG.printf("%x\n", frame->id);
