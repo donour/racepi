@@ -18,6 +18,7 @@
 
 #define USE_SPARKFUN_UBX
 //#define USE_UART_NEOGPS
+//#define USE_ICM20600
 
 #define USE_ESP32_CAN
 //#define USE_ACAN_SPI
@@ -246,17 +247,21 @@ void setup() {
   SerialBT.register_callback(bt_callback);
   SerialBT.begin(BLUETOOTH_DEVICE_BROADCAST_NAME); 
   Serial.write(0); Serial.flush();
+  Serial.print("***uRacePi***\n");
+
   SerialBT.write(0); SerialBT.flush();
   pinMode(GNSS_LED, OUTPUT);
   digitalWrite(GNSS_LED, LOW);
   dl1_init();
 
+#ifdef USE_ICM20600
   icm_i2c.begin(ICM_SDA_PIN, ICM_SCL_PIN);
   if (icm.init(&icm_i2c)) {
     Serial.printf("(ICM20600) setup error!\n");
   } {
     Serial.printf("(ICM20600) setup success!\n");    
   }
+#endif //USE_ICM20600
 
 #ifdef USE_ACAN_SPI
   SPI.begin(MCP2515_SCK, MCP2515_MISO, MCP2515_MOSI);
