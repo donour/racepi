@@ -403,7 +403,7 @@ void loop() {
     last_data_rx_millis = millis();
   } else {
     check_shutdown_timer();
-    delay(1);
+    delay(20);
   }
 #endif
 
