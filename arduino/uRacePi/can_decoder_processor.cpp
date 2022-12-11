@@ -1,5 +1,5 @@
 /**************************************************************************
-    Copyright 2020 Donour Sizemore
+    Copyright 2020-2022 Donour Sizemore
 
     This file is part of RacePi
 
@@ -42,6 +42,7 @@ class common_can_message {
 };
 
 uint64_t latest_time = 0;
+float latest_yaw_deg = 0.0;
 
 // used for calculating oversteer
 #define STEER_RATIO (1.0/15.0)
@@ -120,7 +121,10 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
 
         float lat_accel = (((int16_t)frame->data16[2] )& 0xFFFFFF00) / ACCEL_DIVISOR;
         float long_accel = power_w * 0.0000134102 ; // hp * 10^-2
-        float yaw = (((int16_t)frame->data16[3] )& 0x00FFFFFF);
+
+        float yaw = (((int16_t)frame->data16[3] )& 0x00FFFFFF) - 2048.0;
+        latest_yaw_deg = yaw;
+        
         //float long_accel = ((int8_t)frame->data[2]) / ACCEL_DIVISOR;
         if ( ! get_xy_accel_message(&dl1_message, lat_accel, long_accel)) {
           //DEBUG.printf("%1.2f, %1.2f\n", lat_accel, long_accel);
@@ -159,7 +163,6 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
       break;            
 #endif //ENABLE_BRZ_FRS
     default: 
-      //DEBUG.printf("%x\n", frame->id);
       break; // ignore
   }
   
