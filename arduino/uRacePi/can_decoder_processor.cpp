@@ -23,7 +23,7 @@
 
 #define DEBUG Serial
 
-#define ACCEL_DIVISOR (38.0)
+#define ACCEL_DIVISOR (8000.0)
 
 #define ENABLE_LOTUS_EVORA
 #define ENABLE_BRZ_FRS
@@ -118,8 +118,9 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
         //float long_accel = 0;
         //float yaw1 = ((int16_t)(frame->data16[0]+(0x8000))) * 0.005 ; // deg/s^2
 
-        float lat_accel = ((uint8_t)frame->data[4] - 128.0) / ACCEL_DIVISOR;
+        float lat_accel = (((int16_t)frame->data16[2] )& 0xFFFFFF00) / ACCEL_DIVISOR;
         float long_accel = power_w * 0.0000134102 ; // hp * 10^-2
+        float yaw = (((int16_t)frame->data16[3] )& 0x00FFFFFF);
         //float long_accel = ((int8_t)frame->data[2]) / ACCEL_DIVISOR;
         if ( ! get_xy_accel_message(&dl1_message, lat_accel, long_accel)) {
           //DEBUG.printf("%1.2f, %1.2f\n", lat_accel, long_accel);
