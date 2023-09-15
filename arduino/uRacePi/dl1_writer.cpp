@@ -18,19 +18,23 @@
 
 #include <string.h>
 #include "dl1.h"
+#include <pthread.h>
 
 #define FAIL_ON_NULL(v) ({if(v == NULL) return -1;})
 
-static SemaphoreHandle_t message_write_lock;
+static pthread_mutex_t message_write_mutex;
 
-
-unsigned char checksum(unsigned char *data, uint32_t length) {
-  unsigned char cs = 0;
-  for (int i = 0; i < length; i++) {
-    cs += data[i];
-  }
-  return cs & 0xFF;
+int16_t dl1_init() {
+  return pthread_mutex_init(&message_write_mutex, NULL);
 }
+
+// unsigned char checksum(unsigned char *data, uint32_t length) {
+//   unsigned char cs = 0;
+//   for (int i = 0; i < length; i++) {
+//     cs += data[i];
+//   }
+//   return cs & 0xFF;
+// }
 
 void set_checksum(dl1_message_t *message) {
   if(message != NULL) {
@@ -39,10 +43,6 @@ void set_checksum(dl1_message_t *message) {
       message->checksum += message->data[i];    
     }
   }
-}
-
-int16_t dl1_init() {
-  message_write_lock = xSemaphoreCreateMutex();
 }
 
 uint16_t write_message_to_port(dl1_message_t *message, BluetoothSerial *port) {
@@ -59,16 +59,15 @@ int16_t send_dl1_message(dl1_message_t *message, BluetoothSerial *port, const bo
   FAIL_ON_NULL(message);
   uint16_t rc = 0;
 
-  if (xSemaphoreTake(message_write_lock, portMAX_DELAY) == 0) {
-    return -1;
-  }
-  if (write_timestamp) {
-    if ( ! get_timestamp_message(&timestamp_message, millis())) {
-      rc += write_message_to_port(&timestamp_message, port);
+  if(pthread_mutex_lock(&message_write_mutex) == 0){
+    if (write_timestamp) {
+      if ( ! get_timestamp_message(&timestamp_message, millis())) {
+        rc += write_message_to_port(&timestamp_message, port);
+      }
     }
+    rc += write_message_to_port(message, port);
+    pthread_mutex_unlock(&message_write_mutex);
   }
-  rc += write_message_to_port(message, port);
-  xSemaphoreGive(message_write_lock);
   return rc;
   
 }

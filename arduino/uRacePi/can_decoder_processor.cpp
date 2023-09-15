@@ -1,5 +1,5 @@
 /**************************************************************************
-    Copyright 2020-2022 Donour Sizemore
+    Copyright 2020-2023 Donour Sizemore
 
     This file is part of RacePi
 
@@ -79,18 +79,16 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
         int16_t val = ((int16_t)frame->data16[0]) << 1;
         val >>= 1;
         val /= 10;
-        //DEBUG.printf("steer = %d\n", val);
         if ( ! get_steering_angle_message(&dl1_message, val)){
           send_dl1_message(&dl1_message, port, true);
          }  
-        latest_steering_angle = val;
       }
       break;
     case 0x114:
       if (frame->len >= 6){
 
         // bit 40 is brake pedal switch, no pressure reading is provided.
-        bool brake_active = ((frame->data[5] & 0x1) == 0)
+        bool brake_active = ((frame->data[5] & 0x1) == 0);
         /* brake pressure message is broken in solostorm client; this message is disabled
         uint16_t brake_pressure_x10 = (frame->data[5] & 0x1) == 0 ? 0 : MAX_BRAKE_PRESSURE_BAR*10;
         if ( ! get_brake_pressure_message(&dl1_message, brake_pressure_x10)) {
@@ -99,8 +97,11 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
 
         // TPS
         uint16_t tps = (uint8_t)frame->data[3] * 100 / 255;
+        // overload TPS with brake sensor, zero is offset 50
         if (brake_active) {
-          tps = -100; // overload TPS with brake sensor 
+          tps = 0;
+        } else{
+          tps = tps/2 + 50
         }
         if ( ! get_tps_message(&dl1_message, tps)) {
           send_dl1_message(&dl1_message, port, true);
@@ -154,7 +155,6 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
     case 0xD1:
       if (frame->len >=3) {
         uint8_t brake_pressure = (uint8_t)frame->data[2];
-        //DEBUG.printf("BrakePressure: %x\n", brake_pressure);
       }
       break;
     case 0x140:

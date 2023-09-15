@@ -1,5 +1,5 @@
 /**************************************************************************
-    Copyright 2020, 2021 Donour Sizemore
+    Copyright 2020-2023 Donour Sizemore
 
     This file is part of RacePi
 
@@ -181,6 +181,7 @@ void sparkfun_gnss_process(
     elevation_m_acc_xe3);    
 }
 
+#ifdef USE_SPARKFUN_UBX
 void sparkfun_ubx_pvt_callback(UBX_NAV_PVT_data_t pvt) {
   uint32_t speed_ms_x1000 = pvt.gSpeed; 
   uint32_t speed_ms_x100 = pvt.gSpeed / 10; 
@@ -201,6 +202,7 @@ void sparkfun_ubx_pvt_callback(UBX_NAV_PVT_data_t pvt) {
     elevation_m_xe3,
     elevation_m_acc_xe3);    
 }
+#endif //USE_SPARKFUN_UBX
 
 #ifdef USE_UART_NEOGPS
 // check for any received GPS data and send to clients it exists
@@ -241,18 +243,24 @@ void bt_callback(esp_spp_cb_event_t event, esp_spp_cb_param_t *param){
     ESP.restart();
   }
 }
-    
+
 void setup() {    
   Serial.begin(SERIAL_CONSOLE_BAUDRATE);
-  SerialBT.register_callback(bt_callback);
-  SerialBT.begin(BLUETOOTH_DEVICE_BROADCAST_NAME); 
   Serial.write(0); Serial.flush();
   Serial.print("***uRacePi***\n");
-
+  
+  SerialBT.register_callback(bt_callback);
+  SerialBT.begin(BLUETOOTH_DEVICE_BROADCAST_NAME); 
   SerialBT.write(0); SerialBT.flush();
+  Serial.print("Bluetooth setup success!");
+  
   pinMode(GNSS_LED, OUTPUT);
   digitalWrite(GNSS_LED, LOW);
-  dl1_init();
+  if (dl1_init() !=0) {
+    Serial.printf("(DL1 writer setup error!\n");
+  } else {
+    Serial.printf("DL1 writer setup success!\n");
+  }
 
 #ifdef USE_ICM20600
   icm_i2c.begin(ICM_SDA_PIN, ICM_SCL_PIN);
