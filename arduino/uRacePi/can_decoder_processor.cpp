@@ -26,7 +26,7 @@
 #define ACCEL_DIVISOR (8000.0)
 
 #define ENABLE_LOTUS_EVORA
-#define ENABLE_BRZ_FRS
+// #define ENABLE_BRZ_FRS
 
 class common_can_message {
   public : uint32_t id = 0;  
@@ -45,24 +45,24 @@ uint64_t latest_time = 0;
 float latest_yaw_deg = 0.0;
 
 // used for calculating oversteer
-#define STEER_RATIO (1.0/15.0)
-float latest_steering_angle = 0;
-float ackermann_yaw(const float steering_angle, const float wheelbase, const float velocity) {
+// #define STEER_RATIO (1.0/15.0)
+// float latest_steering_angle = 0;
+// float ackermann_yaw(const float steering_angle, const float wheelbase, const float velocity) {
 
-  // TODO finish
-  const float wheel_angle = steering_angle * STEER_RATIO;
-  return velocity*tan(wheel_angle) / wheelbase;
-}
+//   // TODO finish
+//   const float wheel_angle = steering_angle * STEER_RATIO;
+//   return velocity*tan(wheel_angle) / wheelbase;
+// }
 
-float yaw_intended(const float steering_angle, const float wheelbase, const float velocity) {
-  // TODO finish
-  const float wheel_angle = steering_angle * STEER_RATIO;
-  return velocity * wheel_angle / (2 * wheelbase);  
-}
+// float yaw_intended(const float steering_angle, const float wheelbase, const float velocity) {
+//   // TODO finish
+//   const float wheel_angle = steering_angle * STEER_RATIO;
+//   return velocity * wheel_angle / (2 * wheelbase);  
+// }
 
-float surface_limit(const float lat_accel, float velocity) {
-  return lat_accel / velocity;
-}
+// float surface_limit(const float lat_accel, float velocity) {
+//   return lat_accel / velocity;
+// }
 
 
 int16_t private_send(BluetoothSerial *port, common_can_message *frame, float power_w) {
@@ -88,8 +88,20 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
       break;
     case 0x114:
       if (frame->len >= 6){
+
+        // bit 40 is brake pedal switch, no pressure reading is provided.
+        bool brake_active = ((frame->data[5] & 0x1) == 0)
+        /* brake pressure message is broken in solostorm client; this message is disabled
+        uint16_t brake_pressure_x10 = (frame->data[5] & 0x1) == 0 ? 0 : MAX_BRAKE_PRESSURE_BAR*10;
+        if ( ! get_brake_pressure_message(&dl1_message, brake_pressure_x10)) {
+          send_dl1_message(&dl1_message, port, false);
+        }*/
+
         // TPS
         uint16_t tps = (uint8_t)frame->data[3] * 100 / 255;
+        if (brake_active) {
+          tps = -100; // overload TPS with brake sensor 
+        }
         if ( ! get_tps_message(&dl1_message, tps)) {
           send_dl1_message(&dl1_message, port, true);
         }
@@ -100,14 +112,6 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
           send_dl1_message(&dl1_message, port, false);
         }
 
-        // bit 40 is brake pedal switch, no pressure reading is provided.
-        /*
-        // FIXME: this is disabled until client code is fixed
-        uint16_t brake_pressure_x10 = (frame->data[5] & 0x1) == 0 ? 0 : MAX_BRAKE_PRESSURE_BAR*10;
-        if ( ! get_brake_pressure_message(&dl1_message, brake_pressure_x10)) {
-          //DEBUG.printf("brake: %d\n", brake_pressure_x10);
-          send_dl1_message(&dl1_message, port, false);
-        }*/
       }
       break;
 
