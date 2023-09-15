@@ -101,7 +101,7 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
         if (brake_active) {
           tps = 0;
         } else{
-          tps = tps/2 + 50
+          tps = tps/2 + 50;
         }
         if ( ! get_tps_message(&dl1_message, tps)) {
           send_dl1_message(&dl1_message, port, true);
