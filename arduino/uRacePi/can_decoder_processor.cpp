@@ -23,7 +23,8 @@
 
 #define DEBUG Serial
 
-#define ACCEL_DIVISOR (8000.0)
+//#define ACCEL_DIVISOR (8000.0)
+#define ACCEL_DIVISOR (38)
 
 #define ENABLE_LOTUS_EVORA
 // #define ENABLE_BRZ_FRS
@@ -88,7 +89,7 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
       if (frame->len >= 6){
 
         // bit 40 is brake pedal switch, no pressure reading is provided.
-        bool brake_active = ((frame->data[5] & 0x1) == 0);
+        bool brake_active = ((frame->data[5] & 0x1) != 0);
         /* brake pressure message is broken in solostorm client; this message is disabled
         uint16_t brake_pressure_x10 = (frame->data[5] & 0x1) == 0 ? 0 : MAX_BRAKE_PRESSURE_BAR*10;
         if ( ! get_brake_pressure_message(&dl1_message, brake_pressure_x10)) {
@@ -97,11 +98,10 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
 
         // TPS
         uint16_t tps = (uint8_t)frame->data[3] * 100 / 255;
-        // overload TPS with brake sensor, zero is offset 50
-        if (brake_active) {
-          tps = 0;
-        } else{
-          tps = tps/2 + 50;
+        // overload TPS with brake sensor, 0-50 is brake overlap, 50-100 is Throttle only
+        tps /= 2;
+        if (! brake_active) {
+          tps += 50;
         }
         if ( ! get_tps_message(&dl1_message, tps)) {
           send_dl1_message(&dl1_message, port, true);
@@ -123,16 +123,16 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
         //float lat_accel = (int16_t)((frame->data16[2]+(0x8000))) * 0.0001274; // g
         //float long_accel = 0;
         //float yaw1 = ((int16_t)(frame->data16[0]+(0x8000))) * 0.005 ; // deg/s^2
+        // float lat_accel = (((int16_t)frame->data16[2] )& 0xFFFFFF00) / ACCEL_DIVISOR;
+        // float long_accel = power_w * 0.0000134102 ; // hp * 10^-2
+        // float yaw = (((int16_t)frame->data16[3] )& 0x00FFFFFF) - 2048.0;
+        // latest_yaw_deg = yaw;
 
-        float lat_accel = (((int16_t)frame->data16[2] )& 0xFFFFFF00) / ACCEL_DIVISOR;
-        float long_accel = power_w * 0.0000134102 ; // hp * 10^-2
-
-        float yaw = (((int16_t)frame->data16[3] )& 0x00FFFFFF) - 2048.0;
-        latest_yaw_deg = yaw;
-        
+        float lat_accel = ((uint8_t)frame->data[4] - 128.0) / ACCEL_DIVISOR;
         //float long_accel = ((int8_t)frame->data[2]) / ACCEL_DIVISOR;
+        float long_accel = 0.0;        
+
         if ( ! get_xy_accel_message(&dl1_message, lat_accel, long_accel)) {
-          //DEBUG.printf("%1.2f, %1.2f\n", lat_accel, long_accel);
           send_dl1_message(&dl1_message, port, true);
         }    
       }
