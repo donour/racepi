@@ -171,6 +171,7 @@ void sparkfun_gnss_process(
   last_gps_time_x1000 = time_of_week;
   last_speed_x1000 = speed_ms_x1000;
 
+  // TODO write messages to CAN bus in MOTEC format
   write_gnss_messages(
     speed_ms_x100, 
     accuracy_ms_x100, 
@@ -383,7 +384,8 @@ void sparkfun_ubx_task(void *arg) {
       int32_t time_of_week = myGNSS.getTimeOfWeek();
   
       //Serial.printf("%d:  %d, %d\n", time_of_week, lat_xe7, long_xe7);
-          
+
+     
       sparkfun_gnss_process(
         speed_ms_x1000, 
         speed_ms_x100,
