@@ -131,8 +131,10 @@ void write_gnss_messages(
   int32_t long_xe7, 
   int32_t error_xe3,
   int32_t elevation_m_xe3,
-  int32_t elevation_m_acc_xe3) {
+  int32_t elevation_m_acc_xe3,
+  unint32_t time_HHMMSSsss) {
     dl1_message_t dl1_message;
+    can_message_t message;
 
     if ( ! get_speed_message(&dl1_message, speed_ms_x100, accuracy_ms_x100)) {
       send_dl1_message(&dl1_message, &SerialBT, true);
@@ -148,7 +150,25 @@ void write_gnss_messages(
       last_data_rx_millis = millis();
     }
 
+#ifdef USE_ESP32_CAN
+    uint32_t MOTEC_GNSS_CAN_BASE_ID = 0x680
+    uint16_t gps_speed_kmh_x01 = speed_ms_x100 / 100 * 3.6;
+
+    message.identifier = MOTEC_GNSS_CAN_BASE_ID;
+    message.data32[0] = lat_xe7;
+    message.data32[1] = long_xe7;
+    message.len = 8
+    can_transmit(&message, pdMS_TO_TICKS(50));
+
+    message.identifier = MOTEC_GNSS_CAN_BASE_ID+1;
+    message.data32[0] = time_HHMMSSsss;
+    message.data16[2] = gps_speed_kmh_x01;
+    message.data16[3] = elevation_m_xe3 / 100;
+    message.len = 8
+    can_transmit(&message, pdMS_TO_TICKS(50));
+#endif
 }
+
 
 
 void sparkfun_gnss_process(
@@ -178,7 +198,8 @@ void sparkfun_gnss_process(
     long_xe7, 
     error_xe3,
     elevation_m_xe3,
-    elevation_m_acc_xe3);    
+    elevation_m_acc_xe3,
+    0);    
 }
 
 #ifdef USE_SPARKFUN_UBX
@@ -200,7 +221,8 @@ void sparkfun_ubx_pvt_callback(UBX_NAV_PVT_data_t pvt) {
     long_xe7, 
     error_xe3,
     elevation_m_xe3,
-    elevation_m_acc_xe3);    
+    elevation_m_acc_xe3,
+    0);    
 }
 #endif //USE_SPARKFUN_UBX
 
@@ -220,7 +242,8 @@ int16_t update_gnss() {
       fix.longitudeL(), 
       fix.lat_err_cm*10,
       0,
-      1000); 
+      1000,
+      0); 
     return 0;
   } 
   return -1;
