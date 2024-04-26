@@ -1,5 +1,5 @@
 /**************************************************************************
-    Copyright 2020-2023 Donour Sizemore
+    Copyright 2020-2024 Donour Sizemore
 
     This file is part of RacePi
 
@@ -148,8 +148,27 @@ void write_gnss_messages(
       last_data_rx_millis = millis();
     }
 
-}
+    // TODO write messages to CAN bus in MOTEC format
+    uint64_t motec_data_1 = ((uint64_t)lat_xe7) << 32 | long_xe7;
+    uint64_t motec_data_2 = ((uint64_t)speed_ms_x100)<<16 | (elevation_m_xe3*100);
+    uint64_t motec_data_3 = 0L;
+    uint64_t motec_data_4 = 0L;
+    const can_message_t motec_gnss_msg[] = {
+      { 0, 0, 0x680, 8, motec_data_1}, 
+      { 0, 0, 0x681, 8, motec_data_2}, 
+      { 0, 0, 0x682, 8, motec_data_3}, 
+      { 0, 0, 0x683, 8, motec_data_4}      
+    };
+ 
+    for (int i=0; i<4; i++){
+    int err = can_transmit(&motec_gnss_msg[i], pdMS_TO_TICKS(5));
+      if (err != ESP_OK) {
+        // TODO, read the status of TX_SUCCESS/TX_FAILED to ensure delivery
+        Serial.printf("ESP_CAN transmit fail: %d", err);
+      }
+    }
 
+}
 
 void sparkfun_gnss_process(
    uint32_t speed_ms_x1000, 
@@ -171,7 +190,6 @@ void sparkfun_gnss_process(
   last_gps_time_x1000 = time_of_week;
   last_speed_x1000 = speed_ms_x1000;
 
-  // TODO write messages to CAN bus in MOTEC format
   write_gnss_messages(
     speed_ms_x100, 
     accuracy_ms_x100, 
