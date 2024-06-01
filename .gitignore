@@ -1,5 +1,6 @@
 /.idea/
 */.ipynb_checkpoints/*
+arduino/uRacePi/build/*
 *.pyo
 *.pyc
 *~
