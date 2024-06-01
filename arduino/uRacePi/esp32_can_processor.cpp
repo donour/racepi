@@ -22,7 +22,7 @@
 
 int16_t setup_can_driver(uint8_t tx_gpio, uint8_t rx_gpio) {
  can_general_config_t general_config = {
-        .mode = CAN_MODE_LISTEN_ONLY,
+        .mode = TWAI_MODE_NORMAL,
         .tx_io = (gpio_num_t)tx_gpio,
         .rx_io = (gpio_num_t)rx_gpio,
         .clkout_io = (gpio_num_t)CAN_IO_UNUSED,

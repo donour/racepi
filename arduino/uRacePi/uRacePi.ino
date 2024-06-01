@@ -148,20 +148,24 @@ void write_gnss_messages(
       last_data_rx_millis = millis();
     }
 
-    // TODO write messages to CAN bus in MOTEC format
     uint64_t motec_data_1 = ((uint64_t)lat_xe7) << 32 | long_xe7;
     uint64_t motec_data_2 = ((uint64_t)speed_ms_x100)<<16 | (elevation_m_xe3*100);
     uint64_t motec_data_3 = 0L;
     uint64_t motec_data_4 = 0L;
-    const can_message_t motec_gnss_msg[] = {
-      { 0, 0, 0x680, 8, motec_data_1}, 
-      { 0, 0, 0x681, 8, motec_data_2}, 
-      { 0, 0, 0x682, 8, motec_data_3}, 
-      { 0, 0, 0x683, 8, motec_data_4}      
+    uint8_t length = 8;
+    can_message_t motec_gnss_msg[] = {
+      {.flags = 0, .identifier = 0x680, .data_length_code = length}, 
+      {.flags = 0, .identifier = 0x681, .data_length_code = length},
+      {.flags = 0, .identifier = 0x682, .data_length_code = length}, 
+      {.flags = 0, .identifier = 0x683, .data_length_code = length}     
     };
- 
+    memcpy(motec_gnss_msg[0].data, &motec_data_1, length);
+    memcpy(motec_gnss_msg[1].data, &motec_data_2, length);
+    memcpy(motec_gnss_msg[2].data, &motec_data_3, length);
+    memcpy(motec_gnss_msg[3].data, &motec_data_4, length);
+     
     for (int i=0; i<4; i++){
-    int err = can_transmit(&motec_gnss_msg[i], pdMS_TO_TICKS(5));
+    int err = can_transmit(&motec_gnss_msg[i], pdMS_TO_TICKS(10));
       if (err != ESP_OK) {
         // TODO, read the status of TX_SUCCESS/TX_FAILED to ensure delivery
         Serial.printf("ESP_CAN transmit fail: %d", err);
