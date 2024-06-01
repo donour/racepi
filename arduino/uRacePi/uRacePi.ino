@@ -134,6 +134,10 @@ void write_gnss_messages(
   int32_t elevation_m_acc_xe3) {
     dl1_message_t dl1_message;
 
+    if (speed_ms_x100 > GPS_MOVEMENT_THRESHOLD*100) {
+      last_data_rx_millis = millis();
+    }
+
     if ( ! get_speed_message(&dl1_message, speed_ms_x100, accuracy_ms_x100)) {
       send_dl1_message(&dl1_message, &SerialBT, true);
     }
@@ -144,10 +148,6 @@ void write_gnss_messages(
       send_dl1_message(&dl1_message, &SerialBT, false);
     }
     
-    if (speed_ms_x100 > GPS_MOVEMENT_THRESHOLD*100) {
-      last_data_rx_millis = millis();
-    }
-
     uint64_t motec_data_1 = ((uint64_t)lat_xe7) << 32 | long_xe7;
     uint64_t motec_data_2 = ((uint64_t)speed_ms_x100)<<16 | (elevation_m_xe3*100);
     uint64_t motec_data_3 = 0L;
@@ -168,7 +168,8 @@ void write_gnss_messages(
     int err = twai_transmit(&motec_gnss_msg[i], pdMS_TO_TICKS(10));
       if (err != ESP_OK) {
         // TODO, read the status of TX_SUCCESS/TX_FAILED to ensure delivery
-        Serial.printf("ESP_CAN transmit fail: %d", err);
+        Serial.printf("ESP_CAN motec gps transmit fail(%d): %d\n", i, err);
+        return; // bail out of motec logic
       }
     }
 
