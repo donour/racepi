@@ -449,5 +449,5 @@ void loop() {
     check_shutdown_timer();
     delay(1);
   }
-#endif USE_ACAN_SPI
+#endif // USE_ACAN_SPI
 }
