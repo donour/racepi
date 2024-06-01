@@ -30,9 +30,9 @@
 #include "icm20600.h"
 
 #ifdef USE_ESP32_CAN
-#include <driver/can.h>
+#include <driver/twai.h>
 #include "esp32_can_processor.h"
-int16_t process_send_can_message_esp32(BluetoothSerial *port, can_message_t *frame, float power_w);
+int16_t process_send_can_message_esp32(BluetoothSerial *port, twai_message_t *frame, float power_w);
 #endif
 
 #ifdef USE_ACAN_SPI
@@ -153,7 +153,7 @@ void write_gnss_messages(
     uint64_t motec_data_3 = 0L;
     uint64_t motec_data_4 = 0L;
     uint8_t length = 8;
-    can_message_t motec_gnss_msg[] = {
+    twai_message_t motec_gnss_msg[] = {
       {.flags = 0, .identifier = 0x680, .data_length_code = length}, 
       {.flags = 0, .identifier = 0x681, .data_length_code = length},
       {.flags = 0, .identifier = 0x682, .data_length_code = length}, 
@@ -165,7 +165,7 @@ void write_gnss_messages(
     memcpy(motec_gnss_msg[3].data, &motec_data_4, length);
      
     for (int i=0; i<4; i++){
-    int err = can_transmit(&motec_gnss_msg[i], pdMS_TO_TICKS(10));
+    int err = twai_transmit(&motec_gnss_msg[i], pdMS_TO_TICKS(10));
       if (err != ESP_OK) {
         // TODO, read the status of TX_SUCCESS/TX_FAILED to ensure delivery
         Serial.printf("ESP_CAN transmit fail: %d", err);
@@ -428,8 +428,8 @@ void sparkfun_ubx_task(void *arg) {
 
 void loop() {
 #ifdef USE_ESP32_CAN
-  can_message_t msg;
-  if (can_receive(&msg, pdMS_TO_TICKS(1)) == ESP_OK) {
+  twai_message_t msg;
+  if (twai_receive(&msg, pdMS_TO_TICKS(1)) == ESP_OK) {
     process_send_can_message_esp32(&SerialBT, &msg, calc_power_watts);
     //Serial.printf("Canmesg: %d(hz)\n", 1000/((millis()+1) - last_data_rx_millis));
     last_data_rx_millis = millis();

@@ -17,31 +17,31 @@
 **************************************************************************/
 #include "freertos/FreeRTOS.h"
 #include <driver/gpio.h>
-#include <driver/can.h>
+#include <driver/twai.h>
 #include <esp_system.h>
 
 int16_t setup_can_driver(uint8_t tx_gpio, uint8_t rx_gpio) {
- can_general_config_t general_config = {
+ twai_general_config_t general_config = {
         .mode = TWAI_MODE_NORMAL,
         .tx_io = (gpio_num_t)tx_gpio,
         .rx_io = (gpio_num_t)rx_gpio,
-        .clkout_io = (gpio_num_t)CAN_IO_UNUSED,
-        .bus_off_io = (gpio_num_t)CAN_IO_UNUSED,
+        .clkout_io = (gpio_num_t)TWAI_IO_UNUSED,
+        .bus_off_io = (gpio_num_t)TWAI_IO_UNUSED,
         .tx_queue_len = 32,
         .rx_queue_len = 32,
-        .alerts_enabled = CAN_ALERT_NONE,
+        .alerts_enabled = TWAI_ALERT_NONE,
         .clkout_divider = 0};
-    can_timing_config_t timing_config = CAN_TIMING_CONFIG_500KBITS();
-    can_filter_config_t filter_config = CAN_FILTER_CONFIG_ACCEPT_ALL();
+    twai_timing_config_t timing_config = TWAI_TIMING_CONFIG_500KBITS();
+    twai_filter_config_t filter_config = TWAI_FILTER_CONFIG_ACCEPT_ALL();
     esp_err_t error;
 
-    error = can_driver_install(&general_config, &timing_config, &filter_config);
+    error = twai_driver_install(&general_config, &timing_config, &filter_config);
     if (error != ESP_OK) {
         return -1;
     }
 
     // start CAN driver
-    error = can_start();
+    error = twai_start();
     if (error != ESP_OK) {
         return -2;
     }

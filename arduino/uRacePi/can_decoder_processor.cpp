@@ -19,7 +19,7 @@
 #include <ACAN2515.h>
 #include "BluetoothSerial.h"
 #include "dl1.h"
-#include <driver/can.h>
+#include <driver/twai.h>
 
 #define DEBUG Serial
 
@@ -183,7 +183,7 @@ int16_t process_send_can_message(BluetoothSerial *port, CANMessage *frame) {
   return private_send(port, &msg, 0.0);
 }
 
-int16_t process_send_can_message_esp32(BluetoothSerial *port, can_message_t *frame, float power_w) {
+int16_t process_send_can_message_esp32(BluetoothSerial *port, twai_message_t *frame, float power_w) {
   if (frame == 0) return -1;
   common_can_message msg;
   msg.id  = frame->identifier;
