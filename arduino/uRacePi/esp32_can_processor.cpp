@@ -27,7 +27,7 @@ int16_t setup_can_driver(uint8_t tx_gpio, uint8_t rx_gpio) {
         .rx_io = (gpio_num_t)rx_gpio,
         .clkout_io = (gpio_num_t)TWAI_IO_UNUSED,
         .bus_off_io = (gpio_num_t)TWAI_IO_UNUSED,
-        .tx_queue_len = 32,
+        .tx_queue_len = 8,
         .rx_queue_len = 32,
         .alerts_enabled = TWAI_ALERT_NONE,
         .clkout_divider = 0};
@@ -47,7 +47,8 @@ int16_t setup_can_driver(uint8_t tx_gpio, uint8_t rx_gpio) {
     }
 
     // TODO: clear receive queue
-    //can_clear_receive_queue();
+    //twai_clear_receive_queue();
+    //twai_clear_transmit_queue();
 
     return 0;
 }
