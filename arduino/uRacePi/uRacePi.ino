@@ -164,14 +164,19 @@ void write_gnss_messages(
     memcpy(motec_gnss_msg[2].data, &motec_data_3, length);
     memcpy(motec_gnss_msg[3].data, &motec_data_4, length);
      
-    for (int i=0; i<4; i++){
-    int err = twai_transmit(&motec_gnss_msg[i], pdMS_TO_TICKS(10));
-      if (err != ESP_OK) {
-        // TODO, read the status of TX_SUCCESS/TX_FAILED to ensure delivery
-        Serial.printf("ESP_CAN motec gps transmit fail(%d): %d\n", i, err);
-        return; // bail out of motec logic
-      }
-    }
+
+    // static int tx_fail = 0;
+    // for (int i=0; i<4; i++){
+    // if (tx_fail==0) {
+    // int err = twai_transmit(&motec_gnss_msg[i], pdMS_TO_TICKS(1));
+    //   if (err != ESP_OK) {
+    //     // TODO, read the status of TX_SUCCESS/TX_FAILED to ensure delivery
+    //     Serial.printf("ESP_CAN motec gps transmit fail(%d): %d\n", i, err);
+    //     tx_fail++;
+    //     return; // bail out of motec logic
+    //   }
+    // }
+    // }
 
 }
 
