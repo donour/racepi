@@ -35,9 +35,13 @@ int16_t rc_handler_init() {
     rc_set_data(RC_META_YAW, 0.4);
     rc_set_data(RC_META_PITCH, 0.5);
     rc_set_data(RC_META_ROLL, 0.6);
-    rc_set_data(RC_META_TPS, 12.34);
     rc_set_data(RC_META_RPM, 1234.0);
-    // rc_set_data(RC_META_STEERING, 5.43);
+    rc_set_data(RC_META_TPS, 12.34);
+    rc_set_data(RC_META_BRAKE, 0.22);
+    rc_set_data(RC_META_STEERING, 5.0);
+    rc_set_data(RC_META_ENGINE_TEMP, 85.0);
+    rc_set_data(RC_META_MAP, 15.0);
+    rc_set_data(RC_META_IAT, 75.0);
 
     return 0;
 }
@@ -116,12 +120,10 @@ void rc_bt_reader(BluetoothSerial *port, HardwareSerial *debug) {
         } else {
             if (enable_data) {
                 bt_tx_data_sample(port, debug);
-                delay(50);
+                delay(25);
             } else {
                 delay(100);
             }
         }
-
     }
-
 }

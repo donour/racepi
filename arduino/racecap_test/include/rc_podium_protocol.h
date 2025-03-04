@@ -22,11 +22,12 @@ enum {
     RC_META_ROLL,
     RC_META_RPM,
     RC_META_TPS,
-//    RC_META_BRAKE,
+    RC_META_BRAKE,
     RC_META_STEERING,
-//    RC_META_ENGINE_TEMP,
+    RC_META_ENGINE_TEMP,
     RC_META_MAP,
     RC_META_IAT,
+    RC_META_OIL_TEMP,
     RC_META_MAX
 };
 
@@ -50,11 +51,12 @@ const char meta_mesg[] =
                 "{\"sr\":10,\"nm\":\"Roll\",\"min\":-300.0,\"ut\":\"Deg/Sec\",\"prec\":1,\"max\":300.0},"
                 "{\"sr\":10,\"nm\":\"RPM\",\"min\":0.0,\"ut\":\"\",\"prec\":0,\"max\":10000.0},"
                 "{\"sr\":10,\"nm\":\"TPS\",\"min\":0.0,\"ut\":\"%\",\"prec\":0,\"max\":100.0},"
-//                "{\"sr\":10,\"nm\":\"Brake\",\"min\":0.0,\"ut\":\"PSI\",\"prec\":1,\"max\":1.0},"
+                "{\"sr\":10,\"nm\":\"Brake\",\"min\":0.0,\"ut\":\"\",\"prec\":2,\"max\":1.0},"
                 "{\"sr\":10,\"nm\":\"Steering\",\"min\":-900.0,\"ut\":\"\",\"prec\":1,\"max\":900.0},"
-//                "{\"sr\":10,\"nm\":\"EngineTemp\",\"min\":0.0,\"prec\":1,\"max\":0.0},"
+                "{\"sr\":10,\"nm\":\"EngineTemp\",\"min\":0.0,\"ut\":\"\",\"prec\":1,\"max\":260.0},"
                 "{\"sr\":10,\"nm\":\"MAP\",\"min\":0.0,\"ut\":\"PSI\",\"prec\":1,\"max\":30.0},"
-                "{\"sr\":10,\"nm\":\"IAT\",\"min\":0.0,\"ut\":\"F\",\"prec\":1,\"max\":200.0}"
+                "{\"sr\":10,\"nm\":\"IAT\",\"min\":0.0,\"ut\":\"F\",\"prec\":1,\"max\":200.0},"
+                "{\"sr\":10,\"nm\":\"OilTemp\",\"min\":0.0,\"ut\":\"F\",\"prec\":1,\"max\":280.0}"
             "],\"t\":%d" 
         "}" 
     "}\r\n";
