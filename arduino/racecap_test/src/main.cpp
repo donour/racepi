@@ -11,8 +11,6 @@ BluetoothSerial SerialBT;
 #define SERIAL_CONSOLE_BAUDRATE (115200)
 static const char BLUETOOTH_DEVICE_BROADCAST_NAME[] = "rc_test";
 
-
-
 void bt_callback(esp_spp_cb_event_t event, esp_spp_cb_param_t *param){
   if (event == ESP_SPP_WRITE_EVT) {
     return;
@@ -55,7 +53,7 @@ void setup() {
   xTaskCreate(
     rc_bt_task,
     "bt_reader_task",
-    2048,
+    4096,
     NULL, 
     2, 
     NULL
