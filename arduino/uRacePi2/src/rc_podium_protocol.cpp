@@ -98,8 +98,6 @@ void rc_bt_reader(BluetoothSerial *port, HardwareSerial *debug) {
             if (rx_buffer_index >= 2 &&
                 rx_buffer[rx_buffer_index - 2] == '\r' &&
                 rx_buffer[rx_buffer_index - 1] == '\n') {
-
-                debug->print(rx_buffer);
                 if (strstr(rx_buffer, "getMeta")) {
                     debug->println("[Meta request]");
                     port->printf(meta_mesg, tick++);

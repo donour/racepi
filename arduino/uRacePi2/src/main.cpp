@@ -20,7 +20,7 @@ BluetoothSerial SerialBT;
 SFE_UBLOX_GNSS myGNSS;
 TaskHandle_t gnss_task, Task2;
 
-static const char BLUETOOTH_DEVICE_BROADCAST_NAME[] = "rc_test";
+static const char BLUETOOTH_DEVICE_BROADCAST_NAME[] = "rp_%02X-%02X-%02X";
 
 static const byte UBX_SDA_PIN = 21;
 static const byte UBX_SCL_PIN = 17;
@@ -61,7 +61,6 @@ void sparkfun_ubx_task(void *arg) {
       
     } else {
       delay(10);
-      Serial.printf("No GNSS fix\n");
     }
   }
 }
@@ -97,10 +96,20 @@ void gnss_setup() {
 }
 
 void rc_bt_setup() {
+  char bt_name[32];
+  uint8_t mac[6];
+  esp_err_t rc = esp_read_mac(mac, ESP_MAC_BT);
+  if (rc != ESP_OK) {
+    Serial.printf("Failed to read MAC address: %d\n", rc);
+    return;
+  }
+
+  snprintf(bt_name, sizeof(bt_name), BLUETOOTH_DEVICE_BROADCAST_NAME, mac[3], mac[4], mac[5]);
+
   rc_handler_init();
-  SerialBT.begin(BLUETOOTH_DEVICE_BROADCAST_NAME); 
+  SerialBT.begin(bt_name); 
   SerialBT.write(0); SerialBT.flush();
-  Serial.print("Bluetooth setup success!");
+  Serial.printf("Bluetooth setup success: %s\n", bt_name);
   xTaskCreate(
     rc_bt_task,
     "bt_reader_task",
