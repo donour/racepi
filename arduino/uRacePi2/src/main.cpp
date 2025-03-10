@@ -40,12 +40,15 @@ void sparkfun_ubx_task(void *arg) {
       float n_sats = myGNSS.getSIV();
       float pdop = myGNSS.getPDOP() / (float)1e2;
 
-      if ( ! date_set ) {
-        Serial.printf("Setting system time to GNSS time\n");
+      if ( ! date_set && myGNSS.getFixType() >= 2) {
         struct timeval tv = {
           .tv_sec = (time_t)myGNSS.getUnixEpoch(),
           .tv_usec = myGNSS.getMillisecond()
-        };
+        };        
+        // print tv as 8601 string
+        char buf[64];
+        strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S", gmtime(&tv.tv_sec));
+        Serial.printf("Setting system time to GNSS time: %s\n", buf);
         settimeofday(&tv, NULL);
         date_set = true;
       }
