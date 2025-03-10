@@ -40,6 +40,8 @@ int16_t rc_handler_init() {
     rc_set_data(RC_META_ENGINE_TEMP, 0.0);
     rc_set_data(RC_META_MAP, 0.0);
     rc_set_data(RC_META_IAT, 0.0);
+    rc_set_data(RC_META_OIL_TEMP, 0.0);
+    rc_set_data(RC_META_FUEL_LEVEL, 0.0);
 
     return 0;
 }

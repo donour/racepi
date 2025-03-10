@@ -28,6 +28,7 @@ enum {
     RC_META_MAP,
     RC_META_IAT,
     RC_META_OIL_TEMP,
+    RC_META_FUEL_LEVEL,
     RC_META_MAX
 };
 
@@ -57,6 +58,7 @@ const char meta_mesg[] =
                 "{\"sr\":10,\"nm\":\"MAP\",\"min\":0.0,\"ut\":\"PSI\",\"prec\":1,\"max\":30.0},"
                 "{\"sr\":10,\"nm\":\"IAT\",\"min\":0.0,\"ut\":\"F\",\"prec\":1,\"max\":200.0},"
                 "{\"sr\":10,\"nm\":\"OilTemp\",\"min\":0.0,\"ut\":\"F\",\"prec\":1,\"max\":280.0}"
+                "{\"sr\":10,\"nm\":\"FuelLevel\",\"min\":0.0,\"ut\":\"%\",\"prec\":0,\"max\":100.0},"
             "],\"t\":%d" 
         "}" 
     "}\r\n";

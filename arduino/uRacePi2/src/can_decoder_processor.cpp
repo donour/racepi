@@ -70,6 +70,17 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
 
   switch(frame->id) { 
 #ifdef ENABLE_LOTUS_EVORA
+    case 0x0A2:
+      if (frame->len >= 6 ) {
+        // wheelspeeds front
+      }
+      break;
+    case 0x0A4:
+      if (frame->len >= 6 ) {
+        // wheelspeeds rear
+      }
+      break;
+
     case 0x085: 
       // steering angle
       if (frame->len >=4) {
@@ -81,6 +92,13 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
       break;
     case 0x114:
       if (frame->len >= 6){
+        // frame bytes from Evora S2 firmware
+        // 0:1 - RPM
+        // 2:  - 0
+        // 3:  - TPS
+        // 4:  - driver input switches
+        // 5:  - unknown
+        // 6:7 - zero
 
         // bit 40 is brake pedal switch, no pressure reading is provided.
         bool brake_active = ((frame->data[5] & 0x1) != 0);
@@ -92,6 +110,21 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
         uint16_t rpm = frame->data16[0] / 4;
         rc_set_data(RC_META_RPM, rpm);
 
+      }
+      break;
+
+    case 0x400:
+      if (frame->len >= 6){
+        // frame bytes from Evora S2 firmware   
+        // 4   - fuel level pct
+        // 5   - coolant temp
+        // 6   - indicator flags
+
+        uint8_t fuel_level = frame->data[4];
+        rc_set_data(RC_META_FUEL_LEVEL, fuel_level);
+
+        uint8_t coolant_temp = frame->data[5];
+        rc_set_data(RC_META_ENGINE_TEMP, coolant_temp);
       }
       break;
 
