@@ -1,5 +1,4 @@
 #include <stdint.h>
-#include <Arduino.h>
 #include "BluetoothSerial.h"
 
 #ifndef __RC_PODIUM_
@@ -64,7 +63,7 @@ const char meta_mesg[] =
     "}\r\n";
 
 int16_t rc_handler_init();
-void rc_bt_reader(BluetoothSerial *port, HardwareSerial *debug);
+void rc_bt_reader(BluetoothSerial *port, HardwareSerial *debug, void (*rc_enable_callback)(bool));
 void rc_set_data(const int index,const float value);
 
 static uint64_t rc_epoch = 0;

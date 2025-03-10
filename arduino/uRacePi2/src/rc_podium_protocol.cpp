@@ -1,5 +1,3 @@
-#include <Arduino.h>
-#include <pthread.h>
 #include <string.h>
 #include <ArduinoJson.h>
 #include "BluetoothSerial.h"
@@ -75,7 +73,7 @@ void bt_tx_data_sample(BluetoothSerial *port, HardwareSerial *debug) {
     return;
 }
 
-void rc_bt_reader(BluetoothSerial *port, HardwareSerial *debug) {
+void rc_bt_reader(BluetoothSerial *port, HardwareSerial *debug, void (*rc_enable_callback)(bool)) {
     bool enable_data = false;
     char rx_buffer[RC_SERIAL_RX_BUFFER_SIZE];
 
@@ -107,10 +105,16 @@ void rc_bt_reader(BluetoothSerial *port, HardwareSerial *debug) {
                 if (strstr(rx_buffer, "setTelemetry")) {
                     if (strstr(rx_buffer, "\"rate\":50")) {
                         enable_data = true;
+                        if (rc_enable_callback != NULL) {
+                            rc_enable_callback(true);
+                        }
                         debug->println("[Telemetry enabled]");
                         port->printf(meta_mesg, tick++);
                     } else {
                         enable_data = false;
+                        if (rc_enable_callback != NULL) {
+                            rc_enable_callback(false);
+                        }
                         debug->println("[Telemetry disabled]");
                     }
                 }

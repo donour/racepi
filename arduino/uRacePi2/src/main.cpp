@@ -7,6 +7,8 @@
 #include <driver/twai.h>
 #include "esp32_can_processor.h"
 
+#define RED_LED_PIN (13) 
+
 // used to indicate that we have timed out all data
 // and should shutdown
 volatile long last_data_rx_millis = millis();
@@ -68,9 +70,19 @@ void sparkfun_ubx_task(void *arg) {
   }
 }
 
-void rc_bt_task(void *arg) {
-  rc_bt_reader(&SerialBT, &Serial);
+
+void rc_enable_callback(bool enable) {
+  if (enable) {
+    digitalWrite(RED_LED_PIN, HIGH);
+  } else {
+    digitalWrite(RED_LED_PIN, LOW);
+  }
 }
+
+void rc_bt_task(void *arg) {
+  rc_bt_reader(&SerialBT, &Serial, &rc_enable_callback);
+}
+
 
 void gnss_setup() {
   Wire.begin(UBX_SDA_PIN, UBX_SCL_PIN);
@@ -136,6 +148,8 @@ void setup() {
   Serial.begin(SERIAL_CONSOLE_BAUDRATE);
   Serial.write(0); Serial.flush();
   Serial.print("*** uRacePi 2 ***\n");
+  
+  pinMode(RED_LED_PIN, OUTPUT);
 
   int16_t espcan_rc = setup_can_driver(ESPCAN_TX_PIN, ESPCAN_RX_PIN);
   switch (espcan_rc) {
