@@ -26,6 +26,8 @@
 
 #define ENABLE_LOTUS_EVORA
 #define EVORA_BRAKE_PRESSURE_MAX (690)
+#define EVORA_FRONT_WHEEL_TICKS_PER_REV (0x3E8)
+#define EVORA_REAR_WHEEL_TICKS_PER_REV (0x3FC)
 
 class common_can_message {
   public : uint32_t id = 0;  
@@ -78,21 +80,21 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
   switch(frame->id) { 
 #ifdef ENABLE_LOTUS_EVORA
     case 0x0A2:
-      if (frame->len >= 6 ) {
+      if (frame->len >= 4 ) {
         // wheelspeeds front
         uint32_t lf = frame->data[1] << 8 | frame->data[0];
         uint32_t rf = frame->data[3] << 8 | frame->data[2];
-        rc_set_data(RC_META_WHEEL_SPEED_LF, evora_wheelspeed_cal(lf, 0x3E8));
-        rc_set_data(RC_META_WHEEL_SPEED_RF, evora_wheelspeed_cal(rf, 0x3E8));
+        rc_set_data(RC_META_WHEEL_SPEED_LF, evora_wheelspeed_cal(lf, EVORA_FRONT_WHEEL_TICKS_PER_REV));
+        rc_set_data(RC_META_WHEEL_SPEED_RF, evora_wheelspeed_cal(rf, EVORA_FRONT_WHEEL_TICKS_PER_REV));
       }
       break;
     case 0x0A4:
-      if (frame->len >= 6 ) {
+      if (frame->len >= 4 ) {
+        // wheelspeeds rear
         uint32_t lr = frame->data[1] << 8 | frame->data[0];
         uint32_t rr = frame->data[3] << 8 | frame->data[2];
-        rc_set_data(RC_META_WHEEL_SPEED_LR, evora_wheelspeed_cal(lr, 0x3FC));
-        rc_set_data(RC_META_WHEEL_SPEED_RR, evora_wheelspeed_cal(rr, 0x3FC));
-        // wheelspeeds rear
+        rc_set_data(RC_META_WHEEL_SPEED_LR, evora_wheelspeed_cal(lr, EVORA_REAR_WHEEL_TICKS_PER_REV));
+        rc_set_data(RC_META_WHEEL_SPEED_RR, evora_wheelspeed_cal(rr, EVORA_REAR_WHEEL_TICKS_PER_REV));
       }
       break;
 

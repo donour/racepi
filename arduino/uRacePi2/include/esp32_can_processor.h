@@ -24,8 +24,8 @@
 
 // TODO: configure RX filters
 
-static const byte ESPCAN_RX_PIN = 22;
-static const byte ESPCAN_TX_PIN = 23;
+#define ESPCAN_RX_PIN (22)
+#define ESPCAN_TX_PIN (23)
 
 // Configure ESP32 CAN driver with specified TX/RX pins.
 // returns:
