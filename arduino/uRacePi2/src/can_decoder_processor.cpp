@@ -62,6 +62,12 @@ float latest_yaw_deg = 0.0;
 //   return lat_accel / velocity;
 // }
 
+double evora_wheelspeed_cal(const uint32_t raw, const uint32_t pulses_per_rev) {
+  uint32_t scaled = raw * 0x32 >> 3;
+  scaled = (pulses_per_rev * scaled) / 1000;
+  return (double)scaled;
+}
+
 
 int16_t private_send(BluetoothSerial *port, common_can_message *frame, float power_w) {
   if (port == NULL || frame == NULL) {
@@ -73,10 +79,18 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
     case 0x0A2:
       if (frame->len >= 6 ) {
         // wheelspeeds front
+        uint32_t lf = frame->data[1] << 8 | frame->data[0];
+        uint32_t rf = frame->data[3] << 8 | frame->data[2];
+        rc_set_data(RC_META_WHEEL_SPEED_LF, evora_wheelspeed_cal(lf, 0x3E8));
+        rc_set_data(RC_META_WHEEL_SPEED_RF, evora_wheelspeed_cal(rf, 0x3E8));
       }
       break;
     case 0x0A4:
       if (frame->len >= 6 ) {
+        uint32_t lr = frame->data[1] << 8 | frame->data[0];
+        uint32_t rr = frame->data[3] << 8 | frame->data[2];
+        rc_set_data(RC_META_WHEEL_SPEED_LR, evora_wheelspeed_cal(lr, 0x3FC));
+        rc_set_data(RC_META_WHEEL_SPEED_RR, evora_wheelspeed_cal(rr, 0x3FC));
         // wheelspeeds rear
       }
       break;
@@ -138,6 +152,28 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
       }
       break;
 #endif // ENABLE_LOTUS_EVORA
+
+    // OBD-II data
+    case 0x7E8:
+      if (frame->len >= 2) {
+        uint8_t obd_resp_type = frame->data[0];
+        uint8_t obd_pid = frame->data[1];
+        switch (obd_resp_type) {
+          case 0x41:
+            if (obd_pid == 0xB) {
+              double map = frame->data[2] * 0.14503773773020922;
+              rc_set_data(RC_META_MAP, map);
+            }
+            break;
+          // Mode $22 not implemented
+          // case 0x62:
+          //   break;
+          default:
+           break;
+        }
+      }
+      break;
+
     default: 
       break; // ignore
   }
