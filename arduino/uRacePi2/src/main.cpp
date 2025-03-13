@@ -43,8 +43,6 @@ static const char BLUETOOTH_DEVICE_BROADCAST_NAME[] = "rp_%02X-%02X-%02X";
 
 static const byte UBX_SDA_PIN = 21;
 static const byte UBX_SCL_PIN = 17;
-static const byte ESPCAN_RX_PIN = 22;
-static const byte ESPCAN_TX_PIN = 23;
 
 bool date_set = false;
 
@@ -87,7 +85,6 @@ void sparkfun_ubx_task(void *arg) {
   }
 }
 
-
 void rc_enable_callback(bool enable) {
   if (enable) {
     digitalWrite(RED_LED_PIN, HIGH);
@@ -99,7 +96,6 @@ void rc_enable_callback(bool enable) {
 void rc_bt_task(void *arg) {
   rc_bt_reader(&SerialBT, &Serial, &rc_enable_callback);
 }
-
 
 void gnss_setup() {
   Wire.begin(UBX_SDA_PIN, UBX_SCL_PIN);
@@ -188,14 +184,52 @@ void setup() {
 }
 
 void loop() {
-  
   twai_message_t msg;
   if (twai_receive(&msg, pdMS_TO_TICKS(1)) == ESP_OK) {
     process_send_can_message_esp32(&SerialBT, &msg, 0.0);
-    Serial.printf("Canmesg: %d(hz)\n", 1000/((millis()+1) - last_data_rx_millis));
     last_data_rx_millis = millis();
   } else {
     check_shutdown_timer();
     delay(5);
   }
 }
+
+// twai_message_t twai_obd_ii_map_msg = {
+//   .identifier = 0x7DF,
+//   .data_length_code = 2,
+//   .data = {0x01, 0xB}
+// };
+
+// twai_message_t twai_obd_ii_manifold_temp_msg = {
+//   .identifier = 0x7DF,
+//   .data_length_code = 3,
+//   .data = {0x22, 0x02, 0x72}
+// };
+
+// void send_obd_ii_request(void *arg) {
+//   twai_message_t *tx_msg = (twai_message_t *)arg;
+//   esp_err_t rc = twai_transmit(tx_msg, pdMS_TO_TICKS(1));  
+//   if (rc != ESP_OK) {
+//     Serial.printf("Failed to send $01 0B request: %s\n", esp_err_to_name(rc));
+//     return;
+//   }
+// }
+// esp_timer_handle_t obd_ii_map_timer;
+// esp_timer_handle_t obd_ii_manifold_temp_timer;
+// void setup_obd_ii_timers() {
+//   esp_timer_create_args_t map_args = {
+//     .callback = &send_obd_ii_request,
+//     .arg = &twai_obd_ii_map_msg,
+//     .name = "obd_ii_map_timer"
+//   };
+//   esp_timer_create(&map_args, &obd_ii_map_timer);
+//   esp_timer_create_args_t manifold_temp_args = {
+//     .callback = &send_obd_ii_request,
+//     .arg = &twai_obd_ii_manifold_temp_msg,
+//     .name = "obd_ii_manifold_temp_timer"
+//   };
+//   esp_timer_create(&manifold_temp_args, &obd_ii_manifold_temp_timer);
+//   // TODO these shoudl not schedule the send, but should really just enqueue a request for send
+//   esp_timer_start_periodic(obd_ii_map_timer, pdMS_TO_TICKS(100));
+//   esp_timer_start_periodic(obd_ii_manifold_temp_timer, pdMS_TO_TICKS(1000));  
+// }
