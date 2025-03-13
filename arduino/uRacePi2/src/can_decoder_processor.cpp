@@ -1,5 +1,5 @@
 /**************************************************************************
-    Copyright 2020-2023 Donour Sizemore
+    Copyright 2020-2025 Donour Sizemore
 
     This file is part of RacePi
 
