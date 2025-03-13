@@ -28,6 +28,7 @@
 #define EVORA_BRAKE_PRESSURE_MAX (690)
 #define EVORA_FRONT_WHEEL_TICKS_PER_REV (0x3E8)
 #define EVORA_REAR_WHEEL_TICKS_PER_REV (0x3FC)
+#define kPA_TO_PSI (0.14503773773020922)
 
 class common_can_message {
   public : uint32_t id = 0;  
@@ -164,7 +165,7 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
         switch (obd_resp_type) {
           case 0x41:
             if (obd_pid == 0xB) {
-              double map = frame->data[2] * 0.14503773773020922;
+              double map = frame->data[2] * kPA_TO_PSI;
               rc_set_data(RC_META_MAP, map);
             }
             break;
