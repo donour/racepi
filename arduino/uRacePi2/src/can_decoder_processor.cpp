@@ -25,6 +25,7 @@
 #define ACCEL_DIVISOR (38)
 
 #define ENABLE_LOTUS_EVORA
+#define EVORA_BRAKE_PRESSURE_MAX (690)
 
 class common_can_message {
   public : uint32_t id = 0;  
@@ -116,7 +117,7 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
 
         // bit 40 is brake pedal switch, no pressure reading is provided.
         bool brake_active = ((frame->data[5] & 0x1) != 0);
-        rc_set_data(RC_META_BRAKE, brake_active ? 1.0 : 0.0);
+        rc_set_data(RC_META_BRAKE, brake_active ? EVORA_BRAKE_PRESSURE_MAX : 0.0);
 
         uint16_t tps = (uint8_t)frame->data[3] * 100 / 255;
         rc_set_data(RC_META_TPS, tps);
