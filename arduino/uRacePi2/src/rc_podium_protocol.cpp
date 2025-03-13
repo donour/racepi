@@ -24,7 +24,7 @@
 
 #define RC_SERIAL_RX_BUFFER_SIZE (256)
 #define RC_SERIAL_TX_BUFFER_SIZE (1024)
-#define RC_SEND_DELAY_MS (1000/50)
+#define RC_SEND_DELAY_MS (1000/50) // clip the update rate to 50hz
 #define RC_IDLE_WAIT_MS (10)
 
 double rc_channel_data[RC_META_MAX];
