@@ -33,13 +33,17 @@ int16_t rc_handler_init() {
     rc_set_data(RC_META_ROLL, 0.0);
     rc_set_data(RC_META_RPM, 9999.9);
     rc_set_data(RC_META_TPS, 0.0);
-    rc_set_data(RC_META_BRAKE, 0.);
+    rc_set_data(RC_META_BRAKE, 0.0);
     rc_set_data(RC_META_STEERING, 0.0);
     rc_set_data(RC_META_ENGINE_TEMP, 0.0);
     rc_set_data(RC_META_MAP, 0.0);
     rc_set_data(RC_META_IAT, 0.0);
     rc_set_data(RC_META_OIL_TEMP, 0.0);
     rc_set_data(RC_META_FUEL_LEVEL, 0.0);
+    rc_set_data(RC_META_WHEEL_SPEED_LF, 0.0);
+    rc_set_data(RC_META_WHEEL_SPEED_RF, 0.0);
+    rc_set_data(RC_META_WHEEL_SPEED_LR, 0.0);
+    rc_set_data(RC_META_WHEEL_SPEED_RR, 0.0);
 
     return 0;
 }
