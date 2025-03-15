@@ -76,9 +76,7 @@ void sparkfun_ubx_task(void *arg) {
       rc_set_data(RC_META_ALTITUDE, elevation_m);
       rc_set_data(RC_META_GPSSATS, n_sats);
       rc_set_data(RC_META_GPSQUAL, myGNSS.getFixType());
-      rc_set_data(RC_META_GPSDOP, pdop);
-      //Serial.printf("Lat: %2.7f, Lon: %2.7f, Error: %1.2f\n", lat, longitude, gnss_error);
-      
+      rc_set_data(RC_META_GPSDOP, pdop);      
     } else {
       delay(10);
     }

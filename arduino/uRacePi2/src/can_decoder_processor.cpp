@@ -108,6 +108,18 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
         rc_set_data(RC_META_STEERING, val);
       }
       break;
+
+    case 0x102:
+      // torque limits
+      if (frame->len >= 3) {
+        // two values packed into 3 bytes
+        uint16_t torque_limit = ((uint16_t)(frame->data[0]) >> 2) | (((uint16_t)(frame->data[1] & 0x0F)) << 6);
+        uint16_t raw_engine_torque = ((uint16_t)(frame->data[1] & 0xF0) >> 4) | ((uint16_t)frame->data[2] << 4);
+        uint16_t engine_torque = raw_engine_torque + 400;
+
+        // TODO: add torque channels
+      }
+      break;
     case 0x114:
       if (frame->len >= 6){
         // frame bytes from Evora S2 firmware
