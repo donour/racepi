@@ -166,7 +166,6 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
             if (obd_pid == 0xB) {
               double map = frame->data[3] * kPA_TO_PSI;
               rc_set_data(RC_META_MAP, map);
-              DEBUG.printf("MAP: %f\n", map);
             }
             break;
           // Mode $22 not implemented
