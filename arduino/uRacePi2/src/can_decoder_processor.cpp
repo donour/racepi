@@ -46,27 +46,11 @@ class common_can_message {
 uint64_t latest_time = 0;
 float latest_yaw_deg = 0.0;
 
-// used for calculating oversteer
-// #define STEER_RATIO (1.0/15.0)
-// float latest_steering_angle = 0;
-// float ackermann_yaw(const float steering_angle, const float wheelbase, const float velocity) {
-
-//   // TODO finish
-//   const float wheel_angle = steering_angle * STEER_RATIO;
-//   return velocity*tan(wheel_angle) / wheelbase;
-// }
-
-// float yaw_intended(const float steering_angle, const float wheelbase, const float velocity) {
-//   // TODO finish
-//   const float wheel_angle = steering_angle * STEER_RATIO;
-//   return velocity * wheel_angle / (2 * wheelbase);  
-// }
-
-// float surface_limit(const float lat_accel, float velocity) {
-//   return lat_accel / velocity;
-// }
-
 double evora_wheelspeed_cal(const uint32_t raw, const uint32_t pulses_per_rev) {
+  if (raw == 0x3FFF) {
+    return 0.0;
+  }
+
   uint32_t scaled = raw * 0x32 >> 3;
   scaled = (pulses_per_rev * scaled) / 1000;
   return (double)scaled;
@@ -83,17 +67,18 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
     case 0x0A2:
       if (frame->len >= 4 ) {
         // wheelspeeds front
-        uint32_t lf = frame->data[1] << 8 | frame->data[0];
-        uint32_t rf = frame->data[3] << 8 | frame->data[2];
+        uint32_t lf = (frame->data[1] & 0x3f) << 8 | frame->data[0];
+        uint32_t rf = (frame->data[1] & 0xC0) >> 6 | (frame->data[3] & 0xF) << 10 | frame->data[2] << 2;
         rc_set_data(RC_META_WHEEL_SPEED_LF, evora_wheelspeed_cal(lf, EVORA_FRONT_WHEEL_TICKS_PER_REV));
         rc_set_data(RC_META_WHEEL_SPEED_RF, evora_wheelspeed_cal(rf, EVORA_FRONT_WHEEL_TICKS_PER_REV));
+        DEBUG.printf("\r %d LF: %f, RF: %f", millis(), evora_wheelspeed_cal(lf, EVORA_FRONT_WHEEL_TICKS_PER_REV), evora_wheelspeed_cal(rf, EVORA_FRONT_WHEEL_TICKS_PER_REV));
       }
       break;
     case 0x0A4:
       if (frame->len >= 4 ) {
         // wheelspeeds rear
-        uint32_t lr = frame->data[1] << 8 | frame->data[0];
-        uint32_t rr = frame->data[3] << 8 | frame->data[2];
+        uint32_t lr = (frame->data[1] & 0x3f) << 8 | frame->data[0];
+        uint32_t rr = (frame->data[1] & 0xC0) >> 6 | (frame->data[3] & 0xF) << 10 | frame->data[2] << 2;
         rc_set_data(RC_META_WHEEL_SPEED_LR, evora_wheelspeed_cal(lr, EVORA_REAR_WHEEL_TICKS_PER_REV));
         rc_set_data(RC_META_WHEEL_SPEED_RR, evora_wheelspeed_cal(rr, EVORA_REAR_WHEEL_TICKS_PER_REV));
       }
@@ -116,8 +101,6 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
         uint16_t torque_limit = ((uint16_t)(frame->data[0]) >> 2) | (((uint16_t)(frame->data[1] & 0x0F)) << 6);
         uint16_t raw_engine_torque = ((uint16_t)(frame->data[1] & 0xF0) >> 4) | ((uint16_t)frame->data[2] << 4);
         uint16_t engine_torque = raw_engine_torque + 400;
-
-        // TODO: add torque channels
       }
       break;
     case 0x114:
@@ -143,18 +126,21 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
       }
       break;
 
-    case 0x400:
+    case 0x400: // verified 10hz with T6e
       if (frame->len >= 6){
         // frame bytes from Evora S2 firmware   
         // 4   - fuel level pct
         // 5   - coolant temp
         // 6   - indicator flags
 
-        uint8_t fuel_level = frame->data[4];
+        uint8_t fuel_level = frame->data[4] * 100 / 255;
         rc_set_data(RC_META_FUEL_LEVEL, fuel_level);
 
         uint8_t coolant_temp = frame->data[5];
         rc_set_data(RC_META_ENGINE_TEMP, coolant_temp);
+
+        //DEBUG.printf("\r%d Fuel Level: % 3d, Coolant Temp: % 3d\n", millis(), fuel_level, coolant_temp);
+
       }
       break;
 
@@ -171,25 +157,28 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
 
     // OBD-II data
     case 0x7E8:
-      if (frame->len >= 2) {
-        uint8_t obd_resp_type = frame->data[0];
-        uint8_t obd_pid = frame->data[1];
+      if (frame->len >= 3) {
+        // TODO hand variable length responses         
+        uint8_t obd_resp_type = frame->data[1];
+        uint8_t obd_pid = frame->data[2];
         switch (obd_resp_type) {
           case 0x41:
             if (obd_pid == 0xB) {
-              double map = frame->data[2] * kPA_TO_PSI;
+              double map = frame->data[3] * kPA_TO_PSI;
               rc_set_data(RC_META_MAP, map);
+              DEBUG.printf("MAP: %f\n", map);
             }
             break;
           // Mode $22 not implemented
-          // case 0x62:
-          //   break;
+            // case 0x62:
+            //  if (obd_pid == 0x2) {}
+            //  break;
           default:
-           break;
+            break;
         }
       }
       break;
-
+      
     default: 
       break; // ignore
   }

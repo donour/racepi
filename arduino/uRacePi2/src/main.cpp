@@ -155,6 +155,8 @@ void check_shutdown_timer() {
     }  
 }
 
+
+
 void setup() {
   Serial.begin(SERIAL_CONSOLE_BAUDRATE);
   Serial.write(0); Serial.flush();
@@ -195,7 +197,7 @@ void loop() {
 // twai_message_t twai_obd_ii_map_msg = {
 //   .identifier = 0x7DF,
 //   .data_length_code = 2,
-//   .data = {0x01, 0xB}
+//   .data = {0x01, 0x0B}
 // };
 
 // twai_message_t twai_obd_ii_manifold_temp_msg = {
@@ -203,6 +205,16 @@ void loop() {
 //   .data_length_code = 3,
 //   .data = {0x22, 0x02, 0x72}
 // };
+
+// void send_obd_ii_request(void *arg) {
+//   twai_message_t *tx_msg = (twai_message_t *)arg;
+//   esp_err_t rc = twai_transmit(tx_msg, pdMS_TO_TICKS(1));  
+//   if (rc != ESP_OK) {
+//     Serial.printf("Failed to send $01 0B request: %s\n", esp_err_to_name(rc));
+//     return;
+//   }
+// }
+
 
 // void send_obd_ii_request(void *arg) {
 //   twai_message_t *tx_msg = (twai_message_t *)arg;
