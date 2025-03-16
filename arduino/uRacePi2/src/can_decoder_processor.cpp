@@ -71,7 +71,6 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
         uint32_t rf = (frame->data[1] & 0xC0) >> 6 | (frame->data[3] & 0xF) << 10 | frame->data[2] << 2;
         rc_set_data(RC_META_WHEEL_SPEED_LF, evora_wheelspeed_cal(lf, EVORA_FRONT_WHEEL_TICKS_PER_REV));
         rc_set_data(RC_META_WHEEL_SPEED_RF, evora_wheelspeed_cal(rf, EVORA_FRONT_WHEEL_TICKS_PER_REV));
-        DEBUG.printf("\r %d LF: %f, RF: %f", millis(), evora_wheelspeed_cal(lf, EVORA_FRONT_WHEEL_TICKS_PER_REV), evora_wheelspeed_cal(rf, EVORA_FRONT_WHEEL_TICKS_PER_REV));
       }
       break;
     case 0x0A4:
