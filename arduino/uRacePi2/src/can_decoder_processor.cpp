@@ -29,6 +29,7 @@
 #define EVORA_FRONT_WHEEL_TICKS_PER_REV (0x3E8)
 #define EVORA_REAR_WHEEL_TICKS_PER_REV (0x3FC)
 #define kPA_TO_PSI (0.14503773773020922)
+#define kmh_to_mps (0.277778)
 
 class common_can_message {
   public : uint32_t id = 0;  
@@ -50,10 +51,10 @@ double evora_wheelspeed_cal(const uint32_t raw, const uint32_t pulses_per_rev) {
   if (raw == 0x3FFF) {
     return 0.0;
   }
-
   uint32_t scaled = raw * 0x32 >> 3;
   scaled = (pulses_per_rev * scaled) / 1000;
-  return (double)scaled;
+  float scaled_f = (float)scaled / 1000.0; // TODO this needs scaling to gps corrected speed
+  return (double)scaled_f;
 }
 
 
@@ -139,9 +140,6 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
 
         uint8_t coolant_temp = frame->data[5];
         rc_set_data(RC_META_ENGINE_TEMP, coolant_temp);
-
-        //DEBUG.printf("\r%d Fuel Level: % 3d, Coolant Temp: % 3d\n", millis(), fuel_level, coolant_temp);
-
       }
       break;
 

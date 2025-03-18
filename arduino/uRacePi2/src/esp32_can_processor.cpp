@@ -39,15 +39,10 @@ int16_t setup_can_driver(uint8_t tx_gpio, uint8_t rx_gpio) {
     if (error != ESP_OK) {
         return -1;
     }
-
     // start CAN driver
     error = twai_start();
     if (error != ESP_OK) {
         return -2;
     }
-
-    // TODO: clear receive queue
-    //can_clear_receive_queue();
-
     return 0;
 }

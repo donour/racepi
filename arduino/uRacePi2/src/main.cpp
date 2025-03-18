@@ -57,7 +57,7 @@ void sparkfun_ubx_task(void *arg) {
       float n_sats = myGNSS.getSIV();
       float pdop = myGNSS.getPDOP() / (float)1e2;
 
-      if ( ! date_set && myGNSS.getFixType() >= 2) {
+      if ( ! date_set && myGNSS.getTimeValid() ) {
         struct timeval tv = {
           .tv_sec = (time_t)myGNSS.getUnixEpoch(),
           .tv_usec = myGNSS.getMillisecond()
@@ -107,7 +107,6 @@ void gnss_setup() {
     myGNSS.setAutoPVT(true);
     // This will optionally persist the settings to NVM on the GNSS device. 
     //myGNSS.saveConfigSelective(VAL_CFG_SUBSEC_IOPORT);
-    //myGNSS.setAutoPVTcallback(&sparkfun_ubx_pvt_callback);
     xTaskCreate(
       sparkfun_ubx_task,
       "GNSSTask",
