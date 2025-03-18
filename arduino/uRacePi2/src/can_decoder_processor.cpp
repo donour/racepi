@@ -100,6 +100,8 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
         uint16_t torque_limit = ((uint16_t)(frame->data[0]) >> 2) | (((uint16_t)(frame->data[1] & 0x0F)) << 6);
         uint16_t raw_engine_torque = ((uint16_t)(frame->data[1] & 0xF0) >> 4) | ((uint16_t)frame->data[2] << 4);
         uint16_t engine_torque = raw_engine_torque + 400;
+        rc_set_data(RC_META_TORQUE_LIMIT, torque_limit);
+        rc_set_data(RC_META_ENGINE_TORQUE, engine_torque);
       }
       break;
     case 0x114:

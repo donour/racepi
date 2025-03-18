@@ -35,6 +35,8 @@ int tick = 0;
 
 void rc_set_data(const int index,const float value) {
     if (index < RC_META_MAX) {
+        // tearing could be an issue here because the data array
+        // does not lock the memory bus
         rc_channel_data[index] = value;
     }
     new_data = true;    

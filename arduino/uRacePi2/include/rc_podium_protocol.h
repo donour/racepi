@@ -46,6 +46,8 @@ enum {
     RC_META_IAT,
     RC_META_OIL_TEMP,
     RC_META_FUEL_LEVEL,
+    RC_META_ENGINE_TORQUE,
+    RC_META_TORQUE_LIMIT,
     RC_META_WHEEL_SPEED_LF,
     RC_META_WHEEL_SPEED_RF,
     RC_META_WHEEL_SPEED_LR,
@@ -80,6 +82,8 @@ const char meta_mesg[] =
                 "{\"sr\":10,\"nm\":\"IAT\",\"min\":0.0,\"ut\":\"F\",\"prec\":1,\"max\":200.0},"
                 "{\"sr\":10,\"nm\":\"OilTemp\",\"min\":0.0,\"ut\":\"F\",\"prec\":1,\"max\":280.0},"
                 "{\"sr\":10,\"nm\":\"FuelLevel\",\"min\":0.0,\"ut\":\"%\",\"prec\":0,\"max\":100.0},"
+                "{\"sr\":10,\"nm\":\"EngineTorque\",\"min\":0.0,\"ut\":\"\",\"prec\":0,\"max\":500.0},"
+                "{\"sr\":10,\"nm\":\"TorqueLimit\",\"min\":0.0,\"ut\":\"\",\"prec\":0,\"max\":500.0},"
                 "{\"sr\":10,\"nm\":\"Wheel_LF\",\"min\":0.0,\"ut\":\"\",\"prec\":0,\"max\":150.0},"
                 "{\"sr\":10,\"nm\":\"Wheel_RF\",\"min\":0.0,\"ut\":\"\",\"prec\":0,\"max\":150.0},"
                 "{\"sr\":10,\"nm\":\"Wheel_LR\",\"min\":0.0,\"ut\":\"\",\"prec\":0,\"max\":150.0},"
