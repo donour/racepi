@@ -26,8 +26,8 @@
 
 #define ENABLE_LOTUS_EVORA
 #define EVORA_BRAKE_PRESSURE_MAX (690)
-#define EVORA_FRONT_WHEEL_TICKS_PER_REV (0x3E8)
-#define EVORA_REAR_WHEEL_TICKS_PER_REV (0x3FC)
+#define EVORA_FRONT_WHEEL_TICKS_PER_REV (0x3E8*1.239)
+#define EVORA_REAR_WHEEL_TICKS_PER_REV (0x3FC*1.1776)
 #define kPA_TO_PSI (0.14503773773020922)
 #define kmh_to_mps (0.277778)
 
@@ -53,7 +53,7 @@ double evora_wheelspeed_cal(const uint32_t raw, const uint32_t pulses_per_rev) {
   }
   uint32_t scaled = raw * 0x32 >> 3;
   scaled = (pulses_per_rev * scaled) / 1000;
-  float scaled_f = (float)scaled / 1000.0; // TODO this needs scaling to gps corrected speed
+  float scaled_f = (float)scaled / (1000.0); // TODO this needs scaling to gps corrected speed
   return (double)scaled_f;
 }
 
