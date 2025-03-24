@@ -24,6 +24,8 @@
 #include <driver/twai.h>
 #include "esp32_can_processor.h"
 
+
+#define MS_TO_MPH (2.23694)
 #define RED_LED_PIN (13) 
 
 // used to indicate that we have timed out all data
@@ -72,7 +74,7 @@ void sparkfun_ubx_task(void *arg) {
 
       rc_set_data(RC_META_LATITUDE,lat);
       rc_set_data(RC_META_LONGITUDE, longitude);
-      rc_set_data(RC_META_SPEED, speed_ms);
+      rc_set_data(RC_META_SPEED, speed_ms*MS_TO_MPH);
       rc_set_data(RC_META_ALTITUDE, elevation_m);
       rc_set_data(RC_META_GPSSATS, n_sats);
       rc_set_data(RC_META_GPSQUAL, myGNSS.getFixType());
