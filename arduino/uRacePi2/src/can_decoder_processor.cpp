@@ -16,8 +16,9 @@
     along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 **************************************************************************/
 
-#include "BluetoothSerial.h"
+#include <math.h>
 #include <driver/twai.h>
+#include "BluetoothSerial.h"
 #include "rc_podium_protocol.h"
 
 #define DEBUG Serial
@@ -44,8 +45,24 @@ class common_can_message {
   };
 };
 
+/* TODO: calculate understeer
+  uint16_t evora_wheelbase_mm = 2575;
+  uint16_t evora steering_ratio_x10 = 160; // 16:1
+  understeer = actual_yaw / requested yaw
+
+  actual yaw: measured
+
+  requested raw:  %/time of turning circle * 2*pi
+  %/time turning circle: speed / turning circle size
+  speed: measured
+  turning circle size: turn radius * 2*pi
+  turn radius : wheelbase / sin(steering_angle)
+
+*/
+
 uint64_t latest_time = 0;
 float latest_yaw_deg = 0.0;
+float latest_steering_angle = 0.0;
 
 double evora_wheelspeed_cal(const uint32_t raw, const uint32_t pulses_per_rev) {
   if (raw == 0x3FFF) {
@@ -55,6 +72,19 @@ double evora_wheelspeed_cal(const uint32_t raw, const uint32_t pulses_per_rev) {
   scaled = (pulses_per_rev * scaled) / 1000;
   float scaled_f = (float)scaled / (1000.0); // TODO this needs scaling to gps corrected speed
   return (double)scaled_f;
+}
+
+float lastest_steering_angle_rad = 0.0;
+
+double calc_understeer(float steering_angle_rad, float wheelbase_m, float speed_ms, float actual_yal_rad) {
+  float requested_yaw_rad = 0.0;
+  if (steering_angle_rad > 0.08) {
+    float turn_radius_m = wheelbase_m / sin(steering_angle_rad);
+    float turning_circle_size_m = turn_radius_m * 2.0 * M_PI;
+    float turning_circle_pct = speed_ms / turning_circle_size_m;
+    requested_yaw_rad = turning_circle_pct * 2.0 * M_PI;
+  }
+  return (actual_yal_rad - requested_yaw_rad) / actual_yal_rad;
 }
 
 
@@ -89,8 +119,8 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
       if (frame->len >=4) {
         int16_t val = ((int16_t)frame->data16[0]) << 1;
         val >>= 1;
-        val /= 10;
-        rc_set_data(RC_META_STEERING, val);
+        rc_set_data(RC_META_STEERING, val/10);
+        lastest_steering_angle_rad = (val/10.0) * M_PI / 180.0;
       }
       break;
 
@@ -150,6 +180,8 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
         float long_accel = 0.0;        
         rc_set_data(RC_META_ACCELX, lat_accel);
         rc_set_data(RC_META_ACCELY, long_accel);
+
+        // TODO lookup yaw channel and calculate understeer
       }
       break;
 #endif // ENABLE_LOTUS_EVORA
