@@ -109,7 +109,7 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
       if (frame->len >= 6){
         // frame bytes from Evora S2 firmware
         // 0:1 - RPM
-        // 2:  - 0
+        // 2:  - 0, reprogrammable
         // 3:  - TPS
         // 4:  - driver input switches
         // 5:  - unknown
@@ -126,13 +126,8 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
         rc_set_data(RC_META_RPM, rpm);
 
         // These are NON-OEM channels, patched into the firmware.
-        uint8_t manifold_temp_f = frame->data[6];
-        rc_set_data(RC_META_IAT, manifold_temp_f);
-        uint8_t trans_temp_f = frame->data[7];
+        uint8_t trans_temp_f = frame->data[2];
         rc_set_data(RC_META_OIL_TEMP, trans_temp_f);
-        // output IAT and OIL_TEMP to debug
-        DEBUG.printf("IAT: % 3d  TransTemp: % 3d", manifold_temp_f, trans_temp_f);
-
       }
       break;
 
