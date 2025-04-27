@@ -149,10 +149,10 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
     case 0x303:
       // IMU
       if (frame->len >= 6){
-        float lat_accel = ((uint8_t)frame->data[4] - 128.0) / ACCEL_DIVISOR;
         float long_accel = 0.0;        
-        rc_set_data(RC_META_ACCELX, lat_accel);
-        rc_set_data(RC_META_ACCELY, long_accel);
+        float lat_accel = ((uint8_t)frame->data[4] - 128.0) / ACCEL_DIVISOR;
+        rc_set_data(RC_META_ACCELX, long_accel);
+        rc_set_data(RC_META_ACCELY, lat_accel);
       }
       break;
 #endif // ENABLE_LOTUS_EVORA
