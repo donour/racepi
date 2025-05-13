@@ -141,8 +141,8 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
         uint8_t fuel_level = frame->data[4] * 100 / 255;
         rc_set_data(RC_META_FUEL_LEVEL, fuel_level);
 
-        uint8_t coolant_temp = frame->data[5];
-        rc_set_data(RC_META_ENGINE_TEMP, coolant_temp);
+        int16_t coolant_temp_f = frame->data[5] * 9 / 8 - 40;
+        rc_set_data(RC_META_ENGINE_TEMP, coolant_temp_f);
       }
       break;
 
