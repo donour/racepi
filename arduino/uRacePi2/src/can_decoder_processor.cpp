@@ -126,7 +126,7 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
         rc_set_data(RC_META_RPM, rpm);
 
         // These are NON-OEM channels, patched into the firmware.
-        uint8_t trans_temp_f = frame->data[2];
+        uint8_t trans_temp_f = frame->data[2] * 9 / 8 - 40;
         rc_set_data(RC_META_OIL_TEMP, trans_temp_f);
       }
       break;
