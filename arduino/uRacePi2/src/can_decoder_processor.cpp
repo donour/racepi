@@ -91,6 +91,9 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
         val >>= 1;
         val /= 10;
         rc_set_data(RC_META_STEERING, val);
+
+        // unused speed indicator
+        //uint8_t steering_speed = frame->data[2];
       }
       break;
 
@@ -151,8 +154,10 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
       if (frame->len >= 6){
         float long_accel = 0.0;        
         float lat_accel = ((uint8_t)frame->data[4] - 128.0) / ACCEL_DIVISOR;
+        float yaw = uint16_t(frame->data16[3] & 0x3FFF);
         rc_set_data(RC_META_ACCELX, long_accel);
         rc_set_data(RC_META_ACCELY, lat_accel);
+        rc_set_data(RC_META_YAW, yaw);
       }
       break;
 #endif // ENABLE_LOTUS_EVORA
