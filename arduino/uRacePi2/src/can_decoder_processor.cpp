@@ -22,8 +22,6 @@
 
 #define DEBUG Serial
 
-#define ACCEL_DIVISOR (38)
-
 #define ENABLE_LOTUS_EVORA
 #define EVORA_BRAKE_PRESSURE_MAX (690)
 #define kPA_TO_PSI (0.14503773773020922)
@@ -91,14 +89,9 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
 
     case 0x085: 
       // steering angle
-      if (frame->len >=4) {
-        int16_t val = ((int16_t)frame->data16[0]) << 1;
-        val >>= 1;
-        val /= 10;
+      if (frame->len >= 3) {
+        int16_t val = (int16_t)frame->data16[0];
         rc_set_data(RC_META_STEERING, val);
-
-        // unused speed indicator
-        //uint8_t steering_speed = frame->data[2];
       }
       break;
 
@@ -144,11 +137,20 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
       break;
 
     case 0x303:
-      // IMU
-      if (frame->len >= 6){
-        float long_accel = 0.0;        
-        float lat_accel = ((uint8_t)frame->data[4] - 128.0) / ACCEL_DIVISOR;
-        float yaw = uint16_t(frame->data16[3] & 0x3FFF);
+      // IMU (7-byte message: longitudinal accel, lateral accel, yaw rate)
+      if (frame->len >= 7){
+        // Longitudinal acceleration (12-bit, bytes 2-3)
+        uint16_t long_raw = ((uint16_t)(frame->data[2] & 0x0F) << 8) | frame->data[3];
+        float long_accel = (long_raw - 2049) * 20385.0 / 100000.0 / 2550.0;
+
+        // Lateral acceleration (12-bit, bytes 4-5)
+        uint16_t lat_raw = ((uint16_t)frame->data[4] << 4) | (frame->data[5] >> 4);
+        float lat_accel = (lat_raw - 2049) * 20385.0 / 100000.0 / 2550.0;
+
+        // Yaw rate (12-bit, bytes 5-6)
+        uint16_t yaw_raw = ((uint16_t)(frame->data[5] & 0x0F) << 8) | frame->data[6];
+        float yaw = (yaw_raw - 2048) * 8;
+
         rc_set_data(RC_META_ACCELX, long_accel);
         rc_set_data(RC_META_ACCELY, lat_accel);
         rc_set_data(RC_META_YAW, yaw);

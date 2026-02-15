@@ -1,0 +1,45 @@
+CAN Message 0x85 — Steering Angle Sensor to ECU
+
+Received on FlexCAN A, buffer 0x04 (arb ID = 0x85). 5-byte message.
+Source: Steering angle sensor (via ABS/ESP module).
+Only processed when COD configuration bit (COD[1] bit 12) is set.
+
+Byte | Name                        | Description                                      | Transform / Encoding                        | Units
+-----|-----------------------------|--------------------------------------------------|----------------------------------------------|--------
+0    | Steering Angle (low byte)   | Steering wheel angle, 16-bit, low byte           | angle = (byte1 << 8) | byte0                | (see below)
+1    | Steering Angle (high byte)  | Steering wheel angle, 16-bit, high byte          | (see byte 0)                                 |
+2    | Steering Angle Rate         | Rate of steering wheel rotation                  | Direct value                                 | (unknown units)
+3    | Sensor Status Flags         | Steering angle sensor status bitfield             | —                                            | bitfield
+4    | (unused by ECU)             |                                                  |                                              |
+
+Bytes 0–1 — Steering Angle
+
+  - 16-bit signed value: (byte1 << 8) | byte0
+  - Stored to: steering_angle
+  - Used with abs() for comparison against CAL_dca_enable_steering_max (shifted left by 1)
+  - Sign convention: positive = one direction, negative = other direction
+  - Center = 0
+
+Byte 2 — Steering Angle Rate
+
+  - 8-bit value
+  - Stored to: steering_angle_rate___
+
+Byte 3 — Sensor Status Flags
+
+  Bit | Stored In                          | Meaning
+  ----|------------------------------------|------------------------------------------
+  0   | steering_angle_sensor_flags bit 0  | Sensor valid / calibrated
+  1   | steering_angle_sensor_flags bit 1  | (unknown status flag)
+  2   | steering_angle_sensor_flags bit 2  | (unknown status flag)
+
+  These bits are copied directly from the CAN message into the
+  steering_angle_sensor_flags variable, preserving their state.
+
+  Bit 0 (sensor valid) is checked by the deceleration assist (DCA) logic
+  to determine if the steering angle reading can be trusted.
+
+Outputs:
+  - steering_angle (16-bit signed)
+  - steering_angle_rate___  (8-bit)
+  - steering_angle_sensor_flags (bits 0, 1, 2 updated)

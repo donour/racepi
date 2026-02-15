@@ -1,0 +1,92 @@
+CAN Message 0x303 — ABS/ESP IMU (Inertial Measurement Unit) to ECU
+
+Received on FlexCAN A, buffer 0x0D (arb ID = 0x303). 7-byte message.
+Source: ABS/ESP module inertial sensors.
+Only processed when COD configuration bit (COD[1] bit 11) is set.
+
+Note: Ghidra decompiles the local data buffer as two separate variables
+(local_10[4] and local_c) due to an indexed store spanning both. They are
+actually one contiguous 7-byte buffer copied from fca_buffer[0xd].data[0..6].
+
+Byte | Name                         | Description
+-----|------------------------------|----------------------------------------------------
+0    | (unused by ECU)              |
+1    | Sensor Status                | Status/validity flags for accelerometer and gyroscope
+2    | Long. Accel (high)           | Longitudinal acceleration, 12-bit (high nibble in low 4 bits)
+3    | Long. Accel (low)            | Longitudinal acceleration, 12-bit (low 8 bits)
+4    | Lateral Accel (high)         | Lateral acceleration, 12-bit (high 8 bits)
+5    | Accel (low) / Gyro (high)    | Shared byte: lat accel low nibble [7:4], gyro high nibble [3:0]
+6    | Yaw Rate / Gyro (low)        | Yaw rate, 12-bit (low 8 bits)
+
+Byte 1 — Sensor Status
+
+  Bits  | Field               | Values
+  ------|---------------------|------------------------------------------
+  [1:0] | General status      | 0 = OK; any bit set = error
+  [3:2] | Gyro status         | 0 = valid, 1 = error, 2 = error, 3 = unknown/init
+  [5:4] | Accel status        | 0 = valid, 1 = error, 2 = error, 3 = unknown/init
+
+  An error flag (DAT_40001518 bit 2) is set when any of these conditions are true:
+    - Bit 0 set
+    - Bit 1 set
+    - Gyro status == 1 or 2
+    - Accel status == 1 or 2
+
+  When the accel status field is non-zero, all accel outputs are forced to 0.
+  When the gyro status field is non-zero, imu_gyro is forced to 0.
+
+Bytes 2–3 — Longitudinal Acceleration (12-bit packed)
+
+  Bit layout:
+    byte2[3:0]  = accel bits [11:8]  (high 4 bits)
+    byte3[7:0]  = accel bits [7:0]   (low 8 bits)
+
+  raw_12bit = (byte2 & 0x0F) << 8 | byte3
+
+  Transform:
+    imu_accel_long = (raw_12bit - 2049) * 20385 / 100000
+
+  Same scaling and offset as lateral acceleration.
+  Center (zero g) = raw value 2049 (0x801)
+
+  NOTE: The B13200091 (2011 Evora NA) firmware does NOT decode this field.
+  It is decoded by the GT430 (C132E0278) and Evora GT (E132E0288) firmwares,
+  where it is stored to imu_accel_long___ (i16_accel_1/2550g).
+
+Bytes 4–5 — Lateral Acceleration (12-bit packed)
+
+  Bit layout:
+    byte4[7:0]  = accel bits [11:4]  (high 8 bits)
+    byte5[7:4]  = accel bits [3:0]   (low 4 bits)
+
+  raw_12bit = (byte4 << 4) | (byte5 >> 4)
+
+  Transform:
+    imu_accel_lat = (raw_12bit - 2049) * 20385 / 100000
+
+  Output type: i16_accel_1/2550g (signed 16-bit, units of 1/2550 g)
+  To convert to g:  accel_g = imu_accel_lat / 2550
+
+  Center (zero g) = raw value 2049 (0x801)
+  Resolution: 20385 / 100000 / 2550 ≈ 0.0000799 g per raw count
+
+Bytes 5–6 — Yaw Rate / Gyroscope (12-bit packed)
+
+  Bit layout:
+    byte5[3:0]  = gyro bits [11:8]   (high 4 bits)
+    byte6[7:0]  = gyro bits [7:0]    (low 8 bits)
+
+  raw_12bit = (byte5 & 0x0F) << 8 | byte6
+
+  Transform:
+    imu_gyro = (raw_12bit - 2048) * 8
+
+  Center (zero rate) = raw value 2048 (0x800)
+  Signed output, scaled by 8.
+
+Outputs:
+  - imu_accel_long___ (longitudinal acceleration — GT/GT430 only, not decoded on NA Evora)
+  - imu_accel_lat     (lateral acceleration, i16_accel_1/2550g)
+  - imu_gyro          (yaw rate, signed 16-bit)
+  - DAT_400022ce      (raw copy of byte 1, sensor status)
+  - DAT_40001518      (message-received flag bit 0; error flag bit 2)
