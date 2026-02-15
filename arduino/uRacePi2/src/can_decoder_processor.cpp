@@ -91,7 +91,7 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
       // steering angle
       if (frame->len >= 3) {
         int16_t val = (int16_t)frame->data16[0];
-        rc_set_data(RC_META_STEERING, val);
+        rc_set_data(RC_META_STEERING, val/10.0f);
       }
       break;
 
