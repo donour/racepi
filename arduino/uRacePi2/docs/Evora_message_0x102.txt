@@ -1,0 +1,43 @@
+CAN Message 0x102 — ECU to ABS/ESP (Torque Information)
+
+Transmitted on FlexCAN A, buffer 0x15 (arb ID = 0x102). 3-byte message (DLC = 3).
+Bytes 3–7 are zeroed.
+
+Two packed fields across bytes 0–2:
+
+Bit Layout:
+
+  Byte 0        Byte 1        Byte 2
+  [7:0]         [7:0]         [7:0]
+  AAAAAA..      BBBBAAAA      .BBBBBBB
+
+  A = Torque Alpha-N Net     (12 bits, unsigned)
+  B = Torque Net Combustion  (11 bits, signed)
+
+Field     | Bits                                              | Name
+----------|---------------------------------------------------|-----------------------------
+A [11:0]  | byte0[7:2] (low 6), byte1[3:0] (high 4)         | Torque Alpha-N Net
+          | Note: byte0 bits [1:0] unused (zero)              |
+B [10:0]  | byte1[7:4] (low 4), byte2[6:0] (high 7)         | Torque Net Combustion
+
+Field A — Torque Alpha-N Net (torque_alphaN_net)
+  - 12-bit unsigned value (0–4095)
+  - Type: u16_torque_nm
+  - Units: Nm (direct, no scaling)
+  - Negative source values are clamped to 0
+  - 0xFFF (4095) = invalid / error (set when VVT inhibit, MAF fault, or misfire fault active)
+
+Field B — Torque Net Combustion (torque_net_engine_combustion)
+  - 11-bit signed value
+  - Encoding: raw = (torque_net_engine_combustion - 400) * 4
+  - Decode:   torque_Nm = raw / 4 + 400
+  - Resolution: 0.25 Nm
+  - Offset: 400 Nm
+  - Range: approximately 144–655 Nm (raw -1024 to +1023 → 144 to 655.75 Nm)
+  - 0x7FF (2047) = invalid / error (set when VVT inhibit, all 6 cylinders misfiring,
+    or misfire condition flag 0x800 active)
+
+Error Encoding:
+  - Both invalid: data = [0xFF, 0xFF, 0x7F] (A=0xFFF, B=0x7FF)
+  - Only A invalid: A bits set to all 1s (0xFFF), B encoded normally
+  - Only B invalid: B bits set to all 1s (0x7FF), A encoded normally

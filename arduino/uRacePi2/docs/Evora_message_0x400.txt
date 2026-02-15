@@ -1,0 +1,45 @@
+CAN Message 0x400 — ECU to Instrument Cluster (Dashboard Data)
+
+Transmitted on FlexCAN A, buffer 0x14 (arb ID = 0x400). 7-byte message (DLC = 7).
+
+Byte | Name                        | Description                                         | Transform / Encoding                                                        | Units
+-----|-----------------------------|-----------------------------------------------------|------------------------------------------------------------------------------|--------
+0–1  | Fuel Usage (instantaneous)  | Instantaneous fuel consumption, 16-bit big-endian   | raw = fuel_usage_instantaneous << 4 (upper 12 bits meaningful, max 0xFFF0)   | (relative, higher = more consumption)
+2    | (Reserved / field7)         | Always 0 in observed code                           | —                                                                            | —
+3    | Cluster Flags               | Bitfield (see below)                                | —                                                                            | bitfield
+4    | Fuel Level                  | Fuel tank level as percentage                       | % = value * 100 / 255                                                        | %
+5    | Coolant Temperature         | Engine coolant temperature                          | °C = value * 5/8 - 40                                                        | °C
+6    | Cluster Indicator Flags     | Warning lights / shift light bitfield (see below)   | —                                                                            | bitfield
+
+Byte 3 — Cluster Flags
+
+Bit | Mask | Meaning
+----|------|----------------------------------------------
+4   | 0x10 | (cleared before TX, purpose unknown)
+3   | 0x08 | Traction control active indicator
+0   | 0x01 | Low fuel warning
+
+Byte 6 — Cluster Indicator Flags
+
+Bit | Mask | Meaning
+----|------|----------------------------------------------
+7   | 0x80 | Shift light stage 1 (approaching rev limit)
+6   | 0x40 | Shift light stage 2
+5   | 0x20 | Shift light stage 3 (at rev limit)
+4   | 0x10 | MIL (Malfunction Indicator Lamp / Check Engine)
+3   | 0x08 | Oil pressure warning lamp
+2   | 0x04 | Limp mode / LBF indicator
+1   | 0x02 | TPMS warning (tire pressure)
+0   | 0x01 | Coolant over-temperature warning
+
+Notes:
+- Shift light bits [7:5] progress through 4 stages (000→100→110→111) based on RPM
+  relative to the hard rev limiter, with a per-gear RPM offset and hysteresis deadband.
+  At engine start (cluster_run_state == 1), all three shift light bits are set (0xE0) for lamp test.
+- Coolant over-temperature (bit 0) is set when coolant_temp exceeds CAL_cluster_overtemp_warning_light.
+- TPMS warning (bit 1) is set when any tire has a valid pressure reading that indicates an error condition.
+  It also flashes/blinks during certain TPMS fault conditions.
+- Fuel level percentage is scaled from raw fuel level sensor value, clipped at a zero threshold
+  (CAL_cluster_fuel_level_zero_clip_threshold) and capped at a COD-derived max value.
+- Fuel usage instantaneous is computed from injection quantity / car_speed when the vehicle is moving;
+  set to 0 when stationary.
