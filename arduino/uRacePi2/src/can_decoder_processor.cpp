@@ -91,7 +91,13 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
       // steering angle
       if (frame->len >= 3) {
         int16_t val = (int16_t)frame->data16[0];
-        rc_set_data(RC_META_STEERING, val/10.0f);
+        float steering_angle = val / 10.0f;
+  
+        // drop samples with extreme steering angles that are likely erroneous
+        if (steering_angle > -360.0 && steering_angle < 360.0) {
+          rc_set_data(RC_META_STEERING, steering_angle);
+        }
+        
       }
       break;
 
