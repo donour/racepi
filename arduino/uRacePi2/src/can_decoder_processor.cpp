@@ -44,6 +44,17 @@ class common_can_message {
 uint64_t latest_time = 0;
 float latest_yaw_deg = 0.0;
 
+// Estimate available friction (mu) from lateral acceleration using
+// peak-hold with exponential decay. The decay rate is tuned for ~50Hz
+// IMU updates; mu decays toward zero with a time constant of ~10s.
+float mu = 1.0f;
+void update_mu_estimate(float lat_accel_g) {
+  const float decay = 0.998f;
+  float abs_lat = fabsf(lat_accel_g);
+  float decayed_mu = fmax(0.3f, mu * decay);
+  mu = fmaxf(abs_lat, decayed_mu);
+}
+
 double evora_wheelspeed_kmh(const uint32_t raw) {
   if (raw == 0x3FFF) {
     return 0.0;
@@ -216,6 +227,7 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
         uint16_t yaw_raw = ((uint16_t)(frame->data[5] & 0x0F) << 8) | frame->data[6];
         float yaw = (yaw_raw - 2048) * 8;
 
+        update_mu_estimate(lat_accel);
         rc_set_data(RC_META_ACCELY, lat_accel);
         rc_set_data(RC_META_YAW, yaw);
       }
