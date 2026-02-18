@@ -96,7 +96,7 @@ void bt_tx_data_sample(HardwareSerial *debug) {
 }
 
 void rc_bt_reader(HardwareSerial *debug, void (*rc_enable_callback)(bool)) {
-    bool enable_data = false;
+    int enable_data = 0;
     char rx_buffer[RC_SERIAL_RX_BUFFER_SIZE];
 
     unsigned int rx_buffer_index = 0;
@@ -126,25 +126,25 @@ void rc_bt_reader(HardwareSerial *debug, void (*rc_enable_callback)(bool)) {
                 }
                 if (strstr(rx_buffer, "setTelemetry")) {
                     if (strstr(rx_buffer, "\"rate\":50")) {
-                        enable_data = true;
-                        if (rc_enable_callback != NULL) {
+                        enable_data++;
+                        if (enable_data == 1 && rc_enable_callback != NULL) {
                             rc_enable_callback(true);
                         }
-                        debug->println("[Telemetry enabled]");
+                        debug->printf("[Telemetry enabled (%d)]\n", enable_data);
                         spp_serial_printf(meta_mesg, tick++);
                     } else {
-                        enable_data = false;
-                        if (rc_enable_callback != NULL) {
+                        if (enable_data > 0) enable_data--;
+                        if (enable_data == 0 && rc_enable_callback != NULL) {
                             rc_enable_callback(false);
                         }
-                        debug->println("[Telemetry disabled]");
+                        debug->printf("[Telemetry disabled (%d)]\n", enable_data);
                     }
                 }
                 rx_buffer_index = 0;
                 bzero(rx_buffer, RC_SERIAL_RX_BUFFER_SIZE);
             }
         } else {
-            if (enable_data && new_data) {
+            if (enable_data > 0 && new_data) {
                 bt_tx_data_sample(debug);
                 new_data = false;
                 delay(RC_SEND_DELAY_MS);

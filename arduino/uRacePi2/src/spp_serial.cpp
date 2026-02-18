@@ -78,8 +78,10 @@ static void gap_callback(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *par
 static void spp_callback(esp_spp_cb_event_t event, esp_spp_cb_param_t *param) {
     switch (event) {
         case ESP_SPP_INIT_EVT:
-            ESP_LOGI(TAG, "ESP_SPP_INIT_EVT");
-            esp_spp_start_srv(ESP_SPP_SEC_NONE, ESP_SPP_ROLE_SLAVE, 0, SPP_SERVER_NAME);
+            ESP_LOGI(TAG, "ESP_SPP_INIT_EVT: starting %d server instances", SPP_MAX_CLIENTS);
+            for (int i = 0; i < SPP_MAX_CLIENTS; i++) {
+                esp_spp_start_srv(ESP_SPP_SEC_NONE, ESP_SPP_ROLE_SLAVE, 0, SPP_SERVER_NAME);
+            }
             break;
         case ESP_SPP_SRV_OPEN_EVT:
         case ESP_SPP_OPEN_EVT:
@@ -116,6 +118,8 @@ static void spp_callback(esp_spp_cb_event_t event, esp_spp_cb_param_t *param) {
                         break;
                     }
                 }
+                // Restart one server instance to replace the closed one
+                esp_spp_start_srv(ESP_SPP_SEC_NONE, ESP_SPP_ROLE_SLAVE, 0, SPP_SERVER_NAME);
             }
             break;
         default:
