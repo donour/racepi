@@ -36,8 +36,9 @@ static const char *TAG = "spp_serial";
 #define RX_RING_BUF_SIZE 512
 #define TX_FMT_BUF_SIZE  3072
 
-static uint32_t spp_handle = 0;
-static volatile bool spp_connected = false;
+#define SPP_MAX_CLIENTS 3
+static uint32_t spp_handles[SPP_MAX_CLIENTS] = {0};
+static volatile int spp_client_count = 0;
 
 static uint8_t  rx_ring[RX_RING_BUF_SIZE];
 static volatile size_t rx_head = 0;
@@ -81,22 +82,41 @@ static void spp_callback(esp_spp_cb_event_t event, esp_spp_cb_param_t *param) {
             esp_spp_start_srv(ESP_SPP_SEC_NONE, ESP_SPP_ROLE_SLAVE, 0, SPP_SERVER_NAME);
             break;
         case ESP_SPP_SRV_OPEN_EVT:
-            ESP_LOGI(TAG, "ESP_SPP_SRV_OPEN_EVT handle=%lu", (unsigned long)param->srv_open.handle);
-            spp_handle = param->srv_open.handle;
-            spp_connected = true;
-            break;
         case ESP_SPP_OPEN_EVT:
-            ESP_LOGI(TAG, "ESP_SPP_OPEN_EVT handle=%lu", (unsigned long)param->open.handle);
-            spp_handle = param->open.handle;
-            spp_connected = true;
+            {
+                uint32_t handle = (event == ESP_SPP_SRV_OPEN_EVT)
+                    ? param->srv_open.handle : param->open.handle;
+                ESP_LOGI(TAG, "client connected handle=%lu", (unsigned long)handle);
+                bool stored = false;
+                for (int i = 0; i < SPP_MAX_CLIENTS; i++) {
+                    if (spp_handles[i] == 0) {
+                        spp_handles[i] = handle;
+                        spp_client_count++;
+                        stored = true;
+                        break;
+                    }
+                }
+                if (!stored) {
+                    ESP_LOGW(TAG, "max clients reached, closing handle=%lu", (unsigned long)handle);
+                    esp_spp_disconnect(handle);
+                }
+            }
             break;
         case ESP_SPP_DATA_IND_EVT:
             rx_ring_push(param->data_ind.data, param->data_ind.len);
             break;
         case ESP_SPP_CLOSE_EVT:
-            ESP_LOGI(TAG, "ESP_SPP_CLOSE_EVT");
-            spp_handle = 0;
-            spp_connected = false;
+            {
+                uint32_t handle = param->close.handle;
+                ESP_LOGI(TAG, "client disconnected handle=%lu", (unsigned long)handle);
+                for (int i = 0; i < SPP_MAX_CLIENTS; i++) {
+                    if (spp_handles[i] == handle) {
+                        spp_handles[i] = 0;
+                        spp_client_count--;
+                        break;
+                    }
+                }
+            }
             break;
         default:
             break;
@@ -146,8 +166,11 @@ void spp_serial_init(const char *device_name) {
 }
 
 void spp_serial_write(const uint8_t *data, size_t len) {
-    if (spp_connected && spp_handle != 0 && len > 0) {
-        esp_spp_write(spp_handle, len, (uint8_t *)data);
+    if (len == 0) return;
+    for (int i = 0; i < SPP_MAX_CLIENTS; i++) {
+        if (spp_handles[i] != 0) {
+            esp_spp_write(spp_handles[i], len, (uint8_t *)data);
+        }
     }
 }
 
@@ -176,5 +199,5 @@ int spp_serial_read() {
 }
 
 bool spp_serial_connected() {
-    return spp_connected;
+    return spp_client_count > 0;
 }
