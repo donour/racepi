@@ -1,0 +1,43 @@
+CAN Message 0x114 — ECU to Instrument Cluster
+
+Transmitted on FlexCAN A, buffer 0x15 (arb ID field = 0x04500000 → standard ID 0x114). 8-byte message.
+
+Byte | Name                        | Description                                              | Transform                                                                                      | Units
+-----|-----------------------------|----------------------------------------------------------|------------------------------------------------------------------------------------------------|--------
+0    | Engine Speed (low)          | Tachometer RPM, little-endian low byte                   | RPM = (byte1 << 8) | byte0                                                                    | RPM
+1    | Engine Speed (high)         | Tachometer RPM, little-endian high byte                  | (see byte 0)                                                                                   | RPM
+2    | (Reserved)                  | Always 0                                                 | —                                                                                              | —
+3    | Accelerator Pedal Position  | Throttle pedal position (or cruise-commanded throttle)   | % = value * 100 / 250 (raw = accel_pedal_pos >> 2, clamped; 0xFB = max, 0xFF = sensor error)   | %
+4    | Driver Input Flags [1]      | Bitfield (see below)                                     | —                                                                                              | bitfield
+5    | Driver Input Flags [0]      | Bitfield (see below)                                     | —                                                                                              | bitfield
+6    | (Reserved)                  | Always 0                                                 | —                                                                                              | —
+7    | (Reserved)                  | Always 0                                                 | —                                                                                              | —
+
+Byte 3 — Accelerator Pedal Position Details
+
+- Source: accel_pedal_pos (type u16_factor_1/1023, range 0–1023), right-shifted by 2 → 0–255 scale
+- If accel_pedal_pos > 1004, clamped to 0xFB (251)
+- If VVT bank inhibit flag bit 15 set, forced to 0xFF (error/invalid)
+- During cruise control, replaced with cruise-commanded throttle: cruise_tps_commanded * 250 / 1023
+- When engine not running (engine_operating_state_flags & 1), forced to 0x00
+
+Byte 4 — Driver Input Flags [1]
+
+Bit | Mask | Meaning
+----|------|----------------------------------------------
+7   | 0x80 | Sport mode active
+6   | 0x40 | Launch control enabled
+5   | 0x20 | Clutch disengaged (pedal up)
+4   | 0x10 | Clutch partial / transitioning
+3–1 | —    | (Unknown / unused in analyzed code)
+0   | 0x01 | Engine start permitted / starter relay enabled
+
+Clutch position bits [5:4]: 00 = engaged, 01 = partial, 10 = disengaged, 11 = no clutch sensor / auto
+
+Byte 5 — Driver Input Flags [0]
+
+Bit | Mask | Meaning
+----|------|----------------------------------------------
+2   | 0x04 | Sport mode available (COD option bit)
+1   | 0x02 | Brake pedal pressed (from brake switch bit 5)
+0   | 0x01 | Brake light / brake active (from brake switch bit 4)

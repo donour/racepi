@@ -22,12 +22,9 @@
 
 #define DEBUG Serial
 
-#define ACCEL_DIVISOR (38)
-
 #define ENABLE_LOTUS_EVORA
 #define EVORA_BRAKE_PRESSURE_MAX (690)
-#define EVORA_FRONT_WHEEL_TICKS_PER_REV (0x3E8*1.239)
-#define EVORA_REAR_WHEEL_TICKS_PER_REV (0x3FC*1.1776)
+#define EVORA_FUEL_CAPACITY_LITERS (60.0)
 #define kPA_TO_PSI (0.14503773773020922)
 #define kmh_to_mps (0.277778)
 
@@ -47,14 +44,11 @@ class common_can_message {
 uint64_t latest_time = 0;
 float latest_yaw_deg = 0.0;
 
-double evora_wheelspeed_cal(const uint32_t raw, const uint32_t pulses_per_rev) {
+double evora_wheelspeed_kmh(const uint32_t raw) {
   if (raw == 0x3FFF) {
     return 0.0;
   }
-  uint32_t scaled = raw * 0x32 >> 3;
-  scaled = (pulses_per_rev * scaled) / 1000;
-  float scaled_f = (float)scaled / (1000.0); // TODO this needs scaling to gps corrected speed
-  return (double)scaled_f;
+  return raw * 0.0625;
 }
 
 
@@ -66,71 +60,71 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
   switch(frame->id) { 
 #ifdef ENABLE_LOTUS_EVORA
     case 0x0A2:
-      if (frame->len >= 4 ) {
-        // wheelspeeds front
-        uint32_t lf = (frame->data[1] & 0x3f) << 8 | frame->data[0];
-        uint32_t rf = (frame->data[1] & 0xC0) >> 6 | (frame->data[3] & 0xF) << 10 | frame->data[2] << 2;
-        rc_set_data(RC_META_WHEEL_SPEED_LF, evora_wheelspeed_cal(lf, EVORA_FRONT_WHEEL_TICKS_PER_REV));
-        rc_set_data(RC_META_WHEEL_SPEED_RF, evora_wheelspeed_cal(rf, EVORA_FRONT_WHEEL_TICKS_PER_REV));
+      if (frame->len >= 6 ) {
+        // wheelspeeds front + vehicle speed (6-byte message, three 14-bit fields)
+        uint32_t lf = frame->data[0] | ((uint32_t)(frame->data[1] & 0x3F) << 8);
+        uint32_t rf = (frame->data[1] >> 6) | ((uint32_t)frame->data[2] << 2) | ((uint32_t)(frame->data[3] & 0x0F) << 10);
+        rc_set_data(RC_META_WHEEL_SPEED_LF, evora_wheelspeed_kmh(lf));
+        rc_set_data(RC_META_WHEEL_SPEED_RF, evora_wheelspeed_kmh(rf));
+        
+        /*
+          Ignoring ABS vehicle speed in favor of GPS data
+
+          uint32_t vs = (frame->data[3] >> 4) | ((uint32_t)frame->data[4] << 4) | ((uint32_t)(frame->data[5] & 0x03) << 12);
+          rc_set_data(RC_META_SPEED, evora_wheelspeed_kmh(vs) * kmh_to_mps);
+        */
+        
       }
       break;
     case 0x0A4:
-      if (frame->len >= 4 ) {
-        // wheelspeeds rear
-        uint32_t lr = (frame->data[1] & 0x3f) << 8 | frame->data[0];
-        uint32_t rr = (frame->data[1] & 0xC0) >> 6 | (frame->data[3] & 0xF) << 10 | frame->data[2] << 2;
-        rc_set_data(RC_META_WHEEL_SPEED_LR, evora_wheelspeed_cal(lr, EVORA_REAR_WHEEL_TICKS_PER_REV));
-        rc_set_data(RC_META_WHEEL_SPEED_RR, evora_wheelspeed_cal(rr, EVORA_REAR_WHEEL_TICKS_PER_REV));
+      if (frame->len >= 5 ) {
+        // wheelspeeds rear + brake switch (8-byte message, two 14-bit fields + status)
+        uint32_t lr = frame->data[0] | ((uint32_t)(frame->data[1] & 0x3F) << 8);
+        uint32_t rr = (frame->data[1] >> 6) | ((uint32_t)frame->data[2] << 2) | ((uint32_t)(frame->data[3] & 0x0F) << 10);
+        rc_set_data(RC_META_WHEEL_SPEED_LR, evora_wheelspeed_kmh(lr));
+        rc_set_data(RC_META_WHEEL_SPEED_RR, evora_wheelspeed_kmh(rr));
+        bool brake_active = (frame->data[4] & 0x03) != 0;
+        rc_set_data(RC_META_BRAKE, brake_active ? EVORA_BRAKE_PRESSURE_MAX : 0.0);
       }
       break;
 
     case 0x085: 
       // steering angle
-      if (frame->len >=4) {
-        int16_t val = ((int16_t)frame->data16[0]) << 1;
-        val >>= 1;
-        val /= 10;
-        rc_set_data(RC_META_STEERING, val);
-
-        // unused speed indicator
-        //uint8_t steering_speed = frame->data[2];
+      if (frame->len >= 3) {
+        int16_t val = (int16_t)frame->data16[0];
+        float steering_angle = val / 10.0f;
+  
+        // drop samples with extreme steering angles that are likely erroneous
+        if (steering_angle > -360.0 && steering_angle < 360.0) {
+          rc_set_data(RC_META_STEERING, steering_angle);
+        }
+        
       }
       break;
 
     case 0x102:
-      // torque limits
+      // torque alpha-N net (12-bit unsigned, Nm, no scaling)
       if (frame->len >= 3) {
-        // two values packed into 3 bytes
-        uint16_t torque_limit = ((uint16_t)(frame->data[0]) >> 2) | (((uint16_t)(frame->data[1] & 0x0F)) << 6);
-        uint16_t raw_engine_torque = ((uint16_t)(frame->data[1] & 0xF0) >> 4) | ((uint16_t)frame->data[2] << 4);
-        uint16_t engine_torque = raw_engine_torque + 400;
-        rc_set_data(RC_META_TORQUE_LIMIT, torque_limit);
-        rc_set_data(RC_META_ENGINE_TORQUE, engine_torque);
+        uint16_t torque_alphaN_net = (frame->data[0] >> 2) | ((uint16_t)(frame->data[1] & 0x0F) << 6);
+        if (torque_alphaN_net != 0xFFF) {
+          rc_set_data(RC_META_ENGINE_TORQUE, torque_alphaN_net);
+        }
       }
       break;
     case 0x114:
       if (frame->len >= 6){
-        // frame bytes from Evora S2 firmware
-        // 0:1 - RPM
-        // 2:  - 0, reprogrammable
-        // 3:  - TPS
-        // 4:  - driver input switches
-        // 5:  - unknown
-        // 6:7 - zero
-
-        // bit 40 is brake pedal switch, no pressure reading is provided.
-        bool brake_active = ((frame->data[5] & 0x1) != 0);
-        rc_set_data(RC_META_BRAKE, brake_active ? EVORA_BRAKE_PRESSURE_MAX : 0.0);
+        /*
+         This brake info is ignored because it is already logged from the ABS messsage.
+         
+          bool brake_active = ((frame->data[5] & 0x1) != 0);
+          rc_set_data(RC_META_BRAKE, brake_active ? EVORA_BRAKE_PRESSURE_MAX : 0.0);
+        */
 
         uint16_t tps = (uint8_t)frame->data[3] * 100 / 255;
         rc_set_data(RC_META_TPS, tps);
 
         uint16_t rpm = frame->data16[0] / 4;
         rc_set_data(RC_META_RPM, rpm);
-
-        // These are NON-OEM channels, patched into the firmware.
-        uint8_t trans_temp_f = frame->data[2] * 9 / 8 - 40;
-        rc_set_data(RC_META_OIL_TEMP, trans_temp_f);
       }
       break;
 
@@ -141,8 +135,8 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
         // 5   - coolant temp
         // 6   - indicator flags
 
-        uint8_t fuel_level = frame->data[4] * 100 / 255;
-        rc_set_data(RC_META_FUEL_LEVEL, fuel_level);
+        float fuel_level_liters= frame->data[4] *EVORA_FUEL_CAPACITY_LITERS / 255.0;
+        rc_set_data(RC_META_FUEL_LEVEL, fuel_level_liters);
 
         int16_t coolant_temp_f = frame->data[5] * 9 / 8 - 40;
         rc_set_data(RC_META_ENGINE_TEMP, coolant_temp_f);
@@ -150,12 +144,22 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
       break;
 
     case 0x303:
-      // IMU
-      if (frame->len >= 6){
-        float long_accel = 0.0;        
-        float lat_accel = ((uint8_t)frame->data[4] - 128.0) / ACCEL_DIVISOR;
-        float yaw = uint16_t(frame->data16[3] & 0x3FFF);
-        rc_set_data(RC_META_ACCELX, long_accel);
+      // IMU (7-byte message: longitudinal accel, lateral accel, yaw rate)
+      if (frame->len >= 7){
+
+        // The first 12 bits aren't used in this sensor
+        // // Longitudinal acceleration (12-bit, bytes 2-3)
+        // uint16_t long_raw = ((uint16_t)(frame->data[2] & 0x0F) << 8) | frame->data[3];
+        // float long_accel = (long_raw - 2049) * 20385.0 / 100000.0 / 2550.0;
+
+        // Lateral acceleration (12-bit, bytes 4-5)
+        uint16_t lat_raw = ((uint16_t)frame->data[4] << 4) | (frame->data[5] >> 4);
+        float lat_accel = (lat_raw - 2049) * 20385.0 / 100000.0 / 2550.0;
+
+        // Yaw rate (12-bit, bytes 5-6)
+        uint16_t yaw_raw = ((uint16_t)(frame->data[5] & 0x0F) << 8) | frame->data[6];
+        float yaw = (yaw_raw - 2048) * 8;
+
         rc_set_data(RC_META_ACCELY, lat_accel);
         rc_set_data(RC_META_YAW, yaw);
       }

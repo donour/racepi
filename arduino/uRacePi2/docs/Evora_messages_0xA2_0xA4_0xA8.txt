@@ -1,0 +1,121 @@
+CAN Messages 0xA2, 0xA4, 0xA8 — ABS/ESP Module to ECU (Wheel Speeds & Status)
+
+Received on FlexCAN A, buffer 0x0E. These three messages share the same RX
+buffer and are demuxed by arbitration ID in flexcan_a_rx_wheelspeeds().
+All originate from the ABS/ESP module.
+
+================================================================================
+CAN Message 0xA2 — Front Wheel Speeds + Vehicle Speed
+================================================================================
+
+6-byte message.
+
+Three packed 14-bit wheel speed fields, laid out across bytes 0–5:
+
+Bit Layout (bytes shown MSB-first as transmitted on CAN bus):
+
+  Byte 0    Byte 1    Byte 2    Byte 3    Byte 4    Byte 5
+  [7:0]     [7:0]     [7:0]     [7:0]     [7:0]     [7:0]
+  AAAAAAAA  BBBBBBAA  BBBBBBBB  CCCCBBBB  CCCCCCCC  ......CC
+
+  A = Left Front wheel speed  (14 bits)
+  B = Right Front wheel speed (14 bits)
+  C = Vehicle speed            (14 bits)
+
+Field     | Bits                                                  | Name
+----------|-------------------------------------------------------|-----------------------------
+A [13:0]  | byte0[7:0] (low 8), byte1[5:0] (high 6)             | Left Front Wheel Speed
+B [13:0]  | byte1[7:6] (low 2), byte2[7:0] (mid 8), byte3[3:0] (high 4) | Right Front Wheel Speed
+C [13:0]  | byte3[7:4] (low 4), byte4[7:0] (mid 8), byte5[1:0] (high 2) | Vehicle Speed
+
+Transform (all three fields): speed_kph = raw * 50 / 8 / 100 = raw * 0.0625 km/h
+  - Output stored as 1/100 km/h internally (raw * 50 / 8)
+  - 0x3FFF (16383) = invalid / not available → stored as 0
+
+Outputs:
+  - wheel_speed.LF  (left front)
+  - wheel_speed.RF  (right front)
+  - car_speed_x100   (vehicle reference speed, 1/100 km/h)
+
+================================================================================
+CAN Message 0xA4 — Rear Wheel Speeds + Brake Switch + ABS Data
+================================================================================
+
+8-byte message.
+
+Byte | Name / Field              | Description
+-----|---------------------------|----------------------------------------------------
+0–1  | Left Rear Wheel Speed     | 14-bit packed, same layout as 0xA2 field A
+2–3  | Right Rear Wheel Speed    | 14-bit packed, same layout as 0xA2 field B
+4    | Brake Switch Status       | Bits [1:0] → brake_switch bits [1:0]
+5    | (unused by ECU)           |
+6    | ABS Data byte 6           | Stored to DAT_400022b2 and DAT_4000251c byte 1
+7    | ABS Data byte 7           | Stored to DAT_400022b3 and DAT_4000251c byte 0
+
+Bit Layout for wheel speeds (bytes 0–3, identical packing to 0xA2):
+
+  Byte 0    Byte 1    Byte 2    Byte 3
+  AAAAAAAA  BBBBBBAA  BBBBBBBB  ....BBBB
+
+  A = Left Rear wheel speed   (14 bits)
+  B = Right Rear wheel speed  (14 bits)
+
+Transform (both speed fields): speed_kph = raw * 50 / 8 / 100 = raw * 0.0625 km/h
+  - 0x3FFF (16383) = invalid / not available → stored as 0
+
+Byte 4 — Brake Switch Status:
+
+  Bit | Meaning
+  ----|--------------------------------------------
+  1   | Brake switch state (secondary)
+  0   | Brake switch state (primary)
+
+  These two bits are written directly into brake_switch bits [1:0].
+
+Bytes 6–7 are only captured when DLC == 8.
+
+Outputs:
+  - wheel_speed.LR  (left rear)
+  - wheel_speed.RR  (right rear)
+  - brake_switch bits [1:0]
+
+================================================================================
+CAN Message 0xA8 — ABS/ESP Status Flags
+================================================================================
+
+6-byte message.
+
+Byte | Name / Field              | Description
+-----|---------------------------|----------------------------------------------------
+0    | ABS/ESP Status (high)     | See bitfield below (part of 32-bit big-endian word)
+1    | ABS/ESP Status (mid-high) | See bitfield below
+2    | ABS/ESP Status (mid-low)  | See bitfield below
+3    | ABS/ESP Status (low)      | See bitfield below
+4–5  | (additional data)         | Not explicitly decoded by ECU
+
+Bitfield (bytes 0–3 as 32-bit big-endian word, buffer._0_4_):
+
+  Bit (of 32-bit word) | Byte.Bit    | Stored In              | Meaning
+  ---------------------|-------------|------------------------|----------------------------------
+  30                   | byte0.6     | abs_esp_flags bit 2    | ESP intervention active (only if COD ABS type == 3)
+  28                   | byte0.4     | abs_esp_flags bit 3    | ABS active
+  17                   | byte1.1     | (inverted logic)       | abs_esp_flags bit 4 set when bits [17:16] == 0b00
+  16                   | byte1.0     | (see above)            | (combined with bit 17)
+
+  Byte 1 individual bit extractions:
+  Bit 3 (byte1.3)     | byte1.3     | DAT_400022b4           | Unknown flag (0 or 1)
+  Bit 5 (byte1.5)     | byte1.5     | DAT_400022b5           | Unknown flag (0 or 1)
+
+abs_esp_flags summary:
+
+  Bit | Meaning
+  ----|--------------------------------------------
+  4   | No ABS/ESP wheel intervention (bits [17:16] of msg both zero)
+  3   | ABS active
+  2   | ESP intervention active (requires COD ABS type == 3)
+
+Outputs:
+  - abs_esp_flags (bits 2, 3, 4 updated)
+  - DAT_400022b4
+  - DAT_400022b5
+  - DAT_400023e1

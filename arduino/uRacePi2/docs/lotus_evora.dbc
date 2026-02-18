@@ -1,0 +1,88 @@
+VERSION ""
+
+NS_ :
+
+BS_:
+
+BU_: ECU ABS_ESP SteeringAngleSensor InstrumentCluster
+
+BO_ 133 SteeringAngle: 5 SteeringAngleSensor
+ SG_ SteeringAngle : 0|16@1- (1,0) [-32768|32767] "" ECU
+ SG_ SteeringAngleRate : 16|8@1+ (1,0) [0|255] "" ECU
+ SG_ SensorStatusFlags : 24|3@1+ (1,0) [0|7] "" ECU
+
+BO_ 162 FrontWheelSpeeds: 6 ABS_ESP
+ SG_ WheelSpeedLF : 0|14@1+ (0.0625,0) [0|1023.875] "km/h" ECU
+ SG_ WheelSpeedRF : 14|14@1+ (0.0625,0) [0|1023.875] "km/h" ECU
+ SG_ VehicleSpeed : 28|14@1+ (0.0625,0) [0|1023.875] "km/h" ECU
+
+BO_ 164 RearWheelSpeeds: 8 ABS_ESP
+ SG_ WheelSpeedLR : 0|14@1+ (0.0625,0) [0|1023.875] "km/h" ECU
+ SG_ WheelSpeedRR : 14|14@1+ (0.0625,0) [0|1023.875] "km/h" ECU
+ SG_ BrakeSwitch : 32|2@1+ (1,0) [0|3] "" ECU
+
+BO_ 168 ABSESPStatus: 6 ABS_ESP
+ SG_ ABSActive : 4|1@1+ (1,0) [0|1] "" ECU
+ SG_ ESPActive : 6|1@1+ (1,0) [0|1] "" ECU
+ SG_ WheelInterventionStatus : 8|2@1+ (1,0) [0|3] "" ECU
+
+BO_ 258 EngineTorque: 3 ECU
+ SG_ TorqueAlphaNNet : 2|10@1+ (1,0) [0|1023] "Nm" ABS_ESP
+ SG_ TorqueNetCombustion : 12|11@1- (0.25,400) [144|655.75] "Nm" ABS_ESP
+
+BO_ 276 EngineStatus: 8 ECU
+ SG_ EngineSpeed : 0|16@1+ (1,0) [0|65535] "rpm" InstrumentCluster
+ SG_ AccelPedalPos : 24|8@1+ (0.4,0) [0|100] "%" InstrumentCluster
+ SG_ StarterEnabled : 32|1@1+ (1,0) [0|1] "" InstrumentCluster
+ SG_ ClutchPartial : 36|1@1+ (1,0) [0|1] "" InstrumentCluster
+ SG_ ClutchDisengaged : 37|1@1+ (1,0) [0|1] "" InstrumentCluster
+ SG_ LaunchControl : 38|1@1+ (1,0) [0|1] "" InstrumentCluster
+ SG_ SportMode : 39|1@1+ (1,0) [0|1] "" InstrumentCluster
+ SG_ BrakeLight : 40|1@1+ (1,0) [0|1] "" InstrumentCluster
+ SG_ BrakePedal : 41|1@1+ (1,0) [0|1] "" InstrumentCluster
+ SG_ SportModeAvail : 42|1@1+ (1,0) [0|1] "" InstrumentCluster
+
+BO_ 771 IMU: 7 ABS_ESP
+ SG_ GeneralStatus : 8|2@1+ (1,0) [0|3] "" ECU
+ SG_ GyroStatus : 10|2@1+ (1,0) [0|3] "" ECU
+ SG_ AccelStatus : 12|2@1+ (1,0) [0|3] "" ECU
+ SG_ LongAccel : 19|12@0+ (0.00007994,-0.1638) [-0.164|0.164] "g" ECU
+ SG_ LatAccel : 39|12@0+ (0.00007994,-0.1638) [-0.164|0.164] "g" ECU
+ SG_ YawRate : 43|12@0+ (8,-16384) [-16384|16376] "" ECU
+
+BO_ 1024 DashboardData: 7 ECU
+ SG_ FuelUsage : 7|16@0+ (1,0) [0|65535] "" InstrumentCluster
+ SG_ ClusterFlags : 24|8@1+ (1,0) [0|255] "" InstrumentCluster
+ SG_ FuelLevel : 32|8@1+ (0.39216,0) [0|100] "%" InstrumentCluster
+ SG_ CoolantTemp : 40|8@1+ (0.625,-40) [-40|119.375] "degC" InstrumentCluster
+ SG_ IndicatorFlags : 48|8@1+ (1,0) [0|255] "" InstrumentCluster
+
+CM_ BO_ 133 "Steering angle sensor to ECU. 5-byte message.";
+CM_ BO_ 162 "ABS/ESP front wheel speeds + vehicle speed. 6-byte message. 0x3FFF = invalid.";
+CM_ BO_ 164 "ABS/ESP rear wheel speeds + brake switch. 8-byte message. 0x3FFF = invalid speed.";
+CM_ BO_ 168 "ABS/ESP status flags. 6-byte message.";
+CM_ BO_ 258 "ECU to ABS/ESP torque information. 3-byte message.";
+CM_ BO_ 276 "ECU to instrument cluster engine status. 8-byte message.";
+CM_ BO_ 771 "ABS/ESP inertial measurement unit. 7-byte message.";
+CM_ BO_ 1024 "ECU to instrument cluster dashboard data. 7-byte message.";
+CM_ SG_ 133 SensorStatusFlags "Bits [0]=valid/calibrated, [1]=unknown, [2]=unknown. Bit 0 checked by DCA logic.";
+CM_ SG_ 162 VehicleSpeed "ABS reference vehicle speed. May prefer GPS speed instead.";
+CM_ SG_ 164 BrakeSwitch "Bits [0]=primary switch, [1]=secondary switch. Non-zero = brake active.";
+CM_ SG_ 168 WheelInterventionStatus "Byte1 bits [1:0]. Value 0b00 = no ABS/ESP wheel intervention.";
+CM_ SG_ 258 TorqueAlphaNNet "10-bit unsigned field from byte0[7:2] and byte1[3:0]. Direct Nm, no scaling. Doc labels as 12-bit but bit layout yields 10.";
+CM_ SG_ 258 TorqueNetCombustion "11-bit signed. Decode: Nm = raw * 0.25 + 400. 0x7FF = invalid.";
+CM_ SG_ 276 AccelPedalPos "Raw >> 2 from 10-bit pedal position. 0xFB=max, 0xFF=sensor error.";
+CM_ SG_ 771 GeneralStatus "0=OK, any bit set=error.";
+CM_ SG_ 771 GyroStatus "0=valid, 1=error, 2=error, 3=unknown/init. Non-zero forces YawRate to 0.";
+CM_ SG_ 771 AccelStatus "0=valid, 1=error, 2=error, 3=unknown/init. Non-zero forces accels to 0.";
+CM_ SG_ 771 LongAccel "12-bit Motorola. raw_to_g = (raw - 2049) * 20385 / 100000 / 2550.";
+CM_ SG_ 771 LatAccel "12-bit Motorola. raw_to_g = (raw - 2049) * 20385 / 100000 / 2550.";
+CM_ SG_ 771 YawRate "12-bit Motorola. Scaled value = (raw - 2048) * 8.";
+CM_ SG_ 1024 FuelUsage "16-bit big-endian instantaneous fuel consumption. Upper 12 bits meaningful (raw << 4). 0 when stationary.";
+CM_ SG_ 1024 CoolantTemp "Celsius = raw * 5/8 - 40.";
+CM_ SG_ 1024 FuelLevel "Percentage = raw * 100 / 255.";
+
+VAL_ 164 BrakeSwitch 0 "Released" 1 "Primary_Active" 2 "Secondary_Active" 3 "Both_Active" ;
+VAL_ 771 GyroStatus 0 "Valid" 1 "Error" 2 "Error" 3 "Unknown_Init" ;
+VAL_ 771 AccelStatus 0 "Valid" 1 "Error" 2 "Error" 3 "Unknown_Init" ;
+
