@@ -24,6 +24,7 @@
 
 #define ENABLE_LOTUS_EVORA
 #define EVORA_BRAKE_PRESSURE_MAX (690)
+#define EVORA_FUEL_CAPACITY_LITERS (60.0)
 #define kPA_TO_PSI (0.14503773773020922)
 #define kmh_to_mps (0.277778)
 
@@ -134,8 +135,8 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
         // 5   - coolant temp
         // 6   - indicator flags
 
-        uint8_t fuel_level = frame->data[4] * 100 / 255;
-        rc_set_data(RC_META_FUEL_LEVEL, fuel_level);
+        float fuel_level_liters= frame->data[4] *EVORA_FUEL_CAPACITY_LITERS / 255.0;
+        rc_set_data(RC_META_FUEL_LEVEL, fuel_level_liters);
 
         int16_t coolant_temp_f = frame->data[5] * 9 / 8 - 40;
         rc_set_data(RC_META_ENGINE_TEMP, coolant_temp_f);

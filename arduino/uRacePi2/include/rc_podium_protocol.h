@@ -81,7 +81,7 @@ const char meta_mesg[] =
                 "{\"sr\":10,\"nm\":\"MAP\",\"min\":0.0,\"ut\":\"PSI\",\"prec\":1,\"max\":30.0},"
                 "{\"sr\":10,\"nm\":\"IAT\",\"min\":0.0,\"ut\":\"F\",\"prec\":1,\"max\":200.0},"
                 "{\"sr\":10,\"nm\":\"OilTemp\",\"min\":0.0,\"ut\":\"F\",\"prec\":1,\"max\":280.0},"
-                "{\"sr\":10,\"nm\":\"FuelLevel\",\"min\":0.0,\"ut\":\"%\",\"prec\":0,\"max\":100.0},"
+                "{\"sr\":10,\"nm\":\"FuelLevel\",\"min\":0.0,\"ut\":\"liters\",\"prec\":0,\"max\":100.0},"
                 "{\"sr\":10,\"nm\":\"EngineTorque\",\"min\":0.0,\"ut\":\"\",\"prec\":0,\"max\":500.0},"
                 "{\"sr\":10,\"nm\":\"TorqueLimit\",\"min\":0.0,\"ut\":\"\",\"prec\":0,\"max\":500.0},"
                 "{\"sr\":10,\"nm\":\"WheelSpdLF\",\"min\":0.0,\"ut\":\"\",\"prec\":0,\"max\":150.0},"
