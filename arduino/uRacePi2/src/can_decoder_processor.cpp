@@ -146,9 +146,11 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
     case 0x303:
       // IMU (7-byte message: longitudinal accel, lateral accel, yaw rate)
       if (frame->len >= 7){
-        // Longitudinal acceleration (12-bit, bytes 2-3)
-        uint16_t long_raw = ((uint16_t)(frame->data[2] & 0x0F) << 8) | frame->data[3];
-        float long_accel = (long_raw - 2049) * 20385.0 / 100000.0 / 2550.0;
+
+        // The first 12 bits aren't used in this sensor
+        // // Longitudinal acceleration (12-bit, bytes 2-3)
+        // uint16_t long_raw = ((uint16_t)(frame->data[2] & 0x0F) << 8) | frame->data[3];
+        // float long_accel = (long_raw - 2049) * 20385.0 / 100000.0 / 2550.0;
 
         // Lateral acceleration (12-bit, bytes 4-5)
         uint16_t lat_raw = ((uint16_t)frame->data[4] << 4) | (frame->data[5] >> 4);
@@ -158,7 +160,6 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
         uint16_t yaw_raw = ((uint16_t)(frame->data[5] & 0x0F) << 8) | frame->data[6];
         float yaw = (yaw_raw - 2048) * 8;
 
-        rc_set_data(RC_META_ACCELX, long_accel);
         rc_set_data(RC_META_ACCELY, lat_accel);
         rc_set_data(RC_META_YAW, yaw);
       }
