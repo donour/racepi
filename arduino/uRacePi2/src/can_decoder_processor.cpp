@@ -52,6 +52,35 @@ double evora_wheelspeed_kmh(const uint32_t raw) {
 }
 
 
+// Decode CAN 0xB7 external torque requests.
+  // data: pointer to message payload (4 or 7 bytes)
+  // torque_out: pointer to 3-element output array (Nm, offset +400)
+  // dlc: message data length code
+  //
+  // Torque encoding: 12-bit signed, (value >> 2) + 400 = Nm
+  // 0xFFF = not active, output as 0x38F (911)
+  //
+  // torque_out[0]: cruise control torque target (mode bits = 01)
+  // torque_out[1]: ESP stability torque reduction (mode bits = 10)
+  // torque_out[2]: extended cruise upper bound (7-byte messages only)
+  void decode_0xb7_torque(const uint8_t *data, int16_t *torque_out, uint8_t dlc)
+  {
+      uint16_t raw[3];
+
+      raw[0] = (data[1] & 0x0F) << 8 | data[0];
+      raw[1] = data[2] << 4 | (data[1] >> 4);
+      raw[2] = (dlc >= 7) ? ((data[5] & 0x0F) << 8 | data[4]) : 0xFFF;
+
+      for (int i = 0; i < 3; i++) {
+          if (raw[i] >= 0xFFF) {
+              torque_out[i] = 0x38F;
+          } else {
+              int16_t s = (raw[i] & 0x800) ? (raw[i] | 0xF000) : raw[i];
+              torque_out[i] = (s >> 2) + 400;
+          }
+      }
+  }
+
 int16_t private_send(BluetoothSerial *port, common_can_message *frame, float power_w) {
   if (port == NULL || frame == NULL) {
     return -1;
@@ -101,6 +130,14 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
         
       }
       break;
+    
+    case 0xB7:
+      if (frame->len >= 3) {
+        int16_t torque_result[3];
+        decode_0xb7_torque(frame->data, torque_result, frame->len);
+        rc_set_data(RC_META_TC_TORQUE, torque_result[1]);
+      }
+      break;
 
     case 0x102:
       // torque alpha-N net (12-bit unsigned, Nm, no scaling)
@@ -113,13 +150,32 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
       break;
     case 0x114:
       if (frame->len >= 6){
-        /*
-         This brake info is ignored because it is already logged from the ABS messsage.
-         
-          bool brake_active = ((frame->data[5] & 0x1) != 0);
-          rc_set_data(RC_META_BRAKE, brake_active ? EVORA_BRAKE_PRESSURE_MAX : 0.0);
-        */
+        // driver_input_flags[1] (CAN 0x114, byte 4):
+        //   bit 0 (0x01): engine start permitted (all start prerequisites met)
+        //   bit 1:        unused
+        //   bit 2 (0x04): cruise control actively holding speed
+        //   bit 3 (0x08): cruise control enabled but not actively controlling
+        //   bit 5:4 (0x30): clutch position (00=engaged, 01=partial, 10=disengaged, 11=no sensor)
+        //   bit 6 (0x40): traction control disable (TC enabled by driver)
+        //   bit 7 (0x80): sport mode active
+        //
+        // driver_input_flags[0] (CAN 0x114, byte 5):
+        //   bit 0 (0x01): brake pedal pressed
+        //   bit 1 (0x02): brake light switch active
+        //   bit 2 (0x04): sport mode hardware fitted (from COD)
+        //   bit 7:3:      unused
+        uint8_t driver_input_flags_1 = frame->data[4];
+        uint8_t driver_input_flags_0 = frame->data[5];
 
+        bool sport_mode_active = (driver_input_flags_1 & 0x80) != 0;
+        bool traction_control_disabled = (driver_input_flags_1 & 0x40) != 0;
+        float clutch_position = (driver_input_flags_1 & 0x30) >> 4;
+        rc_set_data(RC_META_SPORT_MODE, sport_mode_active ? 1.0f : 0.0f);
+        rc_set_data(RC_META_TC_DISABLE, traction_control_disabled ? 1.0f : 0.0f);
+        rc_set_data(RC_META_CLUTCH, clutch_position);
+
+        /* This brake info is ignored because it is already logged from the ABS messsage */
+         
         uint16_t tps = (uint8_t)frame->data[3] * 100 / 255;
         rc_set_data(RC_META_TPS, tps);
 
@@ -176,7 +232,7 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
           case 0x41:
             if (obd_pid == 0xB) {
               double map = frame->data[3] * kPA_TO_PSI;
-              rc_set_data(RC_META_MAP, map);
+              //rc_set_data(RC_META_MAP, map);
             }
             break;
           // Mode $22 not implemented
