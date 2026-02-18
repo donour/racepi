@@ -1,5 +1,5 @@
 /**************************************************************************
-    Copyright 2020-2025 Donour Sizemore
+    Copyright 2020-2026 Donour Sizemore
 
     This file is part of RacePi
 
@@ -27,6 +27,8 @@
 #define EVORA_FUEL_CAPACITY_LITERS (60.0)
 #define kPA_TO_PSI (0.14503773773020922)
 #define kmh_to_mps (0.277778)
+#define EVORA_WHEELBASE_M (2.575f)
+#define EVORA_STEERING_RATIO (16.0f)
 
 class common_can_message {
   public : uint32_t id = 0;  
@@ -44,15 +46,80 @@ class common_can_message {
 uint64_t latest_time = 0;
 float latest_yaw_deg = 0.0;
 
+// steering_wheel_deg: steering wheel angle in degrees
+// speed_kmh:          vehicle speed in km/h (average of wheel speeds)
+// yaw_rate_dps:       actual yaw rate in deg/s from IMU
+// lat_accel_g:        lateral acceleration in g's from IMU
+// mu:                 estimated friction coefficient (peak-hold with decay from lateral accel)
+typedef struct {
+  float steering_wheel_deg;
+  float speed_ms;
+  float yaw_rate_dps;
+  float lat_accel_g;
+  float mu;
+} dynamics_state_t;
+
+dynamics_state_t dynamics_state;
+
 // Estimate available friction (mu) from lateral acceleration using
 // peak-hold with exponential decay. The decay rate is tuned for ~50Hz
 // IMU updates; mu decays toward zero with a time constant of ~10s.
-float mu = 1.0f;
-void update_mu_estimate(float lat_accel_g) {
+void update_mu_estimate(dynamics_state_t *state) {
+  if (NULL == state) {
+    return;
+  }
   const float decay = 0.998f;
-  float abs_lat = fabsf(lat_accel_g);
-  float decayed_mu = fmax(0.3f, mu * decay);
-  mu = fmaxf(abs_lat, decayed_mu);
+  const float min_mu = 0.3f; // minimum friction to prevent divide-by-zero and excessive sensitivity
+  float abs_lat = fabsf(state->lat_accel_g);
+  float decayed_mu = fmax(min_mu,  state->mu * decay);
+  state->mu = fmaxf(abs_lat, decayed_mu);
+}
+
+
+// Compute understeer coefficient (K) as yaw rate ratio:
+//   actual_yaw / corrected_reference_yaw
+//   < 1.0 = understeer, > 1.0 = oversteer, 1.0 = neutral
+//
+// Reference yaw rate from bicycle model with tire saturation correction:
+//   yaw_ref = V * tan(delta_road) / L * (1 - grip_ratio^2)
+//   grip_ratio = a_y / (mu * g)
+//
+float compute_steering_gradient(dynamics_state_t *state) {
+  if (NULL == state) {
+    return -1.0f;
+  }
+
+  float speed_ms = state->speed_ms;
+  float steering_wheel_deg = state->steering_wheel_deg;
+  float yaw_rate_dps = state->yaw_rate_dps;
+  float lat_accel_g = state->lat_accel_g;
+  float mu = state->mu;
+
+  // Need meaningful speed and steering input to compute a ratio
+  if (fabsf(speed_ms) < 3.0f || fabsf(steering_wheel_deg) < 5.0f) {
+    return 1.0f;
+  }
+
+  float delta_road_rad = (steering_wheel_deg / EVORA_STEERING_RATIO) * DEG_TO_RAD;
+  float yaw_ref = speed_ms * tanf(delta_road_rad) / EVORA_WHEELBASE_M;
+  float yaw_ref_dps = yaw_ref / DEG_TO_RAD;
+
+  if (fabsf(yaw_ref_dps) < 0.5f) {
+    return 1.0f;
+  }
+
+  // Tire saturation correction: reduce expected yaw rate as lateral
+  // acceleration approaches the friction limit (mu * g)
+  float grip_ratio = fabsf(lat_accel_g) / mu;
+  if (grip_ratio > 1.0f) grip_ratio = 1.0f;
+  float saturation = 1.0f - grip_ratio * grip_ratio;
+  yaw_ref_dps *= saturation;
+
+  if (fabsf(yaw_ref_dps) < 0.5f) {
+    return 1.0f;
+  }
+
+  return yaw_rate_dps / yaw_ref_dps;
 }
 
 double evora_wheelspeed_kmh(const uint32_t raw) {
@@ -107,12 +174,8 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
         rc_set_data(RC_META_WHEEL_SPEED_LF, evora_wheelspeed_kmh(lf));
         rc_set_data(RC_META_WHEEL_SPEED_RF, evora_wheelspeed_kmh(rf));
         
-        /*
-          Ignoring ABS vehicle speed in favor of GPS data
-
-          uint32_t vs = (frame->data[3] >> 4) | ((uint32_t)frame->data[4] << 4) | ((uint32_t)(frame->data[5] & 0x03) << 12);
-          rc_set_data(RC_META_SPEED, evora_wheelspeed_kmh(vs) * kmh_to_mps);
-        */
+        uint32_t vs = (frame->data[3] >> 4) | ((uint32_t)frame->data[4] << 4) | ((uint32_t)(frame->data[5] & 0x03) << 12);
+        dynamics_state.speed_ms = vs * kmh_to_mps;
         
       }
       break;
@@ -138,7 +201,7 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
         if (steering_angle > -360.0 && steering_angle < 360.0) {
           rc_set_data(RC_META_STEERING, steering_angle);
         }
-        
+        dynamics_state.steering_wheel_deg = steering_angle;
       }
       break;
     
@@ -227,9 +290,11 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
         uint16_t yaw_raw = ((uint16_t)(frame->data[5] & 0x0F) << 8) | frame->data[6];
         float yaw = (yaw_raw - 2048) * 8;
 
-        update_mu_estimate(lat_accel);
         rc_set_data(RC_META_ACCELY, lat_accel);
         rc_set_data(RC_META_YAW, yaw);
+        dynamics_state.yaw_rate_dps = yaw;
+        dynamics_state.lat_accel_g = lat_accel;
+        update_mu_estimate(&dynamics_state);
       }
       break;
 #endif // ENABLE_LOTUS_EVORA
