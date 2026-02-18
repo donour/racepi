@@ -16,7 +16,6 @@
     along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 **************************************************************************/
 #include <unistd.h>
-#include <BluetoothSerial.h>
 #include <driver/twai.h>
 
 #ifndef __ESP32_CAN_PROCESSOR_
@@ -33,6 +32,6 @@
 //        -2 on setup failure
 int16_t setup_can_driver(uint8_t tx_gpio, uint8_t rx_gpio);
 
-int16_t process_send_can_message_esp32(BluetoothSerial *port, twai_message_t *frame, float power_w);
+int16_t process_send_can_message_esp32(twai_message_t *frame, float power_w);
 
 #endif//__ESP32_CAN_PROCESSOR_

@@ -19,7 +19,7 @@
 #include <Wire.h>
 #include <SparkFun_u-blox_GNSS_Arduino_Library.h>
 #include "esp32_can_processor.h"
-#include "BluetoothSerial.h"
+#include "spp_serial.h"
 #include "rc_podium_protocol.h"
 #include <driver/twai.h>
 #include "esp32_can_processor.h"
@@ -34,7 +34,6 @@ volatile long last_data_rx_millis = millis();
 #define SHUTDOWN_IDLE_TIME_MILLIS (3.6e6) // 1 hour
 
 #define SERIAL_CONSOLE_BAUDRATE (115200)
-BluetoothSerial SerialBT;
 #define DEBUG_PORT Serial
 
 #define SPARKFUN_UBX_REFRESH_RATE_HZ (25)
@@ -94,7 +93,7 @@ void rc_enable_callback(bool enable) {
 }
 
 void rc_bt_task(void *arg) {
-  rc_bt_reader(&SerialBT, &Serial, &rc_enable_callback);
+  rc_bt_reader(&Serial, &rc_enable_callback);
 }
 
 void gnss_setup() {
@@ -134,8 +133,7 @@ void rc_bt_setup() {
   snprintf(bt_name, sizeof(bt_name), BLUETOOTH_DEVICE_BROADCAST_NAME, mac[3], mac[4], mac[5]);
 
   rc_handler_init();
-  SerialBT.begin(bt_name); 
-  SerialBT.write(0); SerialBT.flush();
+  spp_serial_init(bt_name);
   Serial.printf("Bluetooth setup success: %s\n", bt_name);
   xTaskCreate(
     rc_bt_task,
@@ -187,7 +185,7 @@ void setup() {
 void loop() {
   twai_message_t msg;
   if (twai_receive(&msg, pdMS_TO_TICKS(1)) == ESP_OK) {
-    process_send_can_message_esp32(&SerialBT, &msg, 0.0);
+    process_send_can_message_esp32(&msg, 0.0);
     last_data_rx_millis = millis();
   } else {
     check_shutdown_timer();

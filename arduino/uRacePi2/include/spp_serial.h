@@ -1,5 +1,5 @@
 /**************************************************************************
-    Copyright 2020-2025 Donour Sizemore
+    Copyright 2025 Donour Sizemore
 
     This file is part of RacePi
 
@@ -16,9 +16,18 @@
     along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 **************************************************************************/
 
-#ifndef __RACEPI_TESTS_
-#define __RACEPI_TESTS_
+#ifndef __SPP_SERIAL_H_
+#define __SPP_SERIAL_H_
 
-void test_sends();
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
 
-#endif //__RACEPI_TESTS_
+void spp_serial_init(const char *device_name);
+void spp_serial_write(const uint8_t *data, size_t len);
+void spp_serial_printf(const char *fmt, ...);
+int  spp_serial_available();
+int  spp_serial_read();
+bool spp_serial_connected();
+
+#endif // __SPP_SERIAL_H_

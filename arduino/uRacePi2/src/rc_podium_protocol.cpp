@@ -18,9 +18,9 @@
 
 #include <string.h>
 #include <ArduinoJson.h>
-#include "BluetoothSerial.h"
 
 #include "rc_podium_protocol.h"
+#include "spp_serial.h"
 
 #define RC_SERIAL_RX_BUFFER_SIZE (256)
 #define RC_SERIAL_TX_BUFFER_SIZE (1024)
@@ -67,7 +67,7 @@ int16_t rc_handler_init() {
     return 0;
 }
 
-void bt_tx_data_sample(BluetoothSerial *port, HardwareSerial *debug) {
+void bt_tx_data_sample(HardwareSerial *debug) {
     struct timeval tv;
     gettimeofday(&tv, NULL);
     JsonDocument tx_doc;
@@ -91,19 +91,18 @@ void bt_tx_data_sample(BluetoothSerial *port, HardwareSerial *debug) {
     // }
     // debug->print("\r");
     // debug->print(tx_buffer);
-    port->printf(tx_buffer);
-    port->println("\r\n");
+    spp_serial_printf("%s\r\n", tx_buffer);
     return;
 }
 
-void rc_bt_reader(BluetoothSerial *port, HardwareSerial *debug, void (*rc_enable_callback)(bool)) {
+void rc_bt_reader(HardwareSerial *debug, void (*rc_enable_callback)(bool)) {
     bool enable_data = false;
     char rx_buffer[RC_SERIAL_RX_BUFFER_SIZE];
 
     unsigned int rx_buffer_index = 0;
     bzero(rx_buffer, RC_SERIAL_RX_BUFFER_SIZE);
 
-    if (NULL == port || NULL == debug) {
+    if (NULL == debug) {
         return;
     }
 
@@ -115,15 +114,15 @@ void rc_bt_reader(BluetoothSerial *port, HardwareSerial *debug, void (*rc_enable
             debug->println("Buffer overrun\n");
         }
 
-        if (port->available()) {
-            rx_buffer[rx_buffer_index++] = port->read();
+        if (spp_serial_available()) {
+            rx_buffer[rx_buffer_index++] = spp_serial_read();
 
             if (rx_buffer_index >= 2 &&
                 rx_buffer[rx_buffer_index - 2] == '\r' &&
                 rx_buffer[rx_buffer_index - 1] == '\n') {
                 if (strstr(rx_buffer, "getMeta")) {
                     debug->println("[Meta request]");
-                    port->printf(meta_mesg, tick++);
+                    spp_serial_printf(meta_mesg, tick++);
                 }
                 if (strstr(rx_buffer, "setTelemetry")) {
                     if (strstr(rx_buffer, "\"rate\":50")) {
@@ -132,7 +131,7 @@ void rc_bt_reader(BluetoothSerial *port, HardwareSerial *debug, void (*rc_enable
                             rc_enable_callback(true);
                         }
                         debug->println("[Telemetry enabled]");
-                        port->printf(meta_mesg, tick++);
+                        spp_serial_printf(meta_mesg, tick++);
                     } else {
                         enable_data = false;
                         if (rc_enable_callback != NULL) {
@@ -146,7 +145,7 @@ void rc_bt_reader(BluetoothSerial *port, HardwareSerial *debug, void (*rc_enable
             }
         } else {
             if (enable_data && new_data) {
-                bt_tx_data_sample(port, debug);
+                bt_tx_data_sample(debug);
                 new_data = false;
                 delay(RC_SEND_DELAY_MS);
             } else {

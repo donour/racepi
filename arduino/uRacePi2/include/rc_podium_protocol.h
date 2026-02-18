@@ -17,7 +17,7 @@
 **************************************************************************/
 
 #include <stdint.h>
-#include "BluetoothSerial.h"
+#include <Arduino.h>
 
 #ifndef __RC_PODIUM_
 #define  __RC_PODIUM_
@@ -98,7 +98,7 @@ const char meta_mesg[] =
 //                "{\"sr\":10,\"nm\":\"MAP\",\"min\":0.0,\"ut\":\"PSI\",\"prec\":1,\"max\":30.0},"
 
 int16_t rc_handler_init();
-void rc_bt_reader(BluetoothSerial *port, HardwareSerial *debug, void (*rc_enable_callback)(bool));
+void rc_bt_reader(HardwareSerial *debug, void (*rc_enable_callback)(bool));
 void rc_set_data(const int index,const float value);
 
 static uint64_t rc_epoch = 0;

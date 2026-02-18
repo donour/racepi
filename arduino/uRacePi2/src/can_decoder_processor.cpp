@@ -16,7 +16,7 @@
     along with RacePi.  If not, see <http://www.gnu.org/licenses/>.
 **************************************************************************/
 
-#include "BluetoothSerial.h"
+#include <string.h>
 #include <driver/twai.h>
 #include "rc_podium_protocol.h"
 
@@ -130,7 +130,7 @@ double evora_wheelspeed_kmh(const uint32_t raw) {
 }
 
 
-// Decode CAN 0xB7 external torque requests.
+  // Decode CAN 0xB7 external torque requests.
   // data: pointer to message payload (4 or 7 bytes)
   // torque_out: pointer to 3-element output array (Nm, offset +400)
   // dlc: message data length code
@@ -159,8 +159,8 @@ double evora_wheelspeed_kmh(const uint32_t raw) {
       }
   }
 
-int16_t private_send(BluetoothSerial *port, common_can_message *frame, float power_w) {
-  if (port == NULL || frame == NULL) {
+int16_t private_send(common_can_message *frame, float power_w) {
+  if (frame == NULL) {
     return -1;
   }
 
@@ -329,11 +329,11 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
   return 0;
 }
 
-int16_t process_send_can_message_esp32(BluetoothSerial *port, twai_message_t *frame, float power_w) {
+int16_t process_send_can_message_esp32(twai_message_t *frame, float power_w) {
   if (frame == 0) return -1;
   common_can_message msg;
   msg.id  = frame->identifier;
   msg.len = frame->data_length_code;
   memcpy(&msg.data, &frame->data, 8);
-  return private_send(port, &msg, power_w);
+  return private_send(&msg, power_w);
 }
