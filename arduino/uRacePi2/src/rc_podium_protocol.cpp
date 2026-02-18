@@ -60,6 +60,7 @@ int16_t rc_handler_init() {
     rc_set_data(RC_META_IAT, 0.0);
     rc_set_data(RC_META_OIL_TEMP, 0.0);
     rc_set_data(RC_META_FUEL_LEVEL, 0.0);
+    rc_set_data(RC_META_ENGINE_TORQUE, 0.0);
     rc_set_data(RC_META_WHEEL_SPEED_LF, 0.0);
     rc_set_data(RC_META_WHEEL_SPEED_RF, 0.0);
     rc_set_data(RC_META_WHEEL_SPEED_LR, 0.0);

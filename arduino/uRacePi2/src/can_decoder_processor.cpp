@@ -105,9 +105,9 @@ int16_t private_send(BluetoothSerial *port, common_can_message *frame, float pow
     case 0x102:
       // torque alpha-N net (12-bit unsigned, Nm, no scaling)
       if (frame->len >= 3) {
-        uint16_t torque_alphaN = (frame->data[0] >> 2) | ((uint16_t)(frame->data[1] & 0x0F) << 6);
-        if (torque_alphaN != 0xFFF) {
-          rc_set_data(RC_META_ENGINE_TORQUE, torque_alphaN);
+        uint16_t torque_alphaN_net = (frame->data[0] >> 2) | ((uint16_t)(frame->data[1] & 0x0F) << 6);
+        if (torque_alphaN_net != 0xFFF) {
+          rc_set_data(RC_META_ENGINE_TORQUE, torque_alphaN_net);
         }
       }
       break;
