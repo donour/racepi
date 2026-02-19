@@ -78,9 +78,8 @@ void sparkfun_ubx_task(void *arg) {
       rc_set_data(RC_META_GPSSATS, n_sats);
       rc_set_data(RC_META_GPSQUAL, myGNSS.getFixType());
       rc_set_data(RC_META_GPSDOP, pdop);      
-    } else {
-      delay(10);
-    }
+    } 
+    delay(10);
   }
 }
 
@@ -185,7 +184,7 @@ void setup() {
 void loop() {
   twai_message_t msg;
   if (twai_receive(&msg, pdMS_TO_TICKS(1)) == ESP_OK) {
-    process_send_can_message_esp32(&msg, 0.0);
+    process_send_can_message_esp32(&msg);
     last_data_rx_millis = millis();
   } else {
     check_shutdown_timer();

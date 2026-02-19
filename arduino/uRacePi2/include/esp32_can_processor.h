@@ -32,6 +32,6 @@
 //        -2 on setup failure
 int16_t setup_can_driver(uint8_t tx_gpio, uint8_t rx_gpio);
 
-int16_t process_send_can_message_esp32(twai_message_t *frame, float power_w);
+int16_t process_send_can_message_esp32(twai_message_t *frame);
 
 #endif//__ESP32_CAN_PROCESSOR_

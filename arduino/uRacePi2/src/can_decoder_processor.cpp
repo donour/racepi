@@ -82,7 +82,7 @@ double evora_wheelspeed_kmh(const uint32_t raw) {
       }
   }
 
-int16_t private_send(common_can_message *frame, float power_w) {
+int16_t private_send(common_can_message *frame) {
   if (frame == NULL) {
     return -1;
   }
@@ -255,11 +255,11 @@ int16_t private_send(common_can_message *frame, float power_w) {
   return 0;
 }
 
-int16_t process_send_can_message_esp32(twai_message_t *frame, float power_w) {
+int16_t process_send_can_message_esp32(twai_message_t *frame) {
   if (frame == 0) return -1;
   common_can_message msg;
   msg.id  = frame->identifier;
   msg.len = frame->data_length_code;
   memcpy(&msg.data, &frame->data, 8);
-  return private_send(&msg, power_w);
+  return private_send(&msg);
 }
