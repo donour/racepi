@@ -83,7 +83,8 @@ void bt_tx_data_sample(HardwareSerial *debug) {
     p += snprintf(p, end - p, "{\"s\":{\"d\":[%llu", timestamp_ms);
     for (int i = 1; i < RC_META_MAX && p < end; i++) {
         *p++ = ',';
-        p = dtostrf(rc_channel_data[i], 0, 6, p);
+        dtostrf(rc_channel_data[i], 0, 6, p);
+        p += strlen(p);
     }
     p += snprintf(p, end - p, ",%d],\"t\":%d}}", (1 << RC_META_MAX) - 1, tick++);
 
@@ -91,6 +92,7 @@ void bt_tx_data_sample(HardwareSerial *debug) {
         debug->println("Buffer overrun\n");
         return;
     }
+    debug->printf("TX: %s\n", tx_buffer);
     spp_serial_printf("%s\r\n", tx_buffer);
 }
 
