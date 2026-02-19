@@ -74,6 +74,7 @@ void sparkfun_ubx_task(void *arg) {
       rc_set_data(RC_META_LATITUDE,lat);
       rc_set_data(RC_META_LONGITUDE, longitude);
       rc_set_data(RC_META_SPEED, speed_ms*MS_TO_MPH);
+      //rc_set_data(RC_META_SPEED, (speed_ms+2)*MS_TO_MPH);
       rc_set_data(RC_META_ALTITUDE, elevation_m);
       rc_set_data(RC_META_GPSSATS, n_sats);
       rc_set_data(RC_META_GPSQUAL, myGNSS.getFixType());

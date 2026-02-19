@@ -169,12 +169,28 @@ void spp_serial_init(const char *device_name) {
     ESP_LOGI(TAG, "SPP initialized as \"%s\"", device_name);
 }
 
+static uint32_t spp_write_ok = 0;
+static uint32_t spp_write_fail = 0;
+static uint32_t spp_write_last_report = 0;
+
 void spp_serial_write(const uint8_t *data, size_t len) {
     if (len == 0) return;
     for (int i = 0; i < SPP_MAX_CLIENTS; i++) {
         if (spp_handles[i] != 0) {
-            esp_spp_write(spp_handles[i], len, (uint8_t *)data);
+            esp_err_t rc = esp_spp_write(spp_handles[i], len, (uint8_t *)data);
+            if (rc == ESP_OK) {
+                spp_write_ok++;
+            } else {
+                spp_write_fail++;
+            }
         }
+    }
+    uint32_t now = millis();
+    if (now - spp_write_last_report >= 1000) {
+        ESP_LOGI("spp", "writes ok=%lu fail=%lu", (unsigned long)spp_write_ok, (unsigned long)spp_write_fail);
+        spp_write_ok = 0;
+        spp_write_fail = 0;
+        spp_write_last_report = now;
     }
 }
 

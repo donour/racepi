@@ -45,26 +45,41 @@ void rc_set_data(const int index, const float value) {
 int16_t rc_handler_init() {
     bzero(rc_channel_data, sizeof(rc_channel_data));
 
-    rc_set_data(RC_META_ACCELX, 0.0);
-    rc_set_data(RC_META_ACCELY, 0.0);
-    rc_set_data(RC_META_ACCELZ, 0.0);
-    rc_set_data(RC_META_YAW, 0.0);
-    rc_set_data(RC_META_PITCH, 0.0);
-    rc_set_data(RC_META_ROLL, 0.0);
-    rc_set_data(RC_META_RPM, 9999.9);
-    rc_set_data(RC_META_TPS, 0.0);
-    rc_set_data(RC_META_BRAKE, 0.0);
-    rc_set_data(RC_META_STEERING, 0.0);
-    rc_set_data(RC_META_ENGINE_TEMP, 0.0);
-    rc_set_data(RC_META_IAT, 0.0);
-    rc_set_data(RC_META_FUEL_LEVEL, 0.0);
-    rc_set_data(RC_META_ENGINE_TORQUE, 0.0);
-    rc_set_data(RC_META_WHEEL_SPEED_LF, 0.0);
-    rc_set_data(RC_META_WHEEL_SPEED_RF, 0.0);
-    rc_set_data(RC_META_WHEEL_SPEED_LR, 0.0);
-    rc_set_data(RC_META_WHEEL_SPEED_RR, 0.0);
+    // rc_set_data(RC_META_ACCELX, 0.0);
+    // rc_set_data(RC_META_ACCELY, 0.0);
+    // rc_set_data(RC_META_ACCELZ, 0.0);
+    // rc_set_data(RC_META_YAW, 0.0);
+    // rc_set_data(RC_META_PITCH, 0.0);
+    // rc_set_data(RC_META_ROLL, 0.0);
+    // rc_set_data(RC_META_RPM, 9999.9);
+    // rc_set_data(RC_META_TPS, 0.0);
+    // rc_set_data(RC_META_BRAKE, 0.0);
+    // rc_set_data(RC_META_STEERING, 0.0);
+    // rc_set_data(RC_META_ENGINE_TEMP, 0.0);
+    // rc_set_data(RC_META_IAT, 0.0);
+    // rc_set_data(RC_META_FUEL_LEVEL, 0.0);
+    // rc_set_data(RC_META_ENGINE_TORQUE, 0.0);
+    // rc_set_data(RC_META_WHEEL_SPEED_LF, 0.0);
+    // rc_set_data(RC_META_WHEEL_SPEED_RF, 0.0);
+    // rc_set_data(RC_META_WHEEL_SPEED_LR, 0.0);
+    // rc_set_data(RC_META_WHEEL_SPEED_RR, 0.0);
 
     return 0;
+}
+
+// Strip trailing zeros after the decimal point, and the decimal point
+// itself if no fractional digits remain. Produces compact JSON numbers
+// matching ArduinoJson output (e.g. "0" instead of "0.000000").
+static void strip_trailing_zeros(char *s) {
+    char *dot = strchr(s, '.');
+    if (!dot) return;
+    char *end = s + strlen(s) - 1;
+    while (end > dot && *end == '0') {
+        *end-- = '\0';
+    }
+    if (end == dot) {
+        *end = '\0';
+    }
 }
 
 // Serialize telemetry data directly into tx_buffer as JSON.
@@ -83,7 +98,8 @@ void bt_tx_data_sample(HardwareSerial *debug) {
     p += snprintf(p, end - p, "{\"s\":{\"d\":[%llu", timestamp_ms);
     for (int i = 1; i < RC_META_MAX && p < end; i++) {
         *p++ = ',';
-        dtostrf(rc_channel_data[i], 0, 6, p);
+        dtostrf(rc_channel_data[i], 0, 8, p);
+        strip_trailing_zeros(p);
         p += strlen(p);
     }
     p += snprintf(p, end - p, ",%d],\"t\":%d}}", (1 << RC_META_MAX) - 1, tick++);
@@ -95,7 +111,13 @@ void bt_tx_data_sample(HardwareSerial *debug) {
     *p++ = '\r';
     *p++ = '\n';
     *p = '\0';
+    uint32_t t0 = millis();
+    debug->printf("[TX] %s", tx_buffer);
     spp_serial_write((const uint8_t *)tx_buffer, p - tx_buffer);
+    uint32_t dt = millis() - t0;
+    if (dt > 5) {
+        debug->printf("[SPP write blocked %lu ms]\n", (unsigned long)dt);
+    }
 }
 
 void rc_bt_reader(HardwareSerial *debug, void (*rc_enable_callback)(bool)) {
@@ -125,6 +147,7 @@ void rc_bt_reader(HardwareSerial *debug, void (*rc_enable_callback)(bool)) {
             if (rx_buffer_index >= 2 &&
                 rx_buffer[rx_buffer_index - 2] == '\r' &&
                 rx_buffer[rx_buffer_index - 1] == '\n') {
+                debug->printf("[RX cmd] %.*s", rx_buffer_index, rx_buffer);
                 if (strstr(rx_buffer, "getMeta")) {
                     debug->println("[Meta request]");
                     spp_serial_printf(meta_mesg, tick++);
@@ -150,12 +173,27 @@ void rc_bt_reader(HardwareSerial *debug, void (*rc_enable_callback)(bool)) {
             }
         }
 
+        static uint32_t send_count = 0;
+        static uint32_t idle_count = 0;
+        static uint32_t last_report = 0;
+
         if (enable_data > 0 && new_data) {
             bt_tx_data_sample(debug);
             new_data = false;
+            send_count++;
             delay(RC_SEND_DELAY_MS);
         } else {
+            idle_count++;
             delay(RC_IDLE_WAIT_MS);
+        }
+
+        uint32_t now = millis();
+        if (now - last_report >= 1000) {
+            debug->printf("[RATE] send=%lu idle=%lu enable=%d\n",
+                (unsigned long)send_count, (unsigned long)idle_count, enable_data);
+            send_count = 0;
+            idle_count = 0;
+            last_report = now;
         }
     }
 }
