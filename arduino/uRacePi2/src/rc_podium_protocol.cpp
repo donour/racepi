@@ -33,7 +33,7 @@ bool new_data = false;
 char tx_buffer[RC_SERIAL_TX_BUFFER_SIZE];
 int tick = 0;
 
-void rc_set_data(const int index,const float value) {
+void rc_set_data(const int index, const float value) {
     if (index < RC_META_MAX) {
         // tearing could be an issue here because the data array
         // does not lock the memory bus
@@ -110,14 +110,16 @@ void rc_bt_reader(HardwareSerial *debug, void (*rc_enable_callback)(bool)) {
     }
 
     while(1) {
-        // overran buffer
-        if (rx_buffer_index >= RC_SERIAL_RX_BUFFER_SIZE) {
-            rx_buffer_index = 0;
-            bzero(rx_buffer, RC_SERIAL_RX_BUFFER_SIZE);
-            debug->println("Buffer overrun\n");
-        }
+        // Drain all available RX bytes before attempting TX.
+        // Previously this processed one byte per loop iteration,
+        // which blocked TX entirely while any RX data was pending.
+        while (spp_serial_available()) {
+            if (rx_buffer_index >= RC_SERIAL_RX_BUFFER_SIZE) {
+                rx_buffer_index = 0;
+                bzero(rx_buffer, RC_SERIAL_RX_BUFFER_SIZE);
+                debug->println("Buffer overrun\n");
+            }
 
-        if (spp_serial_available()) {
             rx_buffer[rx_buffer_index++] = spp_serial_read();
 
             if (rx_buffer_index >= 2 &&
@@ -146,14 +148,14 @@ void rc_bt_reader(HardwareSerial *debug, void (*rc_enable_callback)(bool)) {
                 rx_buffer_index = 0;
                 bzero(rx_buffer, RC_SERIAL_RX_BUFFER_SIZE);
             }
+        }
+
+        if (enable_data > 0 && new_data) {
+            bt_tx_data_sample(debug);
+            new_data = false;
+            delay(RC_SEND_DELAY_MS);
         } else {
-            if (enable_data > 0 && new_data) {
-                bt_tx_data_sample(debug);
-                new_data = false;
-                delay(RC_SEND_DELAY_MS);
-            } else {
-                delay(RC_IDLE_WAIT_MS);
-            }
+            delay(RC_IDLE_WAIT_MS);
         }
     }
 }
