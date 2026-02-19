@@ -87,7 +87,6 @@ int16_t process_send_can_message_esp32(twai_message_t *frame) {
         rc_set_data(RC_META_WHEEL_SPEED_LF, evora_wheelspeed_kmh(lf));
         rc_set_data(RC_META_WHEEL_SPEED_RF, evora_wheelspeed_kmh(rf));
 
-        uint32_t vs = (data[3] >> 4) | ((uint32_t)data[4] << 4) | ((uint32_t)(data[5] & 0x03) << 12);
         //dynamics_state.speed_ms = vs * kmh_to_mps;
 
       }
