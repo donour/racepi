@@ -25,7 +25,7 @@
 #include "esp32_can_processor.h"
 
 
-#define MS_TO_MPH (2.23694)
+#define MS_TO_MPH (2.23694f)
 #define RED_LED_PIN (13) 
 
 // used to indicate that we have timed out all data

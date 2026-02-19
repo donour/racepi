@@ -25,9 +25,9 @@
 
 #define ENABLE_LOTUS_EVORA
 #define EVORA_BRAKE_PRESSURE_MAX (690)
-#define EVORA_FUEL_CAPACITY_LITERS (60.0)
-#define kPA_TO_PSI (0.14503773773020922)
-#define kmh_to_mps (0.277778)
+#define EVORA_FUEL_CAPACITY_LITERS (60.0f)
+#define kPA_TO_PSI (0.14503774f)
+#define kmh_to_mps (0.277778f)
 
 class common_can_message {
   public : uint32_t id = 0;
@@ -45,11 +45,11 @@ class common_can_message {
 uint64_t latest_time = 0;
 float latest_yaw_deg = 0.0;
 
-double evora_wheelspeed_kmh(const uint32_t raw) {
+float evora_wheelspeed_kmh(const uint32_t raw) {
   if (raw == 0x3FFF) {
-    return 0.0;
+    return 0.0f;
   }
-  return raw * 0.0625;
+  return raw * 0.0625f;
 }
 
 
@@ -110,7 +110,7 @@ int16_t private_send(common_can_message *frame) {
         rc_set_data(RC_META_WHEEL_SPEED_LR, evora_wheelspeed_kmh(lr));
         rc_set_data(RC_META_WHEEL_SPEED_RR, evora_wheelspeed_kmh(rr));
         bool brake_active = (frame->data[4] & 0x03) != 0;
-        rc_set_data(RC_META_BRAKE, brake_active ? EVORA_BRAKE_PRESSURE_MAX : 0.0);
+        rc_set_data(RC_META_BRAKE, brake_active ? EVORA_BRAKE_PRESSURE_MAX : 0.0f);
       }
       break;
 
@@ -188,7 +188,7 @@ int16_t private_send(common_can_message *frame) {
         // 5   - coolant temp
         // 6   - indicator flags
 
-        float fuel_level_liters= frame->data[4] *EVORA_FUEL_CAPACITY_LITERS / 255.0;
+        float fuel_level_liters= frame->data[4] *EVORA_FUEL_CAPACITY_LITERS / 255.0f;
         rc_set_data(RC_META_FUEL_LEVEL, fuel_level_liters);
 
         int16_t coolant_temp_f = frame->data[5] * 9 / 8 - 40;
@@ -207,7 +207,7 @@ int16_t private_send(common_can_message *frame) {
 
         // Lateral acceleration (12-bit, bytes 4-5)
         uint16_t lat_raw = ((uint16_t)frame->data[4] << 4) | (frame->data[5] >> 4);
-        float lat_accel = (lat_raw - 2049) * 20385.0 / 100000.0 / 2550.0;
+        float lat_accel = (lat_raw - 2049) * 20385.0f / 100000.0f / 2550.0f;
 
         // Yaw rate (12-bit, bytes 5-6)
         uint16_t yaw_raw = ((uint16_t)(frame->data[5] & 0x0F) << 8) | frame->data[6];
@@ -234,7 +234,7 @@ int16_t private_send(common_can_message *frame) {
         switch (obd_resp_type) {
           case 0x41:
             if (obd_pid == 0xB) {
-              double map = frame->data[3] * kPA_TO_PSI;
+              float map = frame->data[3] * kPA_TO_PSI;
               //rc_set_data(RC_META_MAP, map);
             }
             break;

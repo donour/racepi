@@ -17,7 +17,7 @@
 **************************************************************************/
 
 #include <string.h>
-#include <ArduinoJson.h>
+#include <stdio.h>
 
 #include "rc_podium_protocol.h"
 #include "spp_serial.h"
@@ -27,7 +27,7 @@
 #define RC_SEND_DELAY_MS (1000/50) // clip the update rate to 50hz
 #define RC_IDLE_WAIT_MS (10)
 
-double rc_channel_data[RC_META_MAX];
+float rc_channel_data[RC_META_MAX];
 bool new_data = false;
 
 char tx_buffer[RC_SERIAL_TX_BUFFER_SIZE];
@@ -67,32 +67,31 @@ int16_t rc_handler_init() {
     return 0;
 }
 
+// Serialize telemetry data directly into tx_buffer as JSON.
+// Uses dtostrf() for float formatting instead of snprintf %g/%f to avoid
+// the implicit float-to-double promotion in varargs, which forces software
+// double-precision arithmetic on ESP32 (no double FPU). dtostrf() stays
+// in single-precision using the hardware FPU, which is ~10-20x faster.
 void bt_tx_data_sample(HardwareSerial *debug) {
     struct timeval tv;
     gettimeofday(&tv, NULL);
-    JsonDocument tx_doc;
+    uint64_t timestamp_ms = ((uint64_t)tv.tv_sec) * 1000 + ((uint64_t)tv.tv_usec) / 1000;
 
-    JsonObject s = tx_doc["s"].to<JsonObject>();
-    JsonArray s_d = s["d"].to<JsonArray>();
-    s_d.add(((uint64_t)tv.tv_sec)*1000 + ((uint64_t)tv.tv_usec)/1000);
-    for (int i = 1; i < RC_META_MAX; i++) {
-        s_d.add(rc_channel_data[i]);
+    char *p = tx_buffer;
+    char *end = tx_buffer + RC_SERIAL_TX_BUFFER_SIZE;
+
+    p += snprintf(p, end - p, "{\"s\":{\"d\":[%llu", timestamp_ms);
+    for (int i = 1; i < RC_META_MAX && p < end; i++) {
+        *p++ = ',';
+        p = dtostrf(rc_channel_data[i], 0, 6, p);
     }
-    s_d.add( (1<<RC_META_MAX) - 1);
-    s["t"] = tick++;
-    size_t rc = serializeJson(tx_doc, tx_buffer, RC_SERIAL_TX_BUFFER_SIZE);
-    if (rc >= RC_SERIAL_TX_BUFFER_SIZE) {
+    p += snprintf(p, end - p, ",%d],\"t\":%d}}", (1 << RC_META_MAX) - 1, tick++);
+
+    if (p >= end) {
         debug->println("Buffer overrun\n");
         return;
     }
-    // debug->print(".");
-    // if (tick % 40 == 0) {
-    //     debug->println("\n");
-    // }
-    // debug->print("\r");
-    // debug->print(tx_buffer);
     spp_serial_printf("%s\r\n", tx_buffer);
-    return;
 }
 
 void rc_bt_reader(HardwareSerial *debug, void (*rc_enable_callback)(bool)) {
