@@ -88,12 +88,14 @@ void bt_tx_data_sample(HardwareSerial *debug) {
     }
     p += snprintf(p, end - p, ",%d],\"t\":%d}}", (1 << RC_META_MAX) - 1, tick++);
 
-    if (p >= end) {
+    if (p + 2 >= end) {
         debug->println("Buffer overrun\n");
         return;
     }
-    debug->printf("TX: %s\n", tx_buffer);
-    spp_serial_printf("%s\r\n", tx_buffer);
+    *p++ = '\r';
+    *p++ = '\n';
+    *p = '\0';
+    spp_serial_write((const uint8_t *)tx_buffer, p - tx_buffer);
 }
 
 void rc_bt_reader(HardwareSerial *debug, void (*rc_enable_callback)(bool)) {
