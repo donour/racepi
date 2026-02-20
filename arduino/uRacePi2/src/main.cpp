@@ -23,6 +23,7 @@
 #include "rc_podium_protocol.h"
 #include <driver/twai.h>
 #include "esp32_can_processor.h"
+#include "esp_freertos_hooks.h"
 
 
 #define MS_TO_MPH (2.23694f)
@@ -74,7 +75,6 @@ void sparkfun_ubx_task(void *arg) {
       rc_set_data(RC_META_LATITUDE,lat);
       rc_set_data(RC_META_LONGITUDE, longitude);
       rc_set_data(RC_META_SPEED, speed_ms*MS_TO_MPH);
-      //rc_set_data(RC_META_SPEED, (speed_ms+2)*MS_TO_MPH);
       rc_set_data(RC_META_ALTITUDE, elevation_m);
       rc_set_data(RC_META_GPSSATS, n_sats);
       rc_set_data(RC_META_GPSQUAL, myGNSS.getFixType());
@@ -154,8 +154,6 @@ void check_shutdown_timer() {
     }  
 }
 
-
-
 void setup() {
   Serial.begin(SERIAL_CONSOLE_BAUDRATE);
   Serial.write(0); Serial.flush();
@@ -178,67 +176,19 @@ void setup() {
      Serial.printf("(CAN) unknown failure: %d\n", espcan_rc);        
   }
 
+
   gnss_setup();
   rc_bt_setup();
 }
 
 void loop() {
+
   twai_message_t msg;
   if (twai_receive(&msg, pdMS_TO_TICKS(1)) == ESP_OK) {
     process_send_can_message_esp32(&msg);
     last_data_rx_millis = millis();
   } else {
     check_shutdown_timer();
-    delay(5);
+    delay(1);
   }
 }
-
-// twai_message_t twai_obd_ii_map_msg = {
-//   .identifier = 0x7DF,
-//   .data_length_code = 2,
-//   .data = {0x01, 0x0B}
-// };
-
-// twai_message_t twai_obd_ii_manifold_temp_msg = {
-//   .identifier = 0x7DF,
-//   .data_length_code = 3,
-//   .data = {0x22, 0x02, 0x72}
-// };
-
-// void send_obd_ii_request(void *arg) {
-//   twai_message_t *tx_msg = (twai_message_t *)arg;
-//   esp_err_t rc = twai_transmit(tx_msg, pdMS_TO_TICKS(1));  
-//   if (rc != ESP_OK) {
-//     Serial.printf("Failed to send $01 0B request: %s\n", esp_err_to_name(rc));
-//     return;
-//   }
-// }
-
-
-// void send_obd_ii_request(void *arg) {
-//   twai_message_t *tx_msg = (twai_message_t *)arg;
-//   esp_err_t rc = twai_transmit(tx_msg, pdMS_TO_TICKS(1));  
-//   if (rc != ESP_OK) {
-//     Serial.printf("Failed to send $01 0B request: %s\n", esp_err_to_name(rc));
-//     return;
-//   }
-// }
-// esp_timer_handle_t obd_ii_map_timer;
-// esp_timer_handle_t obd_ii_manifold_temp_timer;
-// void setup_obd_ii_timers() {
-//   esp_timer_create_args_t map_args = {
-//     .callback = &send_obd_ii_request,
-//     .arg = &twai_obd_ii_map_msg,
-//     .name = "obd_ii_map_timer"
-//   };
-//   esp_timer_create(&map_args, &obd_ii_map_timer);
-//   esp_timer_create_args_t manifold_temp_args = {
-//     .callback = &send_obd_ii_request,
-//     .arg = &twai_obd_ii_manifold_temp_msg,
-//     .name = "obd_ii_manifold_temp_timer"
-//   };
-//   esp_timer_create(&manifold_temp_args, &obd_ii_manifold_temp_timer);
-//   // TODO these shoudl not schedule the send, but should really just enqueue a request for send
-//   esp_timer_start_periodic(obd_ii_map_timer, pdMS_TO_TICKS(100));
-//   esp_timer_start_periodic(obd_ii_manifold_temp_timer, pdMS_TO_TICKS(1000));  
-// }
