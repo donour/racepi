@@ -1,5 +1,5 @@
 /**************************************************************************
-    Copyright 2025 Donour Sizemore
+    Copyright 2025-2026 Donour Sizemore
 
     This file is part of RacePi
 
@@ -25,10 +25,11 @@
 #define REFRESH_RATE_CLAMP_HZ (50)
 #define RC_SERIAL_RX_BUFFER_SIZE (256)
 #define RC_SERIAL_TX_BUFFER_SIZE (1024)
-#define RC_SEND_DELAY_MS (1000/(REFRESH_RATE_CLAMP_HZ))
+#define RC_SEND_DELAY_MS ((1000/(REFRESH_RATE_CLAMP_HZ))-1)
 #define RC_IDLE_WAIT_MS (10)
 
 float rc_channel_data[RC_META_MAX];
+int32_t rc_gps_data[2];    // [0]=latitude, [1]=longitude  (degrees × 1e7)
 bool new_data = false;
 
 char tx_buffer[RC_SERIAL_TX_BUFFER_SIZE];
@@ -40,11 +41,20 @@ void rc_set_data(const int index, const float value) {
         // does not lock the memory bus
         rc_channel_data[index] = value;
     }
-    new_data = true;    
+    new_data = true;
+}
+
+void rc_set_gps_data(const int index, const int32_t value_e7) {
+    int slot = (index == RC_META_LATITUDE) ? 0 : (index == RC_META_LONGITUDE) ? 1 : -1;
+    if (slot >= 0) {
+        rc_gps_data[slot]    = value_e7;
+    }
+    new_data = true;
 }
 
 int16_t rc_handler_init() {
     bzero(rc_channel_data, sizeof(rc_channel_data));
+    bzero(rc_gps_data, sizeof(rc_gps_data));
 
     rc_set_data(RC_META_ACCELX, 0.0);
     rc_set_data(RC_META_ACCELY, 0.0);
@@ -73,21 +83,6 @@ int16_t rc_handler_init() {
     return 0;
 }
 
-// // Strip trailing zeros after the decimal point, and the decimal point
-// // itself if no fractional digits remain. Produces compact JSON numbers
-// // matching ArduinoJson output (e.g. "0" instead of "0.000000").
-// static void strip_trailing_zeros(char *s) {
-//     char *dot = strchr(s, '.');
-//     if (!dot) return;
-//     char *end = s + strlen(s) - 1;
-//     while (end > dot && *end == '0') {
-//         *end-- = '\0';
-//     }
-//     if (end == dot) {
-//         *end = '\0';
-//     }
-// }
-
 // Serialize telemetry data directly into tx_buffer as JSON.
 // Uses dtostrf() for float formatting instead of snprintf %g/%f to avoid
 // the implicit float-to-double promotion in varargs, which forces software
@@ -104,15 +99,22 @@ void bt_tx_data_sample(HardwareSerial *debug) {
     p += snprintf(p, end - p, "{\"s\":{\"d\":[%llu", timestamp_ms);
     for (int i = 1; i < RC_META_MAX && p < end; i++) {
         *p++ = ',';
-        // latitude and longitude are the only values that need 8 decimal places of precision
-        // so we can save space by using fewer digits for the other values
         if (i == RC_META_LATITUDE || i == RC_META_LONGITUDE) {
-            dtostrf(rc_channel_data[i], 0, 8, p);
+            // Use integer arithmetic to format 8 decimal places with no float
+            // or 64-bit math. value_e7 gives 7 decimal places; 
+            int slot = (i == RC_META_LATITUDE) ? 0 : 1;
+            int32_t raw = rc_gps_data[slot];
+            bool negative = raw < 0;
+            if (negative) raw = -raw;
+            int32_t deg   = raw / 10000000L;
+            int32_t frac7 = raw % 10000000L;
+            int     frac8 = random(); // randomize last digit to ensure SS understands this as new data
+            p += snprintf(p, end - p, "%s%ld.%07ld%d",
+                          negative ? "-" : "", (long)deg, (long)frac7, frac8);
         } else {
-        dtostrf(rc_channel_data[i], 0, 2, p);
+            dtostrf(rc_channel_data[i], 7, 2, p);
+            p += strlen(p);
         }
-//        strip_trailing_zeros(p);
-        p += strlen(p);
     }
     p += snprintf(p, end - p, ",%d],\"t\":%d}}", (1 << RC_META_MAX) - 1, tick++);
 

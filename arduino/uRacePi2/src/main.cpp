@@ -1,5 +1,5 @@
 /**************************************************************************
-    Copyright 2025 Donour Sizemore
+    Copyright 2025-2026 Donour Sizemore
 
     This file is part of RacePi
 
@@ -53,8 +53,12 @@ void sparkfun_ubx_task(void *arg) {
     if (myGNSS.getPVT() && (myGNSS.getInvalidLlh() == false)) {
       float speed_ms = myGNSS.getGroundSpeed() / (float)1e3;
       float  gnss_error = myGNSS.getHorizontalAccEst() / (float)1e3;
-      float lat = myGNSS.getLatitude() / (float)1e7;
-      float longitude = myGNSS.getLongitude() / (float)1e7;
+      // Use int32_t from PVT (degrees × 1e7, 7 decimal places). HPPOSLLH is
+      // not used — it requires module HP firmware support that is not confirmed
+      // present. The 8th decimal place is always zero; the integer path avoids
+      // the float-precision loss that was the original problem.
+      int32_t lat       = myGNSS.getLatitude();
+      int32_t longitude = myGNSS.getLongitude();
       float elevation_m = myGNSS.getAltitudeMSL() / (float)1e3;
       float n_sats = myGNSS.getSIV();
       float pdop = myGNSS.getPDOP() / (float)1e2;
@@ -72,8 +76,8 @@ void sparkfun_ubx_task(void *arg) {
         date_set = true;
       }
 
-      rc_set_data(RC_META_LATITUDE,lat);
-      rc_set_data(RC_META_LONGITUDE, longitude);
+      rc_set_gps_data(RC_META_LATITUDE,  lat);
+      rc_set_gps_data(RC_META_LONGITUDE, longitude);
       rc_set_data(RC_META_SPEED, speed_ms*MS_TO_MPH);
       rc_set_data(RC_META_ALTITUDE, elevation_m);
       rc_set_data(RC_META_GPSSATS, n_sats);
@@ -104,7 +108,7 @@ void gnss_setup() {
     // link. RTCM is not that expensive, but NMEA is verbose.
     myGNSS.setI2COutput(COM_TYPE_UBX);
     
-    myGNSS.setNavigationFrequency(SPARKFUN_UBX_REFRESH_RATE_HZ); 
+    myGNSS.setNavigationFrequency(SPARKFUN_UBX_REFRESH_RATE_HZ);
     myGNSS.setAutoPVT(true);
     // This will optionally persist the settings to NVM on the GNSS device. 
     //myGNSS.saveConfigSelective(VAL_CFG_SUBSEC_IOPORT);

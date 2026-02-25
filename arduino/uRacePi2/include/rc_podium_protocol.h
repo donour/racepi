@@ -1,5 +1,5 @@
 /**************************************************************************
-    Copyright 2025 Donour Sizemore
+    Copyright 2025-2026 Donour Sizemore
 
     This file is part of RacePi
 
@@ -99,7 +99,8 @@ const char meta_mesg[] =
 
 int16_t rc_handler_init();
 void rc_bt_reader(HardwareSerial *debug, void (*rc_enable_callback)(bool));
-void rc_set_data(const int index,const float value);
+void rc_set_data(const int index, const float value);
+void rc_set_gps_data(const int index, const int32_t value_e7);
 
 static uint64_t rc_epoch = 0;
 
