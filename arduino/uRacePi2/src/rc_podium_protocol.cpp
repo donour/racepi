@@ -58,7 +58,6 @@ int16_t rc_handler_init() {
 
     rc_set_data(RC_META_ACCELX, 0.0);
     rc_set_data(RC_META_ACCELY, 0.0);
-    rc_set_data(RC_META_ACCELZ, 0.0);
     rc_set_data(RC_META_YAW, 0.0);
     rc_set_data(RC_META_PITCH, 0.0);
     rc_set_data(RC_META_ROLL, 0.0);

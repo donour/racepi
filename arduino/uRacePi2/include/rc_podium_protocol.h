@@ -93,9 +93,9 @@ const char meta_mesg[] =
             "],\"t\":%d" 
         "}" 
     "}\r\n";
-                //                "{\"sr\":10,\"nm\":\"OilTemp\",\"min\":0.0,\"ut\":\"F\",\"prec\":1,\"max\":280.0},"
-                //"{\"sr\":10,\"nm\":\"TorqueLimit\",\"min\":0.0,\"ut\":\"nm\",\"prec\":0,\"max\":911.0},"
-//                "{\"sr\":10,\"nm\":\"MAP\",\"min\":0.0,\"ut\":\"PSI\",\"prec\":1,\"max\":30.0},"
+    // "{\"sr\":10,\"nm\":\"OilTemp\",\"min\":0.0,\"ut\":\"F\",\"prec\":1,\"max\":280.0},"
+    // "{\"sr\":10,\"nm\":\"TorqueLimit\",\"min\":0.0,\"ut\":\"nm\",\"prec\":0,\"max\":911.0},"
+    // "{\"sr\":10,\"nm\":\"MAP\",\"min\":0.0,\"ut\":\"PSI\",\"prec\":1,\"max\":30.0},"
 
 int16_t rc_handler_init();
 void rc_bt_reader(HardwareSerial *debug, void (*rc_enable_callback)(bool));

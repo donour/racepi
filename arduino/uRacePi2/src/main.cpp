@@ -25,9 +25,10 @@
 #include "esp32_can_processor.h"
 #include "esp_freertos_hooks.h"
 
-
 #define MS_TO_MPH (2.23694f)
 #define RED_LED_PIN (13) 
+
+const char compile_date_time[] = "Compiled on: " __DATE__ " at " __TIME__;
 
 // used to indicate that we have timed out all data
 // and should shutdown
@@ -162,6 +163,7 @@ void setup() {
   Serial.begin(SERIAL_CONSOLE_BAUDRATE);
   Serial.write(0); Serial.flush();
   Serial.print("*** uRacePi 2 ***\n");
+  Serial.printf("%s\n", compile_date_time);
   
   pinMode(RED_LED_PIN, OUTPUT);
 
