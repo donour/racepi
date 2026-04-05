@@ -200,7 +200,7 @@ int16_t process_send_can_message_esp32(twai_message_t *frame) {
 
         // Yaw rate (12-bit, bytes 5-6)
         uint16_t yaw_raw = ((uint16_t)(data[5] & 0x0F) << 8) | data[6];
-        float yaw = (yaw_raw - 2048) * 8;
+        float yaw = (yaw_raw - 2048) * 8 / 128.0f;
 
         rc_set_data(RC_META_ACCELY, lat_accel);
         rc_set_data(RC_META_YAW, yaw);
