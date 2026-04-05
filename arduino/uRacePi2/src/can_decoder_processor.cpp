@@ -192,11 +192,11 @@ int16_t process_send_can_message_esp32(twai_message_t *frame) {
         // The first 12 bits aren't used in this sensor
         // // Longitudinal acceleration (12-bit, bytes 2-3)
         // uint16_t long_raw = ((uint16_t)(data[2] & 0x0F) << 8) | data[3];
-        // float long_accel = (long_raw - 2049) * 20385.0f / 100000.0f / 2550.0f;
+        // float long_accel = (long_raw - 2049) * 20385.0f / 100000.0f / 255.0f;
 
         // Lateral acceleration (12-bit, bytes 4-5)
         uint16_t lat_raw = ((uint16_t)data[4] << 4) | (data[5] >> 4);
-        float lat_accel = (lat_raw - 2049) * 20385.0f / 100000.0f / 2550.0f;
+        float lat_accel = (lat_raw - 2049) * 20385.0f / 100000.0f / 255.0f;
 
         // Yaw rate (12-bit, bytes 5-6)
         uint16_t yaw_raw = ((uint16_t)(data[5] & 0x0F) << 8) | data[6];
